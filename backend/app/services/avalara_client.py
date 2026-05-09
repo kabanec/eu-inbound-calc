@@ -58,7 +58,7 @@ def get_quote(consignment: Consignment) -> AvalaraResponse:
     company_id = os.environ["AVALARA_COMPANY_ID"]
     url = f"{os.environ['AVALARA_API_BASE']}/companies/{company_id}/globalcompliance"
     headers = {
-        "Authorization": f"Basic {os.environ['AVALARA_TOKEN']}",
+        "Authorization": os.environ["AVALARA_TOKEN"],
         "Content-Type": "application/json",
     }
     payload = _build_payload(consignment)
