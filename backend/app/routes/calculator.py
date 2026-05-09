@@ -9,6 +9,7 @@ from typing import Any
 from flask import Blueprint, jsonify, request
 
 from ..services.avalara_adapter import from_avalara_getquote
+from ..services.avalara_client import AvalaraError
 from ..services.calculator import calculate
 from ..services.strategy import recommend
 
@@ -44,6 +45,13 @@ def api_calculate() -> Any:
         consignment = from_avalara_getquote(payload)
         result = calculate(consignment)
         return jsonify(_to_json_safe(asdict(result)))
+    except AvalaraError as exc:
+        return jsonify({
+            "error": "Avalara API unavailable",
+            "type": "AvalaraError",
+            "avalara_status": exc.status_code,
+            "detail": str(exc),
+        }), 502
     except ValueError as exc:
         return jsonify({"error": str(exc), "type": "ValueError"}), 400
     except Exception as exc:
@@ -69,6 +77,13 @@ def api_strategy() -> Any:
                 for s in strategies
             ]
         })
+    except AvalaraError as exc:
+        return jsonify({
+            "error": "Avalara API unavailable",
+            "type": "AvalaraError",
+            "avalara_status": exc.status_code,
+            "detail": str(exc),
+        }), 502
     except ValueError as exc:
         return jsonify({"error": str(exc), "type": "ValueError"}), 400
     except Exception as exc:

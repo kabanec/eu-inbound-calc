@@ -140,11 +140,14 @@ An "item" = one or more goods sharing the 3-tuple `(tariff_classification, descr
 - Identical tuples collapse to one declaration line → €3 once
 - Different in any of the 3 → separate items → €3 each
 
-### FR-3: Avalara getQuote interoperability
+### FR-3: Avalara getQuote integration (D&T authority)
 
-- Engine accepts a payload that is a **superset** of the Avalara getQuote request
-- Existing getQuote callers work unchanged (engine derives missing EU-2026 fields from defaults)
-- New callers can supply EU-2026 fields explicitly via dedicated extension fields
+- Engine POSTs every consignment to Avalara `globalcompliance` and uses its duty figures as authoritative.
+- The **€3 simplified regime overrides Avalara** when triggered — Avalara's figure is stored for reference but not used as the line duty when €3 applies.
+- `standard_duty_rate` and `fta_duty_rate` on `Item` are **deprecated** as calculation inputs; Avalara is now the sole source of non-€3 duty amounts. The fields remain in the schema for no-duty detection (`regime = "no_duty"`) and backward compatibility.
+- Avalara failure (4xx/5xx/timeout) propagates as HTTP 502 from both `/api/calculate` and `/api/strategy`.
+- Response includes `avalara_request_id`, `avalara_total_eur`, and `avalara_messages` for audit.
+- Existing getQuote callers work unchanged; EU-2026 extension fields are optional.
 
 See BRD §3 for the surgical field additions.
 
@@ -178,10 +181,11 @@ Each strategy returns landed cost, complexity score (1-5), and risk notes.
 2. **National fees post-Nov 2026** — FR / IT / RO have not committed to withdrawal. v0.1 keeps them live indefinitely; `transaction_date`-keyed config supports future-dated withdrawal without code change.
 3. **Product identifier surfacing in H7** — Annex B amendment specifies "Supporting Document" data element. Engine returns the identifiers in the response; integration with declarant systems (Avalara CCS or partner) is v0.2.
 4. **Returns / invalidation pathway** — DA point 12 closes Article 148(3) for ≤ €150 distance sales. Refunds module is v0.2.
+5. **FTA preferential rate alignment** — When `standard_tariff_fta` regime is triggered and the direct-transport gate passes, Avalara returns the preferential duty figure (potentially 0). If Avalara's `is_preferential` flag disagrees with the engine's FTA gate result, there is no reconciliation step in v0.2. Evaluate whether Avalara's `preferentialduty` detail should override the engine's FTA gate or vice-versa.
 
 ## 7. Acceptance criteria
 
-- [ ] `pytest backend/tests` all green (target: 40+ tests)
+- [ ] `pytest backend/tests` all green (target: 70+ tests)
 - [ ] Each row of §3.2 default table covered by ≥ 1 test
 - [ ] Each row of §3.3 edge case covered by ≥ 1 test
 - [ ] Avalara getQuote payload from `docs/samples/avalara_getquote.json` produces correct landed cost

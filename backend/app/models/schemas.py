@@ -30,6 +30,7 @@ class Item:
     qty: int = 1
     unit_value_eur: Decimal = Decimal("0.00")
     fta_proof_held: bool = False
+    # Deprecated: used only for no_duty regime detection; Avalara is authoritative for figures.
     standard_duty_rate: Decimal = Decimal("0.00")
     fta_duty_rate: Decimal = Decimal("0.00")
     # Identifiers (mandatory from 1 Nov 2026)
@@ -83,6 +84,9 @@ class ItemBreakdown:
     regime: Regime
     duty_eur: Decimal
     notes: list[str] = field(default_factory=list)
+    avalara_rate: Decimal = Decimal("0.00")
+    avalara_is_preferential: bool = False
+    avalara_details: list[dict] = field(default_factory=list)
 
 
 @dataclass
@@ -116,3 +120,6 @@ class CalculationResult:
     defaults_applied: list[DefaultApplied] = field(default_factory=list)
     compliance_warnings: list[str] = field(default_factory=list)
     legal_references: list[str] = field(default_factory=list)
+    avalara_request_id: str = ""
+    avalara_total_eur: Decimal = Decimal("0.00")
+    avalara_messages: list[str] = field(default_factory=list)

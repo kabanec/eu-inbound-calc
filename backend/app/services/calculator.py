@@ -25,6 +25,7 @@ from ..reference.data import (
     DATE_UNION_HANDLING_FEE, E3_PER_ITEM_EUR, FTA_PARTNERS,
     LOW_VALUE_THRESHOLD_EUR, NATIONAL_FEES, UNION_HANDLING_FEE_EUR, VAT_RATES,
 )
+from .avalara_client import get_quote, zero_line
 from .defaults import apply_all_defaults
 
 CENT = Decimal("0.01")
@@ -78,15 +79,6 @@ def _standard_or_fta(
         return "no_duty"
     return "standard_tariff"
 
-
-def _item_duty(item: Item, regime: Regime) -> Decimal:
-    if regime == "e3_simplified":
-        return E3_PER_ITEM_EUR
-    if regime == "standard_tariff_fta":
-        return _round(item.line_value_eur * item.fta_duty_rate)
-    if regime == "standard_tariff":
-        return _round(item.line_value_eur * item.standard_duty_rate)
-    return Decimal("0.00")
 
 
 def _resolve_declarant(c: Consignment) -> Declarant:
@@ -182,8 +174,22 @@ def _compliance_warnings(c: Consignment, regimes: list[Regime]) -> list[str]:
 
 
 def calculate(c: Consignment) -> CalculationResult:
-    """Compute landed cost. Applies defaults first, then runs decision tree."""
+    """Compute landed cost. Applies defaults first, then runs decision tree.
+
+    Avalara getQuote is called for every consignment and is authoritative for
+    duty figures. The €3 simplified regime overrides Avalara when triggered.
+    Raises AvalaraError (propagates to route → 502) on API failure.
+    """
     c, ledger = apply_all_defaults(c)
+
+    ava_resp = get_quote(c)
+    line_map = {lr.line_number: lr for lr in ava_resp.line_results}
+
+    # Map each item's 0-based position to its grouping key so we can sum
+    # Avalara duty across all individual lines that belong to the same group.
+    group_indices: dict[tuple, list[int]] = defaultdict(list)
+    for idx, item in enumerate(c.items):
+        group_indices[item.grouping_key].append(idx)
 
     e3_active = DATE_E3_START <= c.transaction_date < DATE_E3_SUNSET
     pre_e3 = c.transaction_date < DATE_E3_START
@@ -199,6 +205,13 @@ def calculate(c: Consignment) -> CalculationResult:
         line_value = sum(
             (i.line_value_eur for i in group_items_list), Decimal("0.00")
         )
+
+        # Avalara duty for the whole group (sum of individual item lines).
+        indices = group_indices[key]
+        ava_lines = [line_map.get(idx + 1, zero_line(idx + 1)) for idx in indices]
+        ava_group_duty = sum((l.duty_eur for l in ava_lines), Decimal("0.00"))
+        ava_rep = ava_lines[0]
+
         agg = Item(
             hs6=rep.hs6, description=rep.description, origin=rep.origin,
             qty=qty_total,
@@ -209,13 +222,12 @@ def calculate(c: Consignment) -> CalculationResult:
         )
 
         if pre_e3:
-            # Pre-July 2026: legacy de minimis still in force for ≤ €150
             if c.intrinsic_value_eur <= LOW_VALUE_THRESHOLD_EUR:
                 regime: Regime = "pre_e3_de_minimis"
                 duty = Decimal("0.00")
             else:
                 regime = "standard_tariff"
-                duty = _round(line_value * agg.standard_duty_rate)
+                duty = ava_group_duty
         else:
             regime = _resolve_item_regime(
                 agg, consignment_low_value=(c.intrinsic_value_eur <= LOW_VALUE_THRESHOLD_EUR),
@@ -225,7 +237,12 @@ def calculate(c: Consignment) -> CalculationResult:
                 ship_from=c.ship_from,
                 non_alteration_confirmed=c.non_alteration_confirmed,
             )
-            duty = _item_duty(agg, regime)
+            if regime == "e3_simplified":
+                duty = E3_PER_ITEM_EUR
+            elif regime in ("standard_tariff", "standard_tariff_fta"):
+                duty = ava_group_duty
+            else:
+                duty = Decimal("0.00")
 
         duty_total += duty
         regimes_seen.append(regime)
@@ -246,6 +263,9 @@ def calculate(c: Consignment) -> CalculationResult:
             grouping_key=key, qty_total=qty_total,
             line_value_eur=_round(line_value), regime=regime,
             duty_eur=duty, notes=notes,
+            avalara_rate=ava_rep.duty_rate,
+            avalara_is_preferential=ava_rep.is_preferential,
+            avalara_details=ava_rep.duty_details,
         ))
 
     fees = _calculate_fees(c, distinct_groups=len(groups))
@@ -273,4 +293,7 @@ def calculate(c: Consignment) -> CalculationResult:
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77",
         ],
+        avalara_request_id=ava_resp.request_id,
+        avalara_total_eur=ava_resp.total_duty_eur,
+        avalara_messages=ava_resp.messages,
     )

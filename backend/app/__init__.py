@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import os
 
+from dotenv import load_dotenv
 from flask import Flask, render_template
+
+load_dotenv()
 
 
 def create_app() -> Flask:

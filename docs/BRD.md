@@ -158,14 +158,17 @@ This keeps the field count low. Total surgical additions: **10 new fields**
 | Caller sends legacy getQuote payload (no `euReform2026` namespaces) | Calculator runs full default chain per PRD §3.2; returns answer with `defaults_applied` listing every default the engine had to use |
 | Caller sends getQuote payload with `transaction_date < 2026-07-01` | Pre-€3 regime; standard tariff with €150 de minimis; `euReform2026` fields ignored |
 | Caller sends partial `euReform2026` (only some fields) | Each missing field falls back per PRD §3.2 independently |
-| Avalara getQuote returns a duty figure | Wrapper computes its own duty per the new regime; if they disagree, the wrapper's figure prevails and `legacy_avalara_duty_eur` is included for reference |
+| Avalara getQuote returns a duty figure | Avalara is authoritative. Engine uses Avalara's per-line `duty_eur` for `standard_tariff` and `standard_tariff_fta` regimes. **€3 simplified regime overrides Avalara** when triggered — Avalara's total is stored in `avalara_total_eur` for reference. |
 
-## 5. Avalara API contract considerations
+## 5. Avalara API contract
 
-- **Authentication**: existing AvaTax API token is sufficient for getQuote pass-through
-- **Rate limits**: wrapper adds zero new external API calls in fast path; FTA partner list and VAT rates are in-memory
-- **Error mapping**: getQuote 4xx → wrapper returns 400 with `avalara_error` field; getQuote 5xx → wrapper returns 502
-- **Timeouts**: wrapper enforces a 5s timeout on getQuote; on timeout, wrapper degrades to local calculation only with `degraded_mode: true` in response
+- **Endpoint**: `POST {AVALARA_API_BASE}/companies/{AVALARA_COMPANY_ID}/globalcompliance`
+- **Authentication**: HTTP Basic with pre-encoded Base64 token from `AVALARA_TOKEN` env var
+- **Payload type**: `QUOTE_MAXIMUM` — one line per consignment item, `currency: EUR`
+- **D&T authority**: Avalara's `details[].tax` sum is the duty figure for `standard_tariff` and `standard_tariff_fta` regimes. €3 regime overrides this.
+- **Error mapping**: any HTTP error → `AvalaraError` → `/api/calculate` and `/api/strategy` return **502** with `{"type":"AvalaraError","avalara_status":<code>,"detail":"..."}`
+- **Timeout**: 10 s hard timeout on the `requests.post` call; timeout raises `AvalaraError(0, ...)`
+- **No degraded mode**: Avalara failure is a hard failure — no fallback to local rate tables
 
 ## 6. Sample payloads
 

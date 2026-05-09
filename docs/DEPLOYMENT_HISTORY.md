@@ -20,3 +20,21 @@ Per deploy skill convention: every production push gets logged here.
 
 **Test coverage:** 3 test files, 40+ tests covering defaults / decision tree / API
 **Rollback plan:** Revert via `git revert HEAD && git push origin main`, or use Render manual deploy to redeploy a previous commit.
+
+## v0.2.0 — 2026-05-09
+
+**Type:** minor | **Platforms:** Render + IONOS (Docker, port 8080) | **Deployed by:** CLI
+**Changes:**
+- [feature] Avalara `globalcompliance` integration — Avalara is now authoritative for D&T figures; €3 regime overrides when triggered
+- [feature] `AvalaraError` propagates as HTTP 502 from `/api/calculate` and `/api/strategy`
+- [feature] `avalara_request_id`, `avalara_total_eur`, `avalara_messages` in CalculationResult response
+- [feature] Per-item `avalara_rate`, `avalara_is_preferential`, `avalara_details` in ItemBreakdown
+- [feature] Direct-transport gate for FTA preference (ship_from == origin OR non_alteration_confirmed)
+- [feature] Avalara baseline section in UI with Δ (engine vs Avalara), per-item rate, preferential flag, collapsible raw data
+- [feature] Docker container on IONOS VPS at 74.208.74.249:8080 (`docker-compose.eu.yml`)
+- [improvement] `standard_duty_rate` / `fta_duty_rate` on Item deprecated as calculation inputs (Avalara is now sole non-€3 source)
+- [docs] PRD §FR-3 updated to Avalara-authoritative description; BRD §5 rewritten with actual contract
+- [test] conftest.py autouse mock + test_avalara_client.py (9 tests) + test_route_avalara_failure.py (2 tests)
+
+**Test coverage:** 6 test files, 73 tests
+**Rollback plan:** `git revert` the Avalara integration commits; remove `avalara_client.py`; revert calculator.py import + calculate() to v0.1.0 version.

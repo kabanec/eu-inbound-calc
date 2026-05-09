@@ -1,11 +1,20 @@
 """Tests for the core calculator decision tree (PRD §FR-1)."""
 from __future__ import annotations
 
+import json
 from datetime import date
 from decimal import Decimal
 
 from app.models.schemas import Consignment, Item
 from app.services.calculator import calculate, group_items
+from tests.conftest import AVALARA_URL, make_avalara_body
+
+
+def _set_avalara_duties(mock_avalara, duties: list[float]) -> None:
+    """Replace default mock with a response returning specific per-line duties."""
+    mock_avalara.reset()
+    mock_avalara.add(mock_avalara.POST, AVALARA_URL,
+                     json=make_avalara_body(duties), status=200)
 
 
 def make_item(hs6="610910", desc="cotton t-shirt", origin="CN",
@@ -62,7 +71,8 @@ class TestE3Triggers:
                         channel="postal", transaction_date=date(2026, 8, 1))
         assert calculate(c).duty_total_eur == Decimal("3.00")
 
-    def test_b2c_non_ioss_non_postal_uses_standard(self):
+    def test_b2c_non_ioss_non_postal_uses_standard(self, mock_avalara):
+        _set_avalara_duties(mock_avalara, [2.40])  # 12% × €20
         c = Consignment(items=[make_item(value=20, std_rate=0.12)],
                         destination_ms="DE", ioss_registered=False,
                         transaction_date=date(2026, 8, 1))
@@ -89,7 +99,8 @@ class TestE3Triggers:
 
 # Hard exits ---------------------------------------------------------------
 class TestHardExits:
-    def test_b2b_skips_e3(self):
+    def test_b2b_skips_e3(self, mock_avalara):
+        _set_avalara_duties(mock_avalara, [2.40])  # 12% × €20
         c = Consignment(items=[make_item(value=20, std_rate=0.12)],
                         destination_ms="DE", b2b=True,
                         transaction_date=date(2026, 8, 1))
@@ -102,7 +113,8 @@ class TestHardExits:
                         transaction_date=date(2026, 8, 1))
         assert calculate(c).item_breakdown[0].regime != "e3_simplified"
 
-    def test_value_above_150_skips_e3(self):
+    def test_value_above_150_skips_e3(self, mock_avalara):
+        _set_avalara_duties(mock_avalara, [24.00])  # 12% × €200
         c = Consignment(items=[make_item(value=200, std_rate=0.12)],
                         destination_ms="DE", ioss_registered=True,
                         transaction_date=date(2026, 8, 1))
