@@ -245,15 +245,34 @@ class TestNationalFees:
             destination_ms="FR", ioss_registered=True,
             transaction_date=date(2026, 8, 1),
         )
-        assert calculate(c).fees.national_fee_eur == Decimal("10.00")
+        assert calculate(c).fees.national_fee_eur == Decimal("4.00")
 
-    def test_italy_per_parcel(self):
+    def test_italy_suspended_returns_zero_fee(self):
+        """IT fee is suspended until 2026-07-01 — no fee before that date."""
+        c = Consignment(
+            items=[make_item(hs6="610910"), make_item(hs6="640399")],
+            destination_ms="IT", ioss_registered=True,
+            transaction_date=date(2026, 5, 1),
+        )
+        assert calculate(c).fees.national_fee_eur == Decimal("0.00")
+
+    def test_italy_active_after_suspension_lift(self):
+        """IT fee applies on and after 2026-07-01."""
         c = Consignment(
             items=[make_item(hs6="610910"), make_item(hs6="640399")],
             destination_ms="IT", ioss_registered=True,
             transaction_date=date(2026, 8, 1),
         )
         assert calculate(c).fees.national_fee_eur == Decimal("2.00")
+
+    def test_romania_uses_490_not_5(self):
+        """RO fee is €4.90 (25 RON at reference rate), not €5."""
+        c = Consignment(
+            items=[make_item(hs6="610910")],
+            destination_ms="RO", ioss_registered=True,
+            transaction_date=date(2026, 8, 1),
+        )
+        assert calculate(c).fees.national_fee_eur == Decimal("4.90")
 
 
 # Declarant hierarchy ------------------------------------------------------

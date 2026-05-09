@@ -108,6 +108,53 @@
 
     .fee-status { background: #fff7ed; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 11px; }
     .fee-status .indicator { font-weight: 700; color: #ea580c; }
+
+    /* Cite links */
+    .cite-link { color: #2563eb; text-decoration: none; border-bottom: 1px dotted #2563eb; font-size: 0.9em; }
+    .cite-link:hover { border-bottom-style: solid; }
+
+    /* How-does-this-work button */
+    .link-btn { background: none; border: none; color: #2563eb; cursor: pointer; font-size: 12px; padding: 0; text-decoration: underline; }
+    .link-btn:hover { color: #1e40af; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9000; display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 24px 16px; }
+    .modal-content { background: #fff; border-radius: 10px; width: 100%; max-width: 860px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); margin: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px 16px; border-bottom: 1px solid #e5e7eb; }
+    .modal-header h2 { margin: 0; font-size: 18px; color: #111827; }
+    .modal-close { background: none; border: none; font-size: 18px; cursor: pointer; color: #6b7280; padding: 4px 8px; border-radius: 4px; }
+    .modal-close:hover { background: #f3f4f6; color: #111827; }
+    .modal-body { padding: 20px 24px 28px; overflow-y: auto; max-height: calc(100vh - 130px); }
+    .modal-section { margin-bottom: 28px; }
+    .modal-section h3 { font-size: 14px; font-weight: 700; color: #1f2937; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1px solid #f3f4f6; }
+
+    /* Regime cards */
+    .regime-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .regime-card { padding: 12px; border-radius: 6px; border: 1px solid; }
+    .regime-card.e3  { background: #fff1f2; border-color: #fecdd3; }
+    .regime-card.std { background: #fffbeb; border-color: #fde68a; }
+    .regime-card.fta { background: #f0fdf4; border-color: #bbf7d0; }
+    .regime-card.b2b { background: #eff6ff; border-color: #bfdbfe; }
+    .regime-card.postal { background: #faf5ff; border-color: #e9d5ff; }
+    .regime-card .regime-name { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+    .regime-card .regime-desc { font-size: 11px; color: #4b5563; line-height: 1.4; }
+    .regime-citation { font-size: 10px; color: #6b7280; margin-top: 6px; }
+
+    /* National fees table */
+    .fees-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .fees-table th { background: #f3f4f6; padding: 8px 10px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+    .fees-table td { padding: 7px 10px; border-bottom: 1px solid #f3f4f6; color: #374151; vertical-align: top; }
+    .fees-table tr:last-child td { border-bottom: none; }
+    .suspended-badge { background: #fef3c7; color: #92400e; padding: 1px 6px; border-radius: 8px; font-size: 10px; font-weight: 600; }
+    .active-badge { background: #d1fae5; color: #065f46; padding: 1px 6px; border-radius: 8px; font-size: 10px; font-weight: 600; }
+
+    /* Reference grid */
+    .reference-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+    .reference-card { padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #f9fafb; }
+    .reference-card .ref-short { font-size: 12px; font-weight: 600; color: #1e40af; margin-bottom: 3px; }
+    .reference-card .ref-full { font-size: 10px; color: #4b5563; line-height: 1.4; margin-bottom: 6px; }
+    .reference-card a { font-size: 10px; color: #2563eb; text-decoration: none; }
+    .reference-card a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -120,7 +167,7 @@
     <div class="header">
       <div>
         <h1>EU Inbound Calculator — Demo</h1>
-        <div class="subtitle">Council Reg. (EU) 2026/382 · Delegated Reg. C(2026)2760</div>
+        <div class="subtitle">Council Reg. (EU) 2026/382 · Delegated Reg. C(2026)2760 · <button class="link-btn" onclick="openExplainer()">How does this work?</button></div>
       </div>
       <span class="badge">EUR</span>
     </div>
@@ -223,7 +270,191 @@
 
 </div>
 
+<!-- EU Fees 101 Modal -->
+<div id="explainer-overlay" class="modal-overlay" onclick="if(event.target===this)closeExplainer()" style="display:none">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>📖 EU Customs Fees 101</h2>
+      <button class="modal-close" onclick="closeExplainer()">✕</button>
+    </div>
+    <div class="modal-body" id="explainer-body"></div>
+  </div>
+</div>
+
 <script>
+// ---- Citation registry ----
+const CITATIONS = {
+  reg_2026_382: {
+    short: 'Reg. (EU) 2026/382',
+    full: 'Council Regulation (EU) 2026/382 of 11 February 2026 amending Regulation (EU) No 952/2013 (Union Customs Code) — new customs framework for low-value e-commerce',
+    url: 'https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32026R0382',
+  },
+  da_c_2026_2760: {
+    short: 'DA C(2026)2760',
+    full: 'Commission Delegated Regulation C(2026)2760 of 30 April 2026 — €3 per-item simplified duty fee and conditions for the e-commerce simplified regime',
+    url: 'https://ec.europa.eu/taxation_customs/customs/key-policies/e-commerce_en',
+  },
+  dir_2006_112: {
+    short: 'VAT Directive 2006/112/EC',
+    full: 'Council Directive 2006/112/EC of 28 November 2006 on the common system of value added tax',
+    url: 'https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=celex%3A32006L0112',
+  },
+  ioss_dir_2017_2455: {
+    short: 'IOSS Dir. 2017/2455/EU',
+    full: 'Council Directive (EU) 2017/2455 of 5 December 2017 introducing the Import One-Stop Shop (IOSS) for distance sales of imported goods',
+    url: 'https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32017L2455',
+  },
+  ucc_952_2013: {
+    short: 'UCC Reg. 952/2013',
+    full: 'Regulation (EU) No 952/2013 of the European Parliament and of the Council of 9 October 2013 laying down the Union Customs Code',
+    url: 'https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32013R0952',
+  },
+  da_2015_2446: {
+    short: 'DA (EU) 2015/2446',
+    full: 'Commission Delegated Regulation (EU) 2015/2446 of 28 July 2015 supplementing the Union Customs Code — H6 postal declaration procedures',
+    url: 'https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32015R2446',
+  },
+  cp42_da: {
+    short: 'DA 2015/2446 Art. 143(1)(d)',
+    full: 'Commission Delegated Regulation (EU) 2015/2446, Article 143(1)(d) — CP 42 VAT exemption for intra-EU B2B supplies',
+    url: 'https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32015R2446',
+  },
+  fr_ldf_2026: {
+    short: 'FR LdF 2026, Art. 82',
+    full: 'Loi de finances pour 2026, Law n° 2026-103, Article 82 — Taxe sur les petits colis (TPC), €2 per distinct HS6 line, effective 1 March 2026',
+    url: 'https://www.legifrance.gouv.fr/loda/id/JORFTEXT000051224559',
+  },
+  it_budget_2026: {
+    short: 'IT Budget Law 2026 §126-128',
+    full: 'Italian Budget Law 2026, Law no. 199/2025, Article 1, paragraphs 126-128 — €2 per-parcel flat fee, introduced Jan 2026, suspended until 1 July 2026',
+    url: 'https://www.gazzettaufficiale.it/eli/id/2025/12/31/25G00233/SG',
+  },
+  ro_og_2025: {
+    short: 'RO Fiscal Package Nov 2025',
+    full: 'Romanian Parliament, Law adopted 18 November 2025 (fiscal package) — 25 RON (≈ €4.90) per-parcel logistics tax, effective 1 January 2026, B2C only',
+    url: 'https://taxsummaries.pwc.com/romania/corporate/other-taxes',
+  },
+};
+
+function cite(key, anchorText) {
+  const c = CITATIONS[key];
+  if (!c) return anchorText || key;
+  return `<a class="cite-link" href="${c.url}" target="_blank" rel="noopener" title="${c.full}">${anchorText || c.short}</a>`;
+}
+
+const FEE_REF_MAP = { FR: 'fr_ldf_2026', IT: 'it_budget_2026', RO: 'ro_og_2025' };
+const LEGAL_REF_MAP = {
+  '2026/382': 'reg_2026_382',
+  'C(2026)2760': 'da_c_2026_2760',
+  '2006/112': 'dir_2006_112',
+  '2017/2455': 'ioss_dir_2017_2455',
+  '952/2013': 'ucc_952_2013',
+};
+
+// ---- EU Fees 101 modal ----
+function openExplainer() {
+  document.getElementById('explainer-body').innerHTML = buildExplainerHTML();
+  populateReferenceGrid();
+  document.getElementById('explainer-overlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeExplainer() {
+  document.getElementById('explainer-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function buildExplainerHTML() {
+  let h = '';
+  h += `<div class="modal-section">
+    <h3>The Big Picture</h3>
+    <p style="font-size:13px;line-height:1.7;color:#374151;margin:0">
+      From <strong>1 July 2026</strong>, every low-value parcel (≤ €150) entering the EU pays a per-item
+      customs fee under the new €3 simplified regime — ${cite('reg_2026_382')} + ${cite('da_c_2026_2760')}.
+      The old €22 VAT exemption is gone. IOSS (Import One-Stop Shop) handles VAT collection for registered
+      sellers under ${cite('ioss_dir_2017_2455')}. Some member states layer additional national fees on top.
+    </p>
+  </div>`;
+  h += `<div class="modal-section">
+    <h3>Which regime applies to each item?</h3>
+    <div class="regime-cards">
+      <div class="regime-card e3">
+        <div class="regime-name">🔴 €3 / item</div>
+        <div class="regime-desc">B2C · ≤ €150 · non-FTA origin. Flat simplified duty per line item.</div>
+        <div class="regime-citation">${cite('da_c_2026_2760', 'DA C(2026)2760')}</div>
+      </div>
+      <div class="regime-card fta">
+        <div class="regime-name">🟢 FTA €0</div>
+        <div class="regime-desc">Origin country has EU FTA + valid proof (REX, EUR.1, etc.) → zero duty.</div>
+        <div class="regime-citation">${cite('da_c_2026_2760', 'DA Art. 1(1)(a)')}</div>
+      </div>
+      <div class="regime-card std">
+        <div class="regime-name">🟡 Standard tariff</div>
+        <div class="regime-desc">Value > €150, or €3 overridden. Full MFN or FTA ad-valorem rate applies.</div>
+        <div class="regime-citation">${cite('ucc_952_2013', 'UCC 952/2013')}</div>
+      </div>
+      <div class="regime-card b2b">
+        <div class="regime-name">🔵 B2B / CP42</div>
+        <div class="regime-desc">Business buyer → full customs procedures, no IOSS, standard tariff.</div>
+        <div class="regime-citation">${cite('cp42_da', 'DA Art. 143(1)(d)')}</div>
+      </div>
+      <div class="regime-card postal">
+        <div class="regime-name">🟣 H6 postal</div>
+        <div class="regime-desc">Non-IOSS postal consignment ≤ €1 000: simplified H6 declaration.</div>
+        <div class="regime-citation">${cite('da_2015_2446', 'DA 2015/2446')}</div>
+      </div>
+    </div>
+  </div>`;
+  h += `<div class="modal-section">
+    <h3>National fees (as of May 2026)</h3>
+    <table class="fees-table">
+      <thead><tr><th>Country</th><th>Amount</th><th>Basis</th><th>Status</th><th>Legal source</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>🇫🇷 France</td><td><strong>€2.00</strong></td><td>per HS6 line</td>
+          <td><span class="active-badge">Active from Mar 2026</span></td>
+          <td>${cite('fr_ldf_2026', 'LdF 2026, Art. 82')}</td>
+        </tr>
+        <tr>
+          <td>🇮🇹 Italy</td><td><strong>€2.00</strong></td><td>per parcel</td>
+          <td><span class="suspended-badge">Suspended → 1 Jul 2026</span></td>
+          <td>${cite('it_budget_2026', 'Budget Law 2026 §126')}</td>
+        </tr>
+        <tr>
+          <td>🇷🇴 Romania</td><td><strong>€4.90</strong></td><td>per parcel</td>
+          <td><span class="active-badge">Active from Jan 2026</span></td>
+          <td>${cite('ro_og_2025', 'RO Fiscal Pkg Nov 2025')}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:#6b7280;margin:8px 0 0">
+      National fees are excluded from the VAT base per each respective law. Other member states may introduce fees later.
+    </p>
+  </div>`;
+  h += `<div class="modal-section">
+    <h3>VAT routing</h3>
+    <p style="font-size:12px;line-height:1.7;color:#374151;margin:0">
+      <strong>IOSS-registered seller:</strong> VAT collected at checkout, remitted monthly via the IOSS portal. No VAT collected at import. ${cite('ioss_dir_2017_2455')}<br>
+      <strong>Non-IOSS B2C (express):</strong> Customs/broker collects import VAT on behalf of buyer. ${cite('reg_2026_382')}<br>
+      <strong>Non-IOSS postal:</strong> Designated postal operator uses Special Arrangements scheme. ${cite('reg_2026_382')}<br>
+      <strong>B2B:</strong> Reverse-charge applies at destination; no IOSS. Full customs entry required. ${cite('dir_2006_112')}
+    </p>
+  </div>`;
+  h += `<div class="modal-section">
+    <h3>📚 Primary sources</h3>
+    <div class="reference-grid" id="ref-grid"></div>
+  </div>`;
+  return h;
+}
+function populateReferenceGrid() {
+  const grid = document.getElementById('ref-grid');
+  if (!grid) return;
+  grid.innerHTML = Object.entries(CITATIONS).map(([, c]) => `
+    <div class="reference-card">
+      <div class="ref-short">${c.short}</div>
+      <div class="ref-full">${c.full}</div>
+      <a href="${c.url}" target="_blank" rel="noopener">Open source ↗</a>
+    </div>`).join('');
+}
+
 const SAMPLE_RATES = {
   // Common HS6 → MFN rate snippet for demo
   '610910': { rate: 0.12, label: 'Cotton t-shirt (Apparel, knitted)' },
@@ -253,8 +484,8 @@ const SCENARIOS = [
   },
   {
     id: 'fr_stack',
-    label: '🇫🇷 CN→FR: French €5/HS6 stack',
-    desc: 'Multi-HS basket to France — national €5/line on top of EU €3',
+    label: '🇫🇷 CN→FR: French €2/HS6 stack',
+    desc: 'Multi-HS basket to France — national €2/line (TPC) on top of EU €3',
     setup: () => {
       reset();
       setSelect('destination_ms', 'FR');
@@ -267,8 +498,8 @@ const SCENARIOS = [
   },
   {
     id: 'it_parcel',
-    label: '🇮🇹 CN→IT: Italian €2/parcel',
-    desc: 'Italy national fee is per-parcel (flat) regardless of HS lines',
+    label: '🇮🇹 CN→IT: Italian €2/parcel (from Jul 2026)',
+    desc: 'Italy flat €2/parcel — suspended until 1 Jul 2026, then active',
     setup: () => {
       reset();
       setSelect('destination_ms', 'IT');
@@ -280,8 +511,8 @@ const SCENARIOS = [
   },
   {
     id: 'ro_logistics',
-    label: '🇷🇴 CN→RO: Romanian €5 logistics tax',
-    desc: '25 RON per-parcel logistics tax (OG 2025/137) on top of EU regime',
+    label: '🇷🇴 CN→RO: Romanian €4.90 logistics tax',
+    desc: '25 RON per-parcel logistics tax (≈ €4.90) on top of EU regime',
     setup: () => {
       reset();
       setSelect('destination_ms', 'RO');
@@ -540,9 +771,9 @@ async function runStrategy() {
 function renderTotals(d, payload) {
   const ms = payload.addresses.shipTo.country;
   const nationalFeeNotes = {
-    'FR': '🇫🇷 France: €5 × distinct HS6 lines',
-    'IT': '🇮🇹 Italy: €2 per parcel (flat)',
-    'RO': '🇷🇴 Romania: ~€5 (25 RON) per parcel',
+    'FR': '🇫🇷 France: €2 × distinct HS6 lines (TPC)',
+    'IT': '🇮🇹 Italy: €2 per parcel (flat, from 1 Jul 2026)',
+    'RO': '🇷🇴 Romania: €4.90 (25 RON) per parcel',
   };
   let html = `
     <div class="total-row"><span>Goods value</span><span>${fmt(d.consignment_value_eur)}</span></div>
@@ -558,7 +789,9 @@ function renderTotals(d, payload) {
     </div>
   `;
   if (d.fees.national_fee_eur > 0) {
-    html += `<div class="fee-status"><span class="indicator">⚠ National fee active:</span> ${d.fees.national_fee_source}</div>`;
+    const feeKey = FEE_REF_MAP[ms];
+    const feeSrcHtml = feeKey ? cite(feeKey, d.fees.national_fee_source) : d.fees.national_fee_source;
+    html += `<div class="fee-status"><span class="indicator">⚠ National fee active:</span> ${feeSrcHtml}</div>`;
   }
   $('totals').innerHTML = html;
 }
@@ -619,7 +852,9 @@ function renderWork(d, payload) {
       html += `<div class="step calc"><span class="label">Union handling:</span> ${fmt(d.fees.union_handling_fee_eur)}</div>`;
     }
     if (d.fees.national_fee_eur > 0) {
-      html += `<div class="step calc"><span class="label">National (${payload.addresses.shipTo.country}):</span> ${fmt(d.fees.national_fee_eur)}<br><small>${d.fees.national_fee_source}</small></div>`;
+      const feeKey2 = FEE_REF_MAP[payload.addresses.shipTo.country];
+      const feeSrcHtml2 = feeKey2 ? cite(feeKey2, d.fees.national_fee_source) : d.fees.national_fee_source;
+      html += `<div class="step calc"><span class="label">National (${payload.addresses.shipTo.country}):</span> ${fmt(d.fees.national_fee_eur)}<br><small>${feeSrcHtml2}</small></div>`;
     }
   }
 
@@ -680,7 +915,10 @@ function renderWork(d, payload) {
   // Legal refs
   if (d.legal_references && d.legal_references.length) {
     html += '<h3>📚 Legal references</h3><ul class="ref-list">';
-    d.legal_references.forEach(r => { html += `<li>${r}</li>`; });
+    d.legal_references.forEach(r => {
+      const citKey = Object.keys(LEGAL_REF_MAP).find(k => r.includes(k));
+      html += `<li>${citKey ? cite(LEGAL_REF_MAP[citKey], r) : r}</li>`;
+    });
     html += '</ul>';
   }
 

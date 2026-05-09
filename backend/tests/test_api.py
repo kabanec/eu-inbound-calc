@@ -144,8 +144,8 @@ class TestAPI:
         data = r.get_json()
         # CN tee → €3; GB shoe with FTA proof + ship_from==GB → €0
         assert data["duty_total_eur"] == 3.0
-        # France national fee: 2 distinct HS6 × €5 = €10
-        assert data["fees"]["national_fee_eur"] == 10.0
+        # France national fee: 2 distinct HS6 × €2 = €4
+        assert data["fees"]["national_fee_eur"] == 4.0
 
     def test_strategy_endpoint(self, client):
         payload = {

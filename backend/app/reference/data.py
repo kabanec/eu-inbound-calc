@@ -38,25 +38,32 @@ FTA_PARTNERS = frozenset({
 # National handling fees (live as of May 2026) ------------------------------
 NATIONAL_FEES = {
     "FR": {
-        "amount_eur": Decimal("5.00"),
+        "amount_eur": Decimal("2.00"),
         "basis": "per_hs6_line",
         "since": date(2026, 3, 1),
         "in_vat_base": False,
-        "source": "Loi de finances 2026, art. 156 (approved 2 Feb 2026)",
+        "source": "Loi de finances pour 2026, Law n° 2026-103, Article 82",
+        "source_url": "https://www.legifrance.gouv.fr/loda/id/JORFTEXT000051224559",
+        "official_name": "Taxe sur les petits colis (TPC)",
     },
     "IT": {
         "amount_eur": Decimal("2.00"),
         "basis": "per_parcel",
         "since": date(2026, 1, 1),
+        "suspended_until": date(2026, 7, 1),  # introduced in law but suspended until Jul 1
         "in_vat_base": False,
-        "source": "Legge di bilancio 2026, comma 887",
+        "source": "Italian Budget Law 2026, Law no. 199/2025, Article 1, paragraphs 126-128",
+        "source_url": "https://www.gazzettaufficiale.it/eli/id/2025/12/31/25G00233/SG",
+        "applies_to": "B2C and B2B",
     },
     "RO": {
-        "amount_eur": Decimal("5.00"),  # 25 RON ≈ €5
+        "amount_eur": Decimal("4.90"),  # 25 RON at reference exchange rate
         "basis": "per_parcel",
         "since": date(2026, 1, 1),
         "in_vat_base": False,
-        "source": "OG 2025/137 (logistics tax)",
+        "source": "Romanian Parliament, Law adopted 18 Nov 2025 (fiscal package)",
+        "source_url": "https://taxsummaries.pwc.com/romania/corporate/other-taxes",
+        "applies_to": "B2C only",
     },
 }
 

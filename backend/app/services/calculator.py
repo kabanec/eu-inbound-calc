@@ -108,6 +108,8 @@ def _calculate_fees(c: Consignment, distinct_groups: int) -> FeeBreakdown:
 
     nf = NATIONAL_FEES.get(c.destination_ms)
     if nf and c.transaction_date >= nf["since"]:
+        if nf.get("suspended_until") and c.transaction_date < nf["suspended_until"]:
+            return fees
         if nf["basis"] == "per_hs6_line":
             fees.national_fee_eur = nf["amount_eur"] * Decimal(distinct_groups)
         else:
