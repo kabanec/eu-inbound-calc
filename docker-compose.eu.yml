@@ -1,0 +1,13 @@
+services:
+  eu-calc-api:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    mem_limit: 512m
+    mem_reservation: 128m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
