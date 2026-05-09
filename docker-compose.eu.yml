@@ -6,6 +6,10 @@ services:
     restart: unless-stopped
     mem_limit: 512m
     mem_reservation: 128m
+    environment:
+      - AVALARA_API_BASE=https://ns1-quoting-sbx.xbo.avalara.com/api/v2
+      - AVALARA_TOKEN=${AVALARA_TOKEN}
+      - AVALARA_COMPANY_ID=${AVALARA_COMPANY_ID}
     logging:
       driver: "json-file"
       options:
