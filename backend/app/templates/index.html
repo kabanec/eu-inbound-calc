@@ -471,6 +471,8 @@ function populateReferenceGrid() {
     </div>`).join('');
 }
 
+const INTERNAL_MODE = new URLSearchParams(window.location.search).has('internal');
+
 const SAMPLE_RATES = {
   // Common HS6 → MFN rate snippet for demo
   '610910': { rate: 0.12, label: 'Cotton t-shirt (Apparel, knitted)' },
@@ -883,44 +885,46 @@ function renderWork(d, payload) {
     <span class="label">Landed:</span> ${fmt(d.landed_cost_eur)}
   </div>`;
 
-  // Avalara getQuote baseline
-  html += '<h3>7. Avalara getQuote baseline</h3>';
-  const avaTotal = parseFloat(d.avalara_total_eur || 0);
-  const engTotal = parseFloat(d.duty_total_eur || 0);
-  const avaDiff  = (avaTotal - engTotal).toFixed(2);
-  const diffSign = avaDiff > 0 ? '+' : '';
-  html += `<div class="step calc">
-    <span class="label">Request ID:</span> <code>${d.avalara_request_id || '—'}</code><br>
-    <span class="label">Avalara total duty:</span> ${fmt(d.avalara_total_eur)} ·
-    <span class="label">Engine duty:</span> ${fmt(d.duty_total_eur)} ·
-    <span class="label">Δ:</span> <strong>${diffSign}${avaDiff}</strong>
-    ${parseFloat(avaDiff) !== 0 ? ' <span style="color:#f59e0b;font-size:11px">(€3 regime overrode Avalara for one or more items)</span>' : ''}
-  </div>`;
-  d.item_breakdown.forEach(item => {
-    html += `<div class="default-item">
-      <span class="field">${item.grouping_key.join(' / ')}</span>
-      <span class="label"> rate:</span> ${(parseFloat(item.avalara_rate || 0) * 100).toFixed(2)}%
-      ${item.avalara_is_preferential ? ' · <span style="color:#10b981;font-size:10px;font-weight:600">PREFERENTIAL</span>' : ''}
+  // Avalara getQuote baseline — internal only
+  if (INTERNAL_MODE) {
+    html += '<h3>7. Avalara getQuote baseline</h3>';
+    const avaTotal = parseFloat(d.avalara_total_eur || 0);
+    const engTotal = parseFloat(d.duty_total_eur || 0);
+    const avaDiff  = (avaTotal - engTotal).toFixed(2);
+    const diffSign = avaDiff > 0 ? '+' : '';
+    html += `<div class="step calc">
+      <span class="label">Request ID:</span> <code>${d.avalara_request_id || '—'}</code><br>
+      <span class="label">Avalara total duty:</span> ${fmt(d.avalara_total_eur)} ·
+      <span class="label">Engine duty:</span> ${fmt(d.duty_total_eur)} ·
+      <span class="label">Δ:</span> <strong>${diffSign}${avaDiff}</strong>
+      ${parseFloat(avaDiff) !== 0 ? ' <span style="color:#f59e0b;font-size:11px">(€3 regime overrode Avalara for one or more items)</span>' : ''}
     </div>`;
-  });
-  if (d.avalara_messages && d.avalara_messages.length) {
-    html += `<div class="warning">Avalara: ${d.avalara_messages.join(' | ')}</div>`;
+    d.item_breakdown.forEach(item => {
+      html += `<div class="default-item">
+        <span class="field">${item.grouping_key.join(' / ')}</span>
+        <span class="label"> rate:</span> ${(parseFloat(item.avalara_rate || 0) * 100).toFixed(2)}%
+        ${item.avalara_is_preferential ? ' · <span style="color:#10b981;font-size:10px;font-weight:600">PREFERENTIAL</span>' : ''}
+      </div>`;
+    });
+    if (d.avalara_messages && d.avalara_messages.length) {
+      html += `<div class="warning">Avalara: ${d.avalara_messages.join(' | ')}</div>`;
+    }
+    const avaDebug = {
+      request_id: d.avalara_request_id,
+      avalara_total_eur: d.avalara_total_eur,
+      engine_duty_total_eur: d.duty_total_eur,
+      messages: d.avalara_messages,
+      per_line: d.item_breakdown.map(item => ({
+        key: item.grouping_key,
+        avalara_rate: item.avalara_rate,
+        avalara_is_preferential: item.avalara_is_preferential,
+        details: item.avalara_details,
+      })),
+    };
+    html += `<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;color:#6b7280">Raw Avalara data (debug)</summary>
+    <pre style="font-size:10px;overflow:auto;background:#f3f4f6;padding:8px;border-radius:4px;max-height:200px;margin-top:4px">${JSON.stringify(avaDebug, null, 2)}</pre>
+    </details>`;
   }
-  const avaDebug = {
-    request_id: d.avalara_request_id,
-    avalara_total_eur: d.avalara_total_eur,
-    engine_duty_total_eur: d.duty_total_eur,
-    messages: d.avalara_messages,
-    per_line: d.item_breakdown.map(item => ({
-      key: item.grouping_key,
-      avalara_rate: item.avalara_rate,
-      avalara_is_preferential: item.avalara_is_preferential,
-      details: item.avalara_details,
-    })),
-  };
-  html += `<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;color:#6b7280">Raw Avalara data (debug)</summary>
-  <pre style="font-size:10px;overflow:auto;background:#f3f4f6;padding:8px;border-radius:4px;max-height:200px;margin-top:4px">${JSON.stringify(avaDebug, null, 2)}</pre>
-  </details>`;
 
   // Warnings
   if (d.compliance_warnings && d.compliance_warnings.length) {
