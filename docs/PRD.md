@@ -68,6 +68,8 @@ so downstream auditors can see what the engine assumed.
 | `items[].fta_duty_rate` | `0.00` (FULLY PREFERENTIAL) | Optimistic when FTA proof is held | Underestimates duty for staged FTAs (e.g. CETA TRQ-administered tariff lines) — under-collection |
 | `items[].description` | `""` (empty string) | Treated as a unique grouping key per item | Splits items unnecessarily into separate €3 lines (defensible — empty desc IS distinct, but suboptimal) |
 | `items[].qty` | `1` | Single unit | Under-counts line value if caller forgot qty |
+| `ship_from` | `None` | Conservative — cannot validate direct transport. FTA proof, if claimed, will be IGNORED and €3 applied. Caller must supply `ship_from` to claim FTA preference. | Loses FTA exclusion for every FTA-eligible item; applies €3 instead. |
+| `non_alteration_confirmed` | `False` | Default to importer-burden denial per Access2Markets. If goods actually transited under customs supervision with non-alteration documentation, caller must assert this flag; otherwise €3 applies. | Loses FTA exclusion when ship_from ≠ item origin but goods genuinely qualified (transit with non-alteration). Over-collects ~€3 per item. |
 
 ### 3.3 Edge cases requiring explicit handling
 
@@ -101,6 +103,17 @@ Every response includes:
 This makes the engine auditable — a customs broker reviewing a quote can see
 which assumptions drove the result.
 
+### 3.5 Ship From and the direct-transport gate
+
+`ship_from` (derived from `addresses.shipFrom.country`) IS legally relevant: it drives the direct-transport gate that conditions FTA eligibility. The gate applies the importer-burden default — when `ship_from` is unknown or differs from `origin` without a `non_alteration_confirmed` assertion, FTA preference is denied (not just warned about).
+
+Source: EU Commission Access2Markets, Direct Transport rule — preferential treatment is denied "irrespective of the originating status of the products" if the importer cannot prove the goods went directly from the FTA territory to the EU (or transited under customs supervision with non-alteration).
+
+**Practical effect on defaults:**
+- Legacy callers who omit `addresses.shipFrom` → `ship_from = None` → FTA denied for any FTA-claiming item → €3 applied → conservative (over-collects ~€3 per FTA item).
+- Callers shipping from an FTA country AND origin matches `ship_from` → FTA granted.
+- Callers where goods transit a third country → must set `euReform2026.nonAlterationConfirmed: true` with supporting documentation, otherwise FTA denied.
+
 ## 4. Functional requirements
 
 ### FR-1: Decision tree (in strict precedence order)
@@ -110,9 +123,13 @@ which assumptions drove the result.
    - `consignment_value_eur > 150`
    - `b2b == True` (Customs Procedure 42 explicitly excluded — DA Recital 5)
    - `buyer_agent == True` (breaks distance-sale construct of IOSS Art. 14(4))
-3. **Per-item FTA exclusion** (DA Art. 1(1)(a)):
-   - If `fta_proof_held == True` AND `origin` ∈ FTA partners
+3. **Per-item FTA exclusion** (DA Art. 1(1)(a)) **+ direct-transport gate** (Access2Markets):
+   - If `fta_proof_held == True`
+   - AND `origin` ∈ FTA partners
+   - AND (`ship_from == origin` OR `non_alteration_confirmed == True`)
    - → `standard_tariff_fta` regime, €3 NOT applied
+   - Default (any condition fails) → fall through to €3 / standard tariff.
+   - Legal basis: importer-burden default — EU Commission Access2Markets, Direct Transport rule. Preferential treatment is denied "irrespective of the originating status of the products" unless direct transport is proven.
 4. **€3 trigger**: `ioss_registered == True` OR `postal_designated_op == True`
    - → €3 per `(hs6, description, origin)` group
 5. **Else**: standard tariff with special-arrangements VAT routing

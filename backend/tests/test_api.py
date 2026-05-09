@@ -125,7 +125,8 @@ class TestAPI:
 
     def test_calculate_full_extension(self, client):
         payload = {
-            "addresses": {"shipTo": {"country": "FR"}},
+            # shipFrom=GB so the direct-transport gate passes for the GB shoe
+            "addresses": {"shipFrom": {"country": "GB"}, "shipTo": {"country": "FR"}},
             "date": "2026-08-01",
             "euReform2026": {"iossNumber": "IM3720000123"},
             "lines": [
@@ -141,7 +142,7 @@ class TestAPI:
         r = client.post("/api/calculate", json=payload)
         assert r.status_code == 200
         data = r.get_json()
-        # CN tee → €3; GB shoe with FTA proof → €0
+        # CN tee → €3; GB shoe with FTA proof + ship_from==GB → €0
         assert data["duty_total_eur"] == 3.0
         # France national fee: 2 distinct HS6 × €5 = €10
         assert data["fees"]["national_fee_eur"] == 10.0

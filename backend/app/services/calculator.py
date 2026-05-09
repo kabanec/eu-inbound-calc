@@ -4,7 +4,10 @@ Implements PRD §FR-1 decision tree:
 
   1. Phase: date >= 2028-07-01 → standard tariff (CDH live)
   2. Hard exits to standard tariff: value > €150, b2b, buyer_agent
-  3. Per item: FTA exclusion (origin ∈ FTA partners + fta_proof_held)
+  3. Per-item FTA exclusion (DA Art. 1(1)(a)) + direct-transport gate:
+       fta_proof_held AND origin ∈ FTA partners
+       AND (ship_from == origin OR non_alteration_confirmed)
+       → standard_tariff_fta; otherwise fall through.
   4. €3 trigger: ioss_registered OR postal_designated_op
   5. Else: standard tariff with special-arrangements VAT
 """
@@ -41,21 +44,36 @@ def group_items(items: list[Item]) -> dict[tuple, list[Item]]:
 def _resolve_item_regime(
     item: Item, *, consignment_low_value: bool, b2b: bool,
     buyer_agent: bool, ioss: bool, postal: bool, e3_active: bool,
+    ship_from: str | None = None, non_alteration_confirmed: bool = False,
 ) -> Regime:
     if not e3_active:
-        return _standard_or_fta(item)
+        return _standard_or_fta(item, ship_from=ship_from, non_alteration_confirmed=non_alteration_confirmed)
     if not consignment_low_value or b2b or buyer_agent:
-        return _standard_or_fta(item)
+        return _standard_or_fta(item, ship_from=ship_from, non_alteration_confirmed=non_alteration_confirmed)
     if item.fta_proof_held and item.origin.upper() in FTA_PARTNERS:
-        return "standard_tariff_fta"
+        # Direct-transport gate: importer-burden default is denial.
+        # FTA granted only when ship_from == origin OR non_alteration_confirmed.
+        if ship_from is not None and (
+            ship_from.upper() == item.origin.upper() or non_alteration_confirmed
+        ):
+            return "standard_tariff_fta"
+        # Gate failed — fall through to €3 trigger below.
     if ioss or postal:
         return "e3_simplified"
-    return _standard_or_fta(item)
+    return _standard_or_fta(item, ship_from=ship_from, non_alteration_confirmed=non_alteration_confirmed)
 
 
-def _standard_or_fta(item: Item) -> Regime:
+def _standard_or_fta(
+    item: Item,
+    *,
+    ship_from: str | None = None,
+    non_alteration_confirmed: bool = False,
+) -> Regime:
     if item.fta_proof_held and item.origin.upper() in FTA_PARTNERS:
-        return "standard_tariff_fta"
+        if ship_from is not None and (
+            ship_from.upper() == item.origin.upper() or non_alteration_confirmed
+        ):
+            return "standard_tariff_fta"
     if item.standard_duty_rate == 0:
         return "no_duty"
     return "standard_tariff"
@@ -204,6 +222,8 @@ def calculate(c: Consignment) -> CalculationResult:
                 b2b=c.b2b, buyer_agent=c.buyer_agent,
                 ioss=c.ioss_registered, postal=c.postal_designated_op,
                 e3_active=e3_active,
+                ship_from=c.ship_from,
+                non_alteration_confirmed=c.non_alteration_confirmed,
             )
             duty = _item_duty(agg, regime)
 

@@ -25,7 +25,10 @@ def from_avalara_getquote(payload: dict[str, Any]) -> Consignment:
     in one place.
     """
     addresses = payload.get("addresses", {})
-    ship_to = addresses.get("shipTo", {}) if isinstance(addresses, dict) else {}
+    if not isinstance(addresses, dict):
+        addresses = {}
+    ship_to = addresses.get("shipTo", {}) or {}
+    ship_from_raw = (addresses.get("shipFrom", {}) or {}).get("country")
     destination = (ship_to.get("country") or payload.get("destination_ms") or "").upper()
     if not destination:
         raise ValueError("destination_ms (or addresses.shipTo.country) is required")
@@ -65,6 +68,8 @@ def from_avalara_getquote(payload: dict[str, Any]) -> Consignment:
             eu_ext["postalDesignatedOperator"]
             if "postalDesignatedOperator" in eu_ext else None
         ),
+        ship_from=ship_from_raw.upper() if ship_from_raw else None,
+        non_alteration_confirmed=bool(eu_ext.get("nonAlterationConfirmed", False)),
         transaction_date=txn_date if txn_date_raw else None,
         avalara_doc_code=payload.get("code"),
         customer_vat_number=vat_number,

@@ -19,7 +19,7 @@ from decimal import Decimal
 from typing import Optional
 
 from ..models.schemas import Consignment, DefaultApplied, Item
-from ..reference.data import LOW_VALUE_THRESHOLD_EUR
+from ..reference.data import FTA_PARTNERS, LOW_VALUE_THRESHOLD_EUR
 
 
 # ---------------------------------------------------------------------------
@@ -124,6 +124,47 @@ def resolve_postal_designated_op(
 
 
 # ---------------------------------------------------------------------------
+# FTA direct-transport gate ledger
+# ---------------------------------------------------------------------------
+def resolve_ship_from_fta_gate(
+    c: Consignment, ledger: list[DefaultApplied],
+) -> None:
+    """Append ledger entries when the direct-transport gate denies FTA.
+
+    No-op when no items claim FTA. The calculator enforces the denial;
+    this function only records why it happened so callers can audit.
+    """
+    fta_claiming = [
+        (i, item) for i, item in enumerate(c.items)
+        if item.fta_proof_held and item.origin.upper() in FTA_PARTNERS
+    ]
+    if not fta_claiming:
+        return
+
+    if c.ship_from is None:
+        ledger.append(DefaultApplied(
+            field="ship_from",
+            default=None,
+            rationale=(
+                "ship_from not provided — direct-transport rule cannot be validated, "
+                "FTA preference denied per importer-burden default per Access2Markets guidance"
+            ),
+        ))
+        return
+
+    for i, item in fta_claiming:
+        if c.ship_from.upper() != item.origin.upper() and not c.non_alteration_confirmed:
+            ledger.append(DefaultApplied(
+                field=f"items[{i}].ship_from_vs_origin",
+                default="fta_denied",
+                rationale=(
+                    f"items[{i}]: ship_from ({c.ship_from}) differs from origin ({item.origin}); "
+                    f"non-alteration not asserted — FTA preference denied per importer-burden default"
+                ),
+            ))
+
+
+# ---------------------------------------------------------------------------
 # Item-level defaults
 # ---------------------------------------------------------------------------
 def resolve_item(
@@ -197,6 +238,9 @@ def apply_all_defaults(c: Consignment) -> tuple[Consignment, list[DefaultApplied
         c.intrinsic_value_eur = sum(
             (it.line_value_eur for it in c.items), Decimal("0.00")
         )
+
+    # FTA direct-transport gate — must run after items are resolved
+    resolve_ship_from_fta_gate(c, ledger)
 
     # IOSS last — depends on B2B, value, buyer_agent
     c.ioss_registered = resolve_ioss_registered(

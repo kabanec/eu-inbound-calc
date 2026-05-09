@@ -109,26 +109,79 @@ class TestHardExits:
         assert calculate(c).duty_total_eur == Decimal("24.00")
 
 
-# FTA exclusion (the key DA revision) --------------------------------------
+# FTA exclusion + direct-transport gate (PRD §FR-1 step 3) -----------------
 class TestFTAExclusion:
-    def test_fta_origin_with_proof_excludes_e3(self):
+    def test_fta_when_ship_from_equals_origin(self):
         c = Consignment(
             items=[make_item(origin="GB", fta=True, std_rate=0.12, fta_rate=0.0)],
             destination_ms="DE", ioss_registered=True,
+            ship_from="GB",
             transaction_date=date(2026, 8, 1),
         )
         r = calculate(c)
         assert r.item_breakdown[0].regime == "standard_tariff_fta"
         assert r.duty_total_eur == Decimal("0.00")
 
-    def test_customs_union_partner_excluded(self):
+    def test_fta_denied_when_ship_from_differs_no_assertion(self):
         c = Consignment(
-            items=[make_item(origin="TR", fta=True, std_rate=0, fta_rate=0)],
+            items=[make_item(origin="GB", fta=True, std_rate=0.12, fta_rate=0.0)],
             destination_ms="DE", ioss_registered=True,
+            ship_from="CN", non_alteration_confirmed=False,
+            transaction_date=date(2026, 8, 1),
+        )
+        r = calculate(c)
+        assert r.item_breakdown[0].regime == "e3_simplified"
+        assert r.duty_total_eur == Decimal("3.00")
+        assert any(
+            "ship_from_vs_origin" in d.field for d in r.defaults_applied
+        )
+
+    def test_fta_when_ship_from_differs_with_non_alteration(self):
+        c = Consignment(
+            items=[make_item(origin="GB", fta=True, std_rate=0.12, fta_rate=0.0)],
+            destination_ms="DE", ioss_registered=True,
+            ship_from="SG", non_alteration_confirmed=True,
             transaction_date=date(2026, 8, 1),
         )
         r = calculate(c)
         assert r.item_breakdown[0].regime == "standard_tariff_fta"
+        assert r.duty_total_eur == Decimal("0.00")
+
+    def test_fta_denied_when_ship_from_unknown(self):
+        c = Consignment(
+            items=[make_item(origin="GB", fta=True, std_rate=0.12, fta_rate=0.0)],
+            destination_ms="DE", ioss_registered=True,
+            ship_from=None,
+            transaction_date=date(2026, 8, 1),
+        )
+        r = calculate(c)
+        assert r.item_breakdown[0].regime == "e3_simplified"
+        assert r.duty_total_eur == Decimal("3.00")
+        assert any("ship_from" in d.field for d in r.defaults_applied)
+
+    def test_fta_denied_when_origin_not_in_partners(self):
+        # CN has no EU FTA — proof field is irrelevant, €3 applies silently
+        c = Consignment(
+            items=[make_item(origin="CN", fta=True, std_rate=0.12, fta_rate=0.0)],
+            destination_ms="DE", ioss_registered=True,
+            ship_from="CN",
+            transaction_date=date(2026, 8, 1),
+        )
+        r = calculate(c)
+        assert r.item_breakdown[0].regime == "e3_simplified"
+        assert r.duty_total_eur == Decimal("3.00")
+
+    def test_fta_denied_when_no_proof(self):
+        # GB is an FTA partner but proof flag is False — €3 applies silently
+        c = Consignment(
+            items=[make_item(origin="GB", fta=False, std_rate=0.12, fta_rate=0.0)],
+            destination_ms="DE", ioss_registered=True,
+            ship_from="GB",
+            transaction_date=date(2026, 8, 1),
+        )
+        r = calculate(c)
+        assert r.item_breakdown[0].regime == "e3_simplified"
+        assert r.duty_total_eur == Decimal("3.00")
 
 
 # Phase logic --------------------------------------------------------------

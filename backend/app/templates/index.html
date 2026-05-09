@@ -168,7 +168,6 @@
             <option value="IN">IN India</option>
             <option value="TR">TR Turkey 🤝</option>
           </select>
-          <div class="suggested">🤝 = FTA partner (FTA proof needed per item)</div>
         </div>
         <div>
           <label class="required">Ship Date</label>
@@ -186,7 +185,6 @@
       <div class="toggle-row" style="margin-top: 12px;">
         <label><input type="checkbox" id="b2b"> B2B (Business buyer)</label>
         <label><input type="checkbox" id="ioss_registered" checked> IOSS-registered seller</label>
-        <label><input type="checkbox" id="postal_designated_op"> Postal Designated Op</label>
         <label><input type="checkbox" id="buyer_agent"> Buyer agent / forwarder</label>
       </div>
     </div>
@@ -326,7 +324,6 @@ const SCENARIOS = [
       setSelect('destination_ms', 'DE');
       setSelect('ship_from', 'CN');
       document.getElementById('ioss_registered').checked = false;
-      document.getElementById('postal_designated_op').checked = true;
       setMethod('postal');
       addItem({ hs6: '610910', desc: 'Cotton t-shirt', origin: 'CN', qty: 1, unit_value: 20, std_rate: 0.12 });
     }
@@ -350,16 +347,18 @@ const $ = id => document.getElementById(id);
 const fmt = n => '€' + Number(n || 0).toFixed(2);
 function setSelect(id, val) { const el = $(id); el.value = val; }
 let method = 'express';
+let postalDesignatedOp = false;
 function setMethod(m) {
   method = m;
+  postalDesignatedOp = (m === 'postal');
   $('btn-non-postal').classList.toggle('active', m === 'express');
   $('btn-postal').classList.toggle('active', m === 'postal');
 }
 function reset() {
+  lineCounter = 0;
   $('items').innerHTML = '';
   $('b2b').checked = false;
   $('ioss_registered').checked = true;
-  $('postal_designated_op').checked = false;
   $('buyer_agent').checked = false;
   setMethod('express');
 }
@@ -407,6 +406,7 @@ function addItem(it) {
           <option value="US" ${it.origin==='US'?'selected':''}>US USA</option>
           <option value="IN" ${it.origin==='IN'?'selected':''}>IN India</option>
         </select>
+        <div class="suggested">🤝 = FTA partner (proof needed per item)</div>
       </div>
       <div>
         <label>Qty</label>
@@ -497,7 +497,7 @@ function buildPayload() {
     euReform2026: {
       iossNumber: $('ioss_registered').checked ? 'IM3720000123' : null,
       buyerAgent: $('buyer_agent').checked,
-      postalDesignatedOperator: $('postal_designated_op').checked,
+      postalDesignatedOperator: postalDesignatedOp,
       shipmentChannel: method,
     },
     customer: { euReform2026: { isBusinessBuyer: $('b2b').checked } },

@@ -72,7 +72,8 @@ PRD §3.2 if omitted.
     "buyerAgent": false,
     "postalDesignatedOperator": false,
     "shipmentChannel": "express",
-    "customsProcedureCode": null
+    "customsProcedureCode": null,
+    "nonAlterationConfirmed": false
   }
 }
 ```
@@ -85,6 +86,7 @@ PRD §3.2 if omitted.
 | `postalDesignatedOperator` | bool | €3 trigger via postal route + declarant = "postal_operator" | False |
 | `shipmentChannel` | enum: postal/express/general_cargo | Information; cross-validates `postalDesignatedOperator` | "express" |
 | `customsProcedureCode` | string\|null | "42" → forces B2B path; otherwise inferred | None |
+| `nonAlterationConfirmed` | bool | Direct-transport / non-alteration assertion. Set `true` when goods transited a third country under customs supervision with non-alteration documentation; gates FTA preferential treatment per Access2Markets rule. | False |
 
 ### 3.2 Customer-level extension (already partially in getQuote)
 
@@ -146,8 +148,8 @@ The calculator deliberately does NOT introduce:
 - ❌ A `vatRate` override — destination MS is the legal driver
 - ❌ Per-line `iossNumber` — IOSS is consignment-level by VAT Directive Art. 369l
 
-This keeps the field count low. Total surgical additions: **9 new fields**
-(7 truly new, 2 cross-validating existing fields).
+This keeps the field count low. Total surgical additions: **10 new fields**
+(8 truly new, 2 cross-validating existing fields).
 
 ## 4. Backwards compatibility
 

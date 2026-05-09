@@ -58,6 +58,8 @@ class Consignment:
     postal_designated_op: Optional[bool] = None
     transaction_date: Optional[date] = None
     intrinsic_value_eur: Optional[Decimal] = None
+    ship_from: Optional[str] = None
+    non_alteration_confirmed: bool = False
     # Avalara passthrough metadata
     avalara_doc_code: Optional[str] = None
     customer_vat_number: Optional[str] = None
