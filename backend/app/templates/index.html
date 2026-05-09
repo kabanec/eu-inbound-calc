@@ -109,6 +109,22 @@
     .fee-status { background: #fff7ed; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 11px; }
     .fee-status .indicator { font-weight: 700; color: #ea580c; }
 
+    /* IOSS mutual-exclusion rule */
+    .toggle-row label.disabled-by-rule {
+      opacity: 0.5;
+      position: relative;
+      cursor: not-allowed;
+    }
+    .toggle-row label.disabled-by-rule::after {
+      content: "🔒";
+      margin-left: 4px;
+      font-size: 10px;
+    }
+    .toggle-row label.disabled-by-rule input {
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
     /* Cite links */
     .cite-link { color: #2563eb; text-decoration: none; border-bottom: 1px dotted #2563eb; font-size: 0.9em; }
     .cite-link:hover { border-bottom-style: solid; }
@@ -939,6 +955,28 @@ function renderStrategies(strategies) {
   $('work').innerHTML = html;
 }
 
+// ---- IOSS mutual-exclusion (B2B / buyer-agent preclude IOSS) ----
+function updateMutualExclusion() {
+  const b2b = document.getElementById('b2b').checked;
+  const buyerAgent = document.getElementById('buyer_agent').checked;
+  const iossCheckbox = document.getElementById('ioss_registered');
+  const iossLabel = iossCheckbox.closest('label');
+
+  if (b2b || buyerAgent) {
+    iossCheckbox.checked = false;
+    iossLabel.classList.add('disabled-by-rule');
+    iossLabel.title = b2b
+      ? 'IOSS is B2C-only per VAT Dir Art. 369l — disabled because B2B is set'
+      : 'Buyer agent breaks the distance-sale construct (Art. 14(4)(2)) — IOSS not applicable';
+  } else {
+    iossLabel.classList.remove('disabled-by-rule');
+    iossLabel.title = '';
+  }
+}
+
+document.getElementById('b2b').addEventListener('change', updateMutualExclusion);
+document.getElementById('buyer_agent').addEventListener('change', updateMutualExclusion);
+
 // ---- Init ----
 function initScenarios() {
   const wrap = $('scenarios');
@@ -951,6 +989,7 @@ function initScenarios() {
       document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       s.setup();
+      updateMutualExclusion();
       runCalculate();
     };
     wrap.appendChild(btn);
@@ -959,6 +998,7 @@ function initScenarios() {
 
 initScenarios();
 SCENARIOS[0].setup();   // Pre-load the FTA exclusion demo so users see something interesting first
+updateMutualExclusion(); // Set initial IOSS lock state based on default checkbox values
 </script>
 
 </body>
