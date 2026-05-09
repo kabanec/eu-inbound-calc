@@ -15,10 +15,7 @@ import requests
 
 from ..models.schemas import Consignment
 
-DUTY_TYPES = frozenset({
-    "customsduty", "mfn", "preferentialduty", "tariff",
-    "customs duty", "import duty",
-})
+_PREFERENTIAL_TARIFF_TYPES = frozenset({"PREFERENTIAL", "FTA", "TCA", "REX"})
 
 
 class AvalaraError(Exception):
@@ -120,38 +117,51 @@ def _build_payload(c: Consignment) -> dict:
 
 
 def _parse_avalara_response(raw: dict) -> AvalaraResponse:
+    """Parse the globalcompliance response.
+
+    Actual response shape:
+      raw["globalCompliance"][0]["quote"]["lines"][i]
+        .number          — 1-based line number
+        .hsCode          — resolved HS code
+        .costLines[]     — cost entries; type=="DUTY" entries are the duty figures
+        .calculationSummary.dutyCalculationSummary[]  — name/value pairs for rate etc.
+        .calculationSummary.dutyGranularity[]         — per-bracket type (MFN/PREFERENTIAL)
+    """
     line_results: list[AvalaraLineResult] = []
 
-    for line in raw.get("lines", []):
-        line_number = int(line.get("lineNumber") or 0)
-        details = line.get("details") or []
+    gc = raw.get("globalCompliance") or []
+    lines = (gc[0].get("quote") or {}).get("lines") or [] if gc else []
+
+    for line in lines:
+        line_number = int(line.get("number") or 0)
+        cost_lines = line.get("costLines") or []
+        calc = line.get("calculationSummary") or {}
+        duty_summary = calc.get("dutyCalculationSummary") or []
+        duty_granularity = calc.get("dutyGranularity") or []
 
         duty_eur = Decimal("0.00")
-        duty_rate = Decimal("0.00")
-        is_preferential = False
         duty_details: list[dict] = []
+        for cl in cost_lines:
+            if (cl.get("type") or "").upper() == "DUTY":
+                duty_eur += Decimal(str(cl.get("value") or 0))
+                duty_details.append(cl)
 
-        for detail in details:
-            tax_type = (detail.get("taxType") or "").lower()
-            tax_name = (detail.get("taxName") or "").lower()
+        duty_rate = Decimal("0.00")
+        for entry in duty_summary:
+            if entry.get("name") == "RATE":
+                duty_rate = Decimal(str(entry.get("value") or 0))
+                break
 
-            is_duty = (
-                tax_type in DUTY_TYPES
-                or any(k in tax_name for k in ("customs", "duty", "tariff", "mfn"))
-            )
-            if not is_duty:
-                continue
-
-            duty_eur += Decimal(str(detail.get("tax") or 0))
-            if duty_rate == Decimal("0.00"):
-                duty_rate = Decimal(str(detail.get("rate") or 0))
-
-            if any(k in tax_type for k in ("preferential", "fta")):
+        is_preferential = False
+        for entry in duty_summary:
+            if entry.get("name") == "TARIFF_TYPE" and (entry.get("value") or "").upper() in _PREFERENTIAL_TARIFF_TYPES:
                 is_preferential = True
-            if any(k in tax_name for k in ("preferential", "fta", "tca")):
-                is_preferential = True
-
-            duty_details.append(detail)
+                break
+        if not is_preferential:
+            for dg in duty_granularity:
+                if (dg.get("type") or "").upper() in _PREFERENTIAL_TARIFF_TYPES:
+                    is_preferential = True
+                    break
 
         line_results.append(AvalaraLineResult(
             line_number=line_number,
@@ -168,7 +178,7 @@ def _parse_avalara_response(raw: dict) -> AvalaraResponse:
         currency=str(raw.get("currency") or "EUR"),
         line_results=line_results,
         total_duty_eur=total_duty,
-        messages=[str(m) for m in (raw.get("messages") or [])],
+        messages=[f"{s['name']}={s['value']}" for s in (raw.get("summary") or [])],
         raw_response=raw,
     )
 

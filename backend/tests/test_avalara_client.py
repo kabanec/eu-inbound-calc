@@ -52,19 +52,32 @@ class TestPayloadStructure:
 
 
 class TestResponseParsing:
-    def test_duty_summed_from_multiple_detail_entries(self, mock_avalara):
-        """Two separate duty detail rows for the same line are summed."""
+    def _gc_response(self, line_number, cost_lines, duty_summary=None, granularity=None, request_id="req-001"):
+        """Build a minimal globalCompliance response."""
+        return {
+            "id": request_id, "currency": "EUR", "summary": [],
+            "globalCompliance": [{"quote": {"lines": [{
+                "number": line_number,
+                "hsCode": "610910",
+                "costLines": cost_lines,
+                "calculationSummary": {
+                    "dutyCalculationSummary": duty_summary or [],
+                    "dutyGranularity": granularity or [],
+                },
+            }]}}],
+        }
+
+    def test_duty_summed_from_multiple_duty_cost_lines(self, mock_avalara):
+        """Two DUTY costLine entries for the same line are summed."""
         mock_avalara.reset()
-        mock_avalara.add(mock_avalara.POST, AVALARA_URL, json={
-            "id": "req-001", "currency": "EUR", "messages": [],
-            "lines": [{
-                "lineNumber": 1, "hsCode": "610910",
-                "details": [
-                    {"taxType": "customsduty", "taxName": "mfn", "tax": 1.50, "rate": 0.08},
-                    {"taxType": "tariff", "taxName": "additional tariff", "tax": 0.50, "rate": 0.02},
-                ],
-            }],
-        }, status=200)
+        mock_avalara.add(mock_avalara.POST, AVALARA_URL, json=self._gc_response(
+            1,
+            cost_lines=[
+                {"type": "DUTY", "name": "MFN duty", "value": 1.50, "currency": "EUR"},
+                {"type": "DUTY", "name": "Additional duty", "value": 0.50, "currency": "EUR"},
+            ],
+            duty_summary=[{"name": "RATE", "value": "0.08", "unit": "PERCENTAGE"}],
+        ), status=200)
 
         resp = get_quote(_ready_consignment())
         assert resp.request_id == "req-001"
@@ -72,35 +85,32 @@ class TestResponseParsing:
         assert resp.line_results[0].duty_eur == Decimal("2.00")
         assert resp.total_duty_eur == Decimal("2.00")
 
-    def test_vat_details_excluded_from_duty(self, mock_avalara):
-        """Non-duty detail entries (VAT, fees) do not contribute to duty_eur."""
+    def test_vat_cost_lines_excluded_from_duty(self, mock_avalara):
+        """TAX-type costLines (VAT) do not contribute to duty_eur."""
         mock_avalara.reset()
-        mock_avalara.add(mock_avalara.POST, AVALARA_URL, json={
-            "id": "req-002", "currency": "EUR", "messages": [],
-            "lines": [{
-                "lineNumber": 1, "hsCode": "610910",
-                "details": [
-                    {"taxType": "customsduty", "taxName": "mfn customs duty", "tax": 3.00, "rate": 0.15},
-                    {"taxType": "vat", "taxName": "import vat", "tax": 4.00, "rate": 0.20},
-                ],
-            }],
-        }, status=200)
+        mock_avalara.add(mock_avalara.POST, AVALARA_URL, json=self._gc_response(
+            1,
+            cost_lines=[
+                {"type": "DUTY", "name": "Maximum duty.", "value": 3.00, "currency": "EUR"},
+                {"type": "TAX", "name": "TAX", "value": 4.00, "currency": "EUR", "rate": 0.20, "target": "product"},
+            ],
+            duty_summary=[{"name": "RATE", "value": "0.15", "unit": "PERCENTAGE"}],
+        ), status=200)
 
         resp = get_quote(_ready_consignment())
         assert resp.line_results[0].duty_eur == Decimal("3.00")
 
-    def test_preferential_detected_from_tax_type(self, mock_avalara):
-        """is_preferential=True when taxType contains 'preferential'."""
+    def test_preferential_detected_from_tariff_type(self, mock_avalara):
+        """is_preferential=True when TARIFF_TYPE in dutyCalculationSummary is PREFERENTIAL."""
         mock_avalara.reset()
-        mock_avalara.add(mock_avalara.POST, AVALARA_URL, json={
-            "id": "req-003", "currency": "EUR", "messages": [],
-            "lines": [{
-                "lineNumber": 1, "hsCode": "640399",
-                "details": [
-                    {"taxType": "preferentialduty", "taxName": "tca duty", "tax": 0.0, "rate": 0.0},
-                ],
-            }],
-        }, status=200)
+        mock_avalara.add(mock_avalara.POST, AVALARA_URL, json=self._gc_response(
+            1,
+            cost_lines=[],
+            duty_summary=[
+                {"name": "RATE", "value": "0.0", "unit": "PERCENTAGE"},
+                {"name": "TARIFF_TYPE", "value": "PREFERENTIAL", "unit": ""},
+            ],
+        ), status=200)
 
         resp = get_quote(_ready_consignment())
         assert resp.line_results[0].is_preferential is True

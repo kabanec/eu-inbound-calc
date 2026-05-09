@@ -19,20 +19,36 @@ def make_avalara_body(
 ) -> dict:
     """Build a minimal Avalara globalcompliance response body.
 
-    duties: per-line duty amount (len == number of items sent).
-    rates/preferential default to 0.12/False for every line.
+    Matches the actual API shape:
+      globalCompliance[0].quote.lines[i].costLines  — DUTY entries
+      globalCompliance[0].quote.lines[i].calculationSummary.dutyCalculationSummary
     """
     rates = rates or [0.12] * len(duties)
     preferential = preferential or [False] * len(duties)
 
     lines = []
     for i, (duty, rate, pref) in enumerate(zip(duties, rates, preferential)):
-        tax_type = "preferentialduty" if pref else "customsduty"
-        tax_name = "preferential duty" if pref else "mfn customs duty"
-        details = [{"taxType": tax_type, "taxName": tax_name, "tax": duty, "rate": rate}] if duty else []
-        lines.append({"lineNumber": i + 1, "hsCode": "610910", "details": details})
+        tariff_type = "PREFERENTIAL" if pref else "STANDARD"
+        cost_lines = [{"type": "DUTY", "name": "Maximum duty.", "value": duty, "currency": "EUR"}] if duty else []
+        lines.append({
+            "number": i + 1,
+            "hsCode": "610910",
+            "costLines": cost_lines,
+            "calculationSummary": {
+                "dutyCalculationSummary": [
+                    {"name": "RATE", "value": str(rate), "unit": "PERCENTAGE"},
+                    {"name": "TARIFF_TYPE", "value": tariff_type, "unit": ""},
+                ],
+                "dutyGranularity": [],
+            },
+        })
 
-    return {"id": request_id, "currency": "EUR", "messages": [], "lines": lines}
+    return {
+        "id": request_id,
+        "currency": "EUR",
+        "globalCompliance": [{"quote": {"lines": lines}}],
+        "summary": [],
+    }
 
 
 @pytest.fixture
@@ -64,11 +80,15 @@ def mock_avalara(responses, avalara_env):
     def _default_callback(request):
         body = json.loads(request.body)
         n = len(body.get("lines", []))
-        body = {
-            "id": "mock-req", "currency": "EUR", "messages": [],
-            "lines": [{"lineNumber": i + 1, "hsCode": "", "details": []} for i in range(n)],
+        resp = {
+            "id": "mock-req", "currency": "EUR", "summary": [],
+            "globalCompliance": [{"quote": {"lines": [
+                {"number": i + 1, "hsCode": "", "costLines": [],
+                 "calculationSummary": {"dutyCalculationSummary": [], "dutyGranularity": []}}
+                for i in range(n)
+            ]}}],
         }
-        return (200, {"Content-Type": "application/json"}, json.dumps(body))
+        return (200, {"Content-Type": "application/json"}, json.dumps(resp))
 
     responses.add_callback(responses.POST, AVALARA_URL, callback=_default_callback)
     return responses

@@ -13,7 +13,7 @@ services:
       - key: FLASK_DEBUG
         value: "0"
       - key: AVALARA_API_BASE
-        value: https://ns1-quoting-sbx.xbo.avalara.com/api/v2
+        value: https://quoting-int.xbo.avalara.com/api/v2
       - key: AVALARA_TOKEN
         sync: false
       - key: AVALARA_COMPANY_ID
