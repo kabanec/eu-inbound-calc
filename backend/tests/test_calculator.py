@@ -1,0 +1,237 @@
+"""Tests for the core calculator decision tree (PRD §FR-1)."""
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
+
+from app.models.schemas import Consignment, Item
+from app.services.calculator import calculate, group_items
+
+
+def make_item(hs6="610910", desc="cotton t-shirt", origin="CN",
+              qty=1, value=20, fta=False, std_rate=0.12, fta_rate=0.0):
+    return Item(
+        hs6=hs6, description=desc, origin=origin, qty=qty,
+        unit_value_eur=Decimal(str(value)),
+        fta_proof_held=fta,
+        standard_duty_rate=Decimal(str(std_rate)),
+        fta_duty_rate=Decimal(str(fta_rate)),
+    )
+
+
+# Item grouping ------------------------------------------------------------
+class TestItemGrouping:
+    def test_identical_items_group_to_one_line(self):
+        groups = group_items([make_item(qty=3), make_item(qty=2)])
+        assert len(groups) == 1
+
+    def test_different_hs_codes_split(self):
+        groups = group_items([make_item(hs6="610910"), make_item(hs6="640399")])
+        assert len(groups) == 2
+
+    def test_different_descriptions_split(self):
+        groups = group_items([
+            make_item(desc="silk blouse"), make_item(desc="wool blouse"),
+        ])
+        assert len(groups) == 2
+
+    def test_different_origins_split(self):
+        groups = group_items([make_item(origin="CN"), make_item(origin="VN")])
+        assert len(groups) == 2
+
+    def test_description_normalization(self):
+        groups = group_items([
+            make_item(desc="Cotton T-Shirt"),
+            make_item(desc="cotton t-shirt"),
+            make_item(desc="cotton t-shirt "),
+        ])
+        assert len(groups) == 1
+
+
+# €3 trigger paths ---------------------------------------------------------
+class TestE3Triggers:
+    def test_b2c_ioss_under_150_charges_e3(self):
+        c = Consignment(items=[make_item()], destination_ms="DE",
+                        ioss_registered=True,
+                        transaction_date=date(2026, 8, 1))
+        assert calculate(c).duty_total_eur == Decimal("3.00")
+
+    def test_b2c_postal_non_ioss_charges_e3(self):
+        c = Consignment(items=[make_item()], destination_ms="DE",
+                        ioss_registered=False, postal_designated_op=True,
+                        channel="postal", transaction_date=date(2026, 8, 1))
+        assert calculate(c).duty_total_eur == Decimal("3.00")
+
+    def test_b2c_non_ioss_non_postal_uses_standard(self):
+        c = Consignment(items=[make_item(value=20, std_rate=0.12)],
+                        destination_ms="DE", ioss_registered=False,
+                        transaction_date=date(2026, 8, 1))
+        assert calculate(c).duty_total_eur == Decimal("2.40")
+
+    def test_three_distinct_groups_charges_e9(self):
+        c = Consignment(
+            items=[
+                make_item(hs6="610910", desc="cotton tee"),
+                make_item(hs6="640399", desc="leather shoe"),
+                make_item(hs6="851712", desc="smartphone"),
+            ],
+            destination_ms="DE", ioss_registered=True,
+            transaction_date=date(2026, 8, 1),
+        )
+        assert calculate(c).duty_total_eur == Decimal("9.00")
+
+    def test_qty_within_group_does_not_multiply_e3(self):
+        c = Consignment(items=[make_item(qty=10, value=5)],
+                        destination_ms="DE", ioss_registered=True,
+                        transaction_date=date(2026, 8, 1))
+        assert calculate(c).duty_total_eur == Decimal("3.00")
+
+
+# Hard exits ---------------------------------------------------------------
+class TestHardExits:
+    def test_b2b_skips_e3(self):
+        c = Consignment(items=[make_item(value=20, std_rate=0.12)],
+                        destination_ms="DE", b2b=True,
+                        transaction_date=date(2026, 8, 1))
+        r = calculate(c)
+        assert r.duty_total_eur == Decimal("2.40")
+
+    def test_buyer_agent_skips_e3(self):
+        c = Consignment(items=[make_item()], destination_ms="DE",
+                        buyer_agent=True, ioss_registered=True,
+                        transaction_date=date(2026, 8, 1))
+        assert calculate(c).item_breakdown[0].regime != "e3_simplified"
+
+    def test_value_above_150_skips_e3(self):
+        c = Consignment(items=[make_item(value=200, std_rate=0.12)],
+                        destination_ms="DE", ioss_registered=True,
+                        transaction_date=date(2026, 8, 1))
+        assert calculate(c).duty_total_eur == Decimal("24.00")
+
+
+# FTA exclusion (the key DA revision) --------------------------------------
+class TestFTAExclusion:
+    def test_fta_origin_with_proof_excludes_e3(self):
+        c = Consignment(
+            items=[make_item(origin="GB", fta=True, std_rate=0.12, fta_rate=0.0)],
+            destination_ms="DE", ioss_registered=True,
+            transaction_date=date(2026, 8, 1),
+        )
+        r = calculate(c)
+        assert r.item_breakdown[0].regime == "standard_tariff_fta"
+        assert r.duty_total_eur == Decimal("0.00")
+
+    def test_customs_union_partner_excluded(self):
+        c = Consignment(
+            items=[make_item(origin="TR", fta=True, std_rate=0, fta_rate=0)],
+            destination_ms="DE", ioss_registered=True,
+            transaction_date=date(2026, 8, 1),
+        )
+        r = calculate(c)
+        assert r.item_breakdown[0].regime == "standard_tariff_fta"
+
+
+# Phase logic --------------------------------------------------------------
+class TestPhaseLogic:
+    def test_pre_july_2026_uses_legacy_de_minimis(self):
+        c = Consignment(items=[make_item(value=20)], destination_ms="DE",
+                        ioss_registered=True,
+                        transaction_date=date(2026, 6, 30))
+        r = calculate(c)
+        assert r.duty_total_eur == Decimal("0.00")  # legacy de minimis
+        assert r.item_breakdown[0].regime == "pre_e3_de_minimis"
+
+    def test_post_cdh_sunset_uses_standard(self):
+        c = Consignment(items=[make_item(value=20, std_rate=0.12)],
+                        destination_ms="DE", ioss_registered=True,
+                        transaction_date=date(2028, 8, 1))
+        assert calculate(c).item_breakdown[0].regime != "e3_simplified"
+
+
+# VAT ----------------------------------------------------------------------
+class TestVAT:
+    def test_ioss_excludes_duty_from_base(self):
+        c = Consignment(items=[make_item(value=100)], destination_ms="DE",
+                        ioss_registered=True,
+                        transaction_date=date(2026, 8, 1))
+        r = calculate(c)
+        assert r.vat.collected_via == "ioss_at_checkout"
+        assert r.vat.vat_base_eur == Decimal("100.00")
+        assert r.vat.vat_eur == Decimal("19.00")
+
+    def test_special_arrangements_includes_duty(self):
+        c = Consignment(items=[make_item(value=100, std_rate=0.10)],
+                        destination_ms="DE", ioss_registered=False,
+                        postal_designated_op=True,
+                        transaction_date=date(2026, 8, 1))
+        r = calculate(c)
+        assert r.vat.collected_via == "special_arrangements"
+        assert r.vat.vat_base_eur == Decimal("103.00")  # 100 + €3 postal
+
+
+# National fees ------------------------------------------------------------
+class TestNationalFees:
+    def test_france_per_hs6_line(self):
+        c = Consignment(
+            items=[
+                make_item(hs6="610910", desc="tee"),
+                make_item(hs6="640399", desc="shoe"),
+            ],
+            destination_ms="FR", ioss_registered=True,
+            transaction_date=date(2026, 8, 1),
+        )
+        assert calculate(c).fees.national_fee_eur == Decimal("10.00")
+
+    def test_italy_per_parcel(self):
+        c = Consignment(
+            items=[make_item(hs6="610910"), make_item(hs6="640399")],
+            destination_ms="IT", ioss_registered=True,
+            transaction_date=date(2026, 8, 1),
+        )
+        assert calculate(c).fees.national_fee_eur == Decimal("2.00")
+
+
+# Declarant hierarchy ------------------------------------------------------
+class TestDeclarant:
+    def test_ioss_seller_is_declarant(self):
+        c = Consignment(items=[make_item()], destination_ms="DE",
+                        ioss_registered=True,
+                        transaction_date=date(2026, 8, 1))
+        assert calculate(c).declarant == "seller"
+
+    def test_postal_operator_for_non_ioss_postal(self):
+        c = Consignment(items=[make_item()], destination_ms="DE",
+                        ioss_registered=False, postal_designated_op=True,
+                        channel="postal",
+                        transaction_date=date(2026, 8, 1))
+        assert calculate(c).declarant == "postal_operator"
+
+    def test_b2b_uses_agent(self):
+        c = Consignment(items=[make_item()], destination_ms="DE",
+                        b2b=True, transaction_date=date(2026, 8, 1))
+        assert calculate(c).declarant == "agent"
+
+
+# Compliance warnings ------------------------------------------------------
+class TestWarnings:
+    def test_product_id_warning_post_nov_2026(self):
+        c = Consignment(items=[make_item()], destination_ms="DE",
+                        ioss_registered=True,
+                        transaction_date=date(2026, 12, 1))
+        r = calculate(c)
+        assert any("MISSING_PRODUCT_IDENTIFIERS" in w
+                   for w in r.compliance_warnings)
+
+    def test_product_id_warning_voluntary_period(self):
+        c = Consignment(items=[make_item()], destination_ms="DE",
+                        ioss_registered=True,
+                        transaction_date=date(2026, 8, 1))
+        r = calculate(c)
+        assert any("voluntary 1 Jul" in w for w in r.compliance_warnings)
+
+    def test_invalidation_warning_for_e3_path(self):
+        c = Consignment(items=[make_item()], destination_ms="DE",
+                        ioss_registered=True,
+                        transaction_date=date(2026, 8, 1))
+        r = calculate(c)
+        assert any("Article 148(3)" in w for w in r.compliance_warnings)

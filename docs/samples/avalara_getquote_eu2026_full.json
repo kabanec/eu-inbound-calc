@@ -1,0 +1,67 @@
+{
+  "companyCode": "DEMO-CO",
+  "type": "SalesInvoice",
+  "code": "ORDER-67890",
+  "date": "2026-09-15",
+  "currencyCode": "EUR",
+  "customerCode": "CUST-002",
+  "shippingTerms": "DDP",
+  "euReform2026": {
+    "iossNumber": "IM3720000123",
+    "platformIossNumber": null,
+    "buyerAgent": false,
+    "postalDesignatedOperator": false,
+    "shipmentChannel": "express",
+    "customsProcedureCode": null
+  },
+  "customer": {
+    "euReform2026": {
+      "isBusinessBuyer": false,
+      "vatNumber": null
+    }
+  },
+  "addresses": {
+    "shipFrom": {"country": "CN"},
+    "shipTo":   {"country": "FR"}
+  },
+  "lines": [
+    {
+      "number": "1",
+      "itemCode": "TSHIRT-001",
+      "description": "Cotton t-shirt",
+      "hsCode": "610910",
+      "countryOfOrigin": "CN",
+      "quantity": 2,
+      "amount": 24.00,
+      "standard_duty_rate": 0.12,
+      "euReform2026": {
+        "ftaProofType": null,
+        "productIdentifiers": {
+          "merchantId": "MER-TSHIRT-001",
+          "manufacturerId": null,
+          "gtin": "8901234567890"
+        }
+      }
+    },
+    {
+      "number": "2",
+      "itemCode": "SHOE-001",
+      "description": "Leather shoe",
+      "hsCode": "640399",
+      "countryOfOrigin": "GB",
+      "quantity": 1,
+      "amount": 35.00,
+      "standard_duty_rate": 0.08,
+      "fta_duty_rate": 0.0,
+      "euReform2026": {
+        "ftaProofType": "REX",
+        "ftaProofReference": "GB-REX-2026-44521",
+        "productIdentifiers": {
+          "merchantId": "MER-SHOE-001",
+          "manufacturerId": "MFR-LEATHER-LTD",
+          "gtin": "5012345678901"
+        }
+      }
+    }
+  ]
+}

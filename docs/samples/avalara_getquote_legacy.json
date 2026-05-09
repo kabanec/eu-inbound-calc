@@ -1,0 +1,25 @@
+{
+  "companyCode": "DEMO-CO",
+  "type": "SalesInvoice",
+  "code": "ORDER-12345",
+  "date": "2026-08-01",
+  "currencyCode": "EUR",
+  "customerCode": "CUST-001",
+  "shippingTerms": "DDP",
+  "addresses": {
+    "shipFrom": {"country": "CN"},
+    "shipTo":   {"country": "DE"}
+  },
+  "lines": [
+    {
+      "number": "1",
+      "itemCode": "TSHIRT-001",
+      "description": "Cotton t-shirt",
+      "hsCode": "610910",
+      "countryOfOrigin": "CN",
+      "quantity": 2,
+      "amount": 24.00,
+      "standard_duty_rate": 0.12
+    }
+  ]
+}

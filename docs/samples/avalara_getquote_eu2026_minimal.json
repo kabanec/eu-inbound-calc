@@ -1,0 +1,15 @@
+{
+  "addresses": {"shipTo": {"country": "DE"}},
+  "date": "2026-08-01",
+  "euReform2026": {"iossNumber": "IM3720000123"},
+  "lines": [
+    {
+      "hsCode": "610910",
+      "description": "Cotton t-shirt",
+      "countryOfOrigin": "CN",
+      "quantity": 1,
+      "amount": 20.00,
+      "standard_duty_rate": 0.12
+    }
+  ]
+}

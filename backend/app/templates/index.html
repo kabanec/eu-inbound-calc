@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EU Inbound Calculator — Demo</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0; padding: 16px; background: #f5f6f8; color: #1f2937; font-size: 14px;
+    }
+    .layout { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; max-width: 1600px; margin: 0 auto; }
+    @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+
+    /* Header */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .header h1 { font-size: 18px; margin: 0 0 2px; color: #111827; }
+    .header .subtitle { font-size: 12px; color: #6b7280; }
+    .badge { background: #d1fae5; color: #065f46; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+
+    /* Cards */
+    .card { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; }
+    .card h2 { font-size: 14px; color: #2563eb; margin: 0 0 12px; font-weight: 600; }
+
+    /* Demo scenario buttons */
+    .scenarios { display: flex; flex-wrap: wrap; gap: 6px; }
+    .scenario-btn { background: #fff; border: 1px solid #d1d5db; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; color: #374151; transition: all 0.15s; }
+    .scenario-btn:hover { background: #eff6ff; border-color: #3b82f6; color: #1e40af; }
+    .scenario-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
+
+    /* Form */
+    label { display: block; font-size: 11px; font-weight: 600; color: #2563eb; margin-bottom: 4px; }
+    label.required::after { content: " *"; color: #dc2626; }
+    input, select { width: 100%; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; background: #fff; }
+    input:focus, select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
+
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* Method toggle */
+    .method-toggle { display: inline-flex; border: 1px solid #d1d5db; border-radius: 4px; overflow: hidden; }
+    .method-toggle button { padding: 6px 14px; border: none; background: #fff; cursor: pointer; font-size: 12px; }
+    .method-toggle button.active { background: #fb923c; color: white; }
+
+    /* B2B/IOSS toggles */
+    .toggle-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; padding-top: 4px; }
+    .toggle-row label { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; color: #374151; font-size: 12px; cursor: pointer; }
+    .toggle-row input[type=checkbox] { width: auto; margin: 0; cursor: pointer; }
+
+    /* Items */
+    .item { padding: 12px; background: #f9fafb; border-radius: 6px; margin-bottom: 10px; border: 1px solid #e5e7eb; position: relative; }
+    .item-header { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .line-tag { background: #dbeafe; color: #1e40af; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+    .fta-tag { background: #d1fae5; color: #065f46; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+    .remove-btn { margin-left: auto; background: #fff; color: #dc2626; border: 1px solid #fca5a5; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+    .add-btn { background: #fb923c; color: #fff; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px; float: right; }
+    .add-btn:hover { background: #ea580c; }
+
+    /* Action buttons */
+    .actions { display: flex; gap: 8px; margin-top: 12px; }
+    .btn { padding: 9px 18px; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-secondary { background: #fff; color: #2563eb; border: 1px solid #2563eb; }
+    .btn-secondary:hover { background: #eff6ff; }
+
+    /* Totals */
+    .totals { background: #fff; }
+    .total-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+    .total-row.grand { border-top: 2px solid #1f2937; margin-top: 6px; padding-top: 10px; font-size: 16px; font-weight: 700; color: #dc2626; }
+
+    /* Right panel: Show your work */
+    .work-panel { background: #fff; border-radius: 8px; padding: 16px; border: 1px solid #e5e7eb; }
+    .work-panel h2 { font-size: 14px; color: #2563eb; margin: 0 0 12px; }
+    .work-panel h3 { font-size: 12px; color: #374151; margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+    .empty { color: #9ca3af; font-style: italic; font-size: 13px; padding: 20px; text-align: center; }
+
+    .step { padding: 8px 10px; margin-bottom: 6px; border-radius: 4px; font-size: 12px; line-height: 1.5; }
+    .step.input { background: #eff6ff; border-left: 3px solid #3b82f6; }
+    .step.decision { background: #fef3c7; border-left: 3px solid #f59e0b; }
+    .step.calc { background: #f3f4f6; border-left: 3px solid #6b7280; }
+    .step.result { background: #d1fae5; border-left: 3px solid #10b981; }
+    .step .label { font-weight: 700; color: #1f2937; }
+    .step code { background: #e5e7eb; padding: 1px 5px; border-radius: 3px; font-family: ui-monospace, monospace; font-size: 11px; }
+
+    .default-item { background: #fffbeb; padding: 6px 8px; margin-bottom: 4px; border-left: 2px solid #f59e0b; font-size: 11px; border-radius: 2px; }
+    .default-item .field { font-family: ui-monospace, monospace; color: #92400e; font-weight: 600; }
+    .warning { background: #fef2f2; border-left: 3px solid #ef4444; padding: 6px 8px; font-size: 11px; margin-bottom: 4px; border-radius: 2px; color: #991b1b; }
+
+    .ref-list { font-size: 10px; color: #6b7280; line-height: 1.5; }
+    .ref-list li { margin-bottom: 2px; }
+
+    /* Item breakdown */
+    .item-breakdown { background: #f9fafb; padding: 8px 10px; border-radius: 4px; margin-bottom: 6px; font-size: 12px; }
+    .item-breakdown .line-key { font-family: ui-monospace, monospace; font-size: 11px; color: #6b7280; }
+    .item-breakdown .regime { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 10px; font-weight: 600; margin-top: 4px; }
+    .regime.e3 { background: #fee2e2; color: #991b1b; }
+    .regime.fta { background: #d1fae5; color: #065f46; }
+    .regime.std { background: #fef3c7; color: #92400e; }
+    .regime.no_duty { background: #e5e7eb; color: #4b5563; }
+
+    .meta-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .meta-tag { background: #f3f4f6; padding: 2px 6px; border-radius: 3px; font-size: 10px; color: #4b5563; font-family: ui-monospace, monospace; }
+
+    .suggested { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+    .fee-status { background: #fff7ed; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 11px; }
+    .fee-status .indicator { font-weight: 700; color: #ea580c; }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- LEFT: Calculator -->
+  <div class="left-pane">
+
+    <div class="header">
+      <div>
+        <h1>EU Inbound Calculator — Demo</h1>
+        <div class="subtitle">Council Reg. (EU) 2026/382 · Delegated Reg. C(2026)2760</div>
+      </div>
+      <span class="badge">EUR</span>
+    </div>
+
+    <!-- Demo scenarios -->
+    <div class="card">
+      <h2>📋 Demo Scenarios</h2>
+      <div class="scenarios" id="scenarios">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- Header form -->
+    <div class="card">
+      <div class="grid-4">
+        <div>
+          <label class="required">Ship To</label>
+          <select id="destination_ms">
+            <option value="DE">DE Germany</option>
+            <option value="FR">FR France 🇫🇷</option>
+            <option value="IT">IT Italy 🇮🇹</option>
+            <option value="RO">RO Romania 🇷🇴</option>
+            <option value="ES">ES Spain</option>
+            <option value="NL">NL Netherlands</option>
+            <option value="BE">BE Belgium</option>
+            <option value="PL">PL Poland</option>
+            <option value="SE">SE Sweden</option>
+            <option value="IE">IE Ireland</option>
+            <option value="AT">AT Austria</option>
+            <option value="CZ">CZ Czechia</option>
+            <option value="DK">DK Denmark</option>
+            <option value="FI">FI Finland</option>
+          </select>
+        </div>
+        <div>
+          <label>Ship From</label>
+          <select id="ship_from">
+            <option value="CN">CN China</option>
+            <option value="GB">GB United Kingdom 🤝</option>
+            <option value="CH">CH Switzerland 🤝</option>
+            <option value="JP">JP Japan 🤝</option>
+            <option value="KR">KR South Korea 🤝</option>
+            <option value="VN">VN Vietnam 🤝</option>
+            <option value="US">US United States</option>
+            <option value="IN">IN India</option>
+            <option value="TR">TR Turkey 🤝</option>
+          </select>
+          <div class="suggested">🤝 = FTA partner (FTA proof needed per item)</div>
+        </div>
+        <div>
+          <label class="required">Ship Date</label>
+          <input type="date" id="transaction_date" value="2026-08-01">
+        </div>
+        <div>
+          <label>Method</label>
+          <div class="method-toggle">
+            <button id="btn-non-postal" class="active" onclick="setMethod('express')">Non-Postal</button>
+            <button id="btn-postal" onclick="setMethod('postal')">Postal</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="toggle-row" style="margin-top: 12px;">
+        <label><input type="checkbox" id="b2b"> B2B (Business buyer)</label>
+        <label><input type="checkbox" id="ioss_registered" checked> IOSS-registered seller</label>
+        <label><input type="checkbox" id="postal_designated_op"> Postal Designated Op</label>
+        <label><input type="checkbox" id="buyer_agent"> Buyer agent / forwarder</label>
+      </div>
+    </div>
+
+    <!-- Items -->
+    <div class="card">
+      <h2>📦 Shipment Details</h2>
+      <div id="items"></div>
+      <button class="add-btn" onclick="addItem()">+ Add Line</button>
+      <div style="clear: both;"></div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="btn btn-primary" onclick="runCalculate()">Calculate Landed Cost</button>
+      <button class="btn btn-secondary" onclick="runStrategy()">Compare Strategies</button>
+    </div>
+
+    <!-- Totals -->
+    <div class="card totals" id="totals-card" style="margin-top: 12px;">
+      <h2>💰 Landed Cost Summary</h2>
+      <div id="totals">
+        <div class="empty">Click <strong>Calculate</strong> to see totals.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Show your work -->
+  <div class="work-panel">
+    <h2>🔍 Show Your Work</h2>
+    <div id="work">
+      <div class="empty">Run a calculation to see the decision tree, defaults applied, and legal references.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SAMPLE_RATES = {
+  // Common HS6 → MFN rate snippet for demo
+  '610910': { rate: 0.12, label: 'Cotton t-shirt (Apparel, knitted)' },
+  '610990': { rate: 0.12, label: 'Other apparel, knitted' },
+  '640399': { rate: 0.08, label: 'Leather footwear' },
+  '851712': { rate: 0.00, label: 'Smartphone (0% MFN)' },
+  '490210': { rate: 0.00, label: 'Magazine (0% MFN)' },
+  '420232': { rate: 0.030, label: 'Wallet, leather' },
+  '870870': { rate: 0.045, label: 'Auto wheel parts' },
+};
+
+const FTA_PARTNERS = ['GB', 'CH', 'JP', 'KR', 'VN', 'NO', 'IS', 'LI', 'TR', 'AD', 'SM', 'CA', 'SG', 'MX', 'CL', 'ZA', 'UA', 'MD', 'GE'];
+
+// ---- Demo scenarios ----
+const SCENARIOS = [
+  {
+    id: 'gb_fta',
+    label: '🇬🇧 GB→DE: FTA exclusion demo',
+    desc: 'UK origin with FTA proof — €3 bypassed, standard tariff (0%) applies',
+    setup: () => {
+      reset();
+      setSelect('destination_ms', 'DE');
+      setSelect('ship_from', 'GB');
+      document.getElementById('ioss_registered').checked = true;
+      addItem({ hs6: '610910', desc: 'Cotton t-shirt', origin: 'GB', qty: 2, unit_value: 12, std_rate: 0.12, fta_rate: 0.0, fta_proof: true });
+    }
+  },
+  {
+    id: 'fr_stack',
+    label: '🇫🇷 CN→FR: French €5/HS6 stack',
+    desc: 'Multi-HS basket to France — national €5/line on top of EU €3',
+    setup: () => {
+      reset();
+      setSelect('destination_ms', 'FR');
+      setSelect('ship_from', 'CN');
+      document.getElementById('ioss_registered').checked = true;
+      addItem({ hs6: '610910', desc: 'Cotton t-shirt', origin: 'CN', qty: 1, unit_value: 12, std_rate: 0.12 });
+      addItem({ hs6: '640399', desc: 'Leather shoe', origin: 'CN', qty: 1, unit_value: 35, std_rate: 0.08 });
+      addItem({ hs6: '420232', desc: 'Leather wallet', origin: 'CN', qty: 1, unit_value: 25, std_rate: 0.03 });
+    }
+  },
+  {
+    id: 'it_parcel',
+    label: '🇮🇹 CN→IT: Italian €2/parcel',
+    desc: 'Italy national fee is per-parcel (flat) regardless of HS lines',
+    setup: () => {
+      reset();
+      setSelect('destination_ms', 'IT');
+      setSelect('ship_from', 'CN');
+      document.getElementById('ioss_registered').checked = true;
+      addItem({ hs6: '610910', desc: 'Cotton t-shirt', origin: 'CN', qty: 1, unit_value: 15, std_rate: 0.12 });
+      addItem({ hs6: '640399', desc: 'Leather shoe', origin: 'CN', qty: 1, unit_value: 30, std_rate: 0.08 });
+    }
+  },
+  {
+    id: 'ro_logistics',
+    label: '🇷🇴 CN→RO: Romanian €5 logistics tax',
+    desc: '25 RON per-parcel logistics tax (OG 2025/137) on top of EU regime',
+    setup: () => {
+      reset();
+      setSelect('destination_ms', 'RO');
+      setSelect('ship_from', 'CN');
+      document.getElementById('ioss_registered').checked = true;
+      addItem({ hs6: '610910', desc: 'Cotton t-shirt', origin: 'CN', qty: 1, unit_value: 18, std_rate: 0.12 });
+    }
+  },
+  {
+    id: 'b2b_exit',
+    label: '🏢 CN→DE: B2B hard exit',
+    desc: 'B2B import → CP42 exclusion → standard tariff, no €3, no IOSS',
+    setup: () => {
+      reset();
+      setSelect('destination_ms', 'DE');
+      setSelect('ship_from', 'CN');
+      document.getElementById('b2b').checked = true;
+      document.getElementById('ioss_registered').checked = false;
+      addItem({ hs6: '610910', desc: 'Cotton t-shirt', origin: 'CN', qty: 5, unit_value: 12, std_rate: 0.12 });
+    }
+  },
+  {
+    id: 'over_150',
+    label: '💸 CN→DE: >€150 forces standard',
+    desc: 'Value exceeds €150 cap — €3 simplified regime no longer applies',
+    setup: () => {
+      reset();
+      setSelect('destination_ms', 'DE');
+      setSelect('ship_from', 'CN');
+      document.getElementById('ioss_registered').checked = true;
+      addItem({ hs6: '610910', desc: 'Cotton t-shirt', origin: 'CN', qty: 1, unit_value: 200, std_rate: 0.12 });
+    }
+  },
+  {
+    id: 'postal_no_ioss',
+    label: '📮 CN→DE: Postal non-IOSS',
+    desc: 'Postal Designated Op channel — €3 still triggered without IOSS',
+    setup: () => {
+      reset();
+      setSelect('destination_ms', 'DE');
+      setSelect('ship_from', 'CN');
+      document.getElementById('ioss_registered').checked = false;
+      document.getElementById('postal_designated_op').checked = true;
+      setMethod('postal');
+      addItem({ hs6: '610910', desc: 'Cotton t-shirt', origin: 'CN', qty: 1, unit_value: 20, std_rate: 0.12 });
+    }
+  },
+  {
+    id: 'vanilla',
+    label: '🟢 CN→DE: Vanilla €3',
+    desc: 'Baseline scenario — single B2C IOSS tee, simplest €3 path',
+    setup: () => {
+      reset();
+      setSelect('destination_ms', 'DE');
+      setSelect('ship_from', 'CN');
+      document.getElementById('ioss_registered').checked = true;
+      addItem({ hs6: '610910', desc: 'Cotton t-shirt', origin: 'CN', qty: 1, unit_value: 20, std_rate: 0.12 });
+    }
+  },
+];
+
+// ---- Helpers ----
+const $ = id => document.getElementById(id);
+const fmt = n => '€' + Number(n || 0).toFixed(2);
+function setSelect(id, val) { const el = $(id); el.value = val; }
+let method = 'express';
+function setMethod(m) {
+  method = m;
+  $('btn-non-postal').classList.toggle('active', m === 'express');
+  $('btn-postal').classList.toggle('active', m === 'postal');
+}
+function reset() {
+  $('items').innerHTML = '';
+  $('b2b').checked = false;
+  $('ioss_registered').checked = true;
+  $('postal_designated_op').checked = false;
+  $('buyer_agent').checked = false;
+  setMethod('express');
+}
+
+// ---- Items ----
+let lineCounter = 0;
+function addItem(it) {
+  it = it || { hs6: '', desc: '', origin: $('ship_from').value, qty: 1, unit_value: 0, std_rate: 0, fta_rate: 0, fta_proof: false };
+  lineCounter += 1;
+  const lineNum = lineCounter;
+  const div = document.createElement('div');
+  div.className = 'item';
+  div.dataset.line = lineNum;
+
+  const isFta = FTA_PARTNERS.includes(it.origin);
+  div.innerHTML = `
+    <div class="item-header">
+      <span class="line-tag">LINE ${lineNum}</span>
+      ${isFta ? '<span class="fta-tag">FTA partner</span>' : ''}
+      <button class="remove-btn" onclick="this.closest('.item').remove()">×</button>
+    </div>
+    <div class="grid-2">
+      <div>
+        <label>Commercial Description</label>
+        <input class="desc" value="${it.desc}" placeholder="e.g. cotton men t-shirt" oninput="suggestRate(this)">
+        <div class="suggested" id="desc-hint-${lineNum}"></div>
+      </div>
+      <div>
+        <label>Tariff Code (HS6)</label>
+        <input class="hs6" value="${it.hs6}" placeholder="610910" maxlength="6" oninput="lookupHS(this, ${lineNum})">
+        <div class="suggested" id="hs-hint-${lineNum}"></div>
+      </div>
+    </div>
+    <div class="grid-4" style="margin-top: 8px;">
+      <div>
+        <label>Country of Origin</label>
+        <select class="origin" onchange="updateFtaTag(this)">
+          <option value="CN" ${it.origin==='CN'?'selected':''}>CN China</option>
+          <option value="GB" ${it.origin==='GB'?'selected':''}>GB UK 🤝</option>
+          <option value="CH" ${it.origin==='CH'?'selected':''}>CH Switzerland 🤝</option>
+          <option value="JP" ${it.origin==='JP'?'selected':''}>JP Japan 🤝</option>
+          <option value="KR" ${it.origin==='KR'?'selected':''}>KR South Korea 🤝</option>
+          <option value="VN" ${it.origin==='VN'?'selected':''}>VN Vietnam 🤝</option>
+          <option value="TR" ${it.origin==='TR'?'selected':''}>TR Turkey 🤝</option>
+          <option value="US" ${it.origin==='US'?'selected':''}>US USA</option>
+          <option value="IN" ${it.origin==='IN'?'selected':''}>IN India</option>
+        </select>
+      </div>
+      <div>
+        <label>Qty</label>
+        <input type="number" class="qty" value="${it.qty}" min="1" oninput="updateLineValue(this)">
+      </div>
+      <div>
+        <label>Unit Value (€)</label>
+        <input type="number" class="unit-value" value="${it.unit_value}" step="0.01" min="0" oninput="updateLineValue(this)">
+      </div>
+      <div>
+        <label>Line Value</label>
+        <input type="text" class="line-value" value="€${(it.qty * it.unit_value).toFixed(2)}" readonly>
+      </div>
+    </div>
+    <div class="grid-3" style="margin-top: 8px;">
+      <div>
+        <label>MFN Rate</label>
+        <input type="number" class="std-rate" value="${it.std_rate}" step="0.01" min="0" max="1">
+        <div class="suggested">e.g. 0.12 for 12%</div>
+      </div>
+      <div>
+        <label>FTA Rate</label>
+        <input type="number" class="fta-rate" value="${it.fta_rate}" step="0.01" min="0" max="1">
+        <div class="suggested">If FTA-eligible (often 0)</div>
+      </div>
+      <div style="display: flex; align-items: center;">
+        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 400; color: #374151; font-size: 12px;">
+          <input type="checkbox" class="fta-proof" ${it.fta_proof?'checked':''} style="width:auto;margin:0;">
+          Holds FTA proof (REX/EUR.1)
+        </label>
+      </div>
+    </div>
+  `;
+  $('items').appendChild(div);
+}
+
+function updateLineValue(el) {
+  const row = el.closest('.item');
+  const qty = parseFloat(row.querySelector('.qty').value) || 0;
+  const uv = parseFloat(row.querySelector('.unit-value').value) || 0;
+  row.querySelector('.line-value').value = '€' + (qty * uv).toFixed(2);
+}
+
+function updateFtaTag(el) {
+  const row = el.closest('.item');
+  const tag = row.querySelector('.fta-tag');
+  const isFta = FTA_PARTNERS.includes(el.value);
+  if (isFta && !tag) {
+    const newTag = document.createElement('span');
+    newTag.className = 'fta-tag';
+    newTag.textContent = 'FTA partner';
+    row.querySelector('.line-tag').after(newTag);
+  } else if (!isFta && tag) { tag.remove(); }
+}
+
+function lookupHS(el, lineNum) {
+  const hs = el.value.trim();
+  const hint = $(`hs-hint-${lineNum}`);
+  if (SAMPLE_RATES[hs]) {
+    hint.innerHTML = `📘 ${SAMPLE_RATES[hs].label} · MFN ${(SAMPLE_RATES[hs].rate*100).toFixed(1)}%`;
+    const row = el.closest('.item');
+    if (!row.querySelector('.std-rate').value || row.querySelector('.std-rate').value === '0') {
+      row.querySelector('.std-rate').value = SAMPLE_RATES[hs].rate;
+    }
+  } else {
+    hint.textContent = '';
+  }
+}
+function suggestRate(el) { /* placeholder */ }
+
+// ---- Build payload ----
+function buildPayload() {
+  const items = Array.from(document.querySelectorAll('.item')).map(row => ({
+    hsCode: row.querySelector('.hs6').value,
+    description: row.querySelector('.desc').value,
+    countryOfOrigin: row.querySelector('.origin').value,
+    quantity: parseInt(row.querySelector('.qty').value, 10),
+    amount: (parseFloat(row.querySelector('.qty').value) || 0) * (parseFloat(row.querySelector('.unit-value').value) || 0),
+    standard_duty_rate: parseFloat(row.querySelector('.std-rate').value) || 0,
+    fta_duty_rate: parseFloat(row.querySelector('.fta-rate').value) || 0,
+    euReform2026: row.querySelector('.fta-proof').checked
+      ? { ftaProofType: 'REX' } : {}
+  }));
+  return {
+    addresses: { shipFrom: { country: $('ship_from').value }, shipTo: { country: $('destination_ms').value } },
+    date: $('transaction_date').value,
+    currencyCode: 'EUR',
+    euReform2026: {
+      iossNumber: $('ioss_registered').checked ? 'IM3720000123' : null,
+      buyerAgent: $('buyer_agent').checked,
+      postalDesignatedOperator: $('postal_designated_op').checked,
+      shipmentChannel: method,
+    },
+    customer: { euReform2026: { isBusinessBuyer: $('b2b').checked } },
+    lines: items,
+  };
+}
+
+// ---- Calculate ----
+async function runCalculate() {
+  const payload = buildPayload();
+  $('totals').innerHTML = '<div class="empty">Calculating…</div>';
+  $('work').innerHTML = '<div class="empty">Calculating…</div>';
+  try {
+    const r = await fetch('/api/calculate', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+    const data = await r.json();
+    if (data.error) {
+      $('totals').innerHTML = `<div class="warning">${data.error}</div>`;
+      $('work').innerHTML = '';
+      return;
+    }
+    renderTotals(data, payload);
+    renderWork(data, payload);
+  } catch (e) {
+    $('totals').innerHTML = `<div class="warning">Network error: ${e.message}</div>`;
+  }
+}
+
+async function runStrategy() {
+  const payload = buildPayload();
+  $('work').innerHTML = '<div class="empty">Comparing strategies…</div>';
+  try {
+    const r = await fetch('/api/strategy', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+    const data = await r.json();
+    if (data.error) { $('work').innerHTML = `<div class="warning">${data.error}</div>`; return; }
+    renderStrategies(data.strategies);
+  } catch (e) { $('work').innerHTML = `<div class="warning">${e.message}</div>`; }
+}
+
+// ---- Renderers ----
+function renderTotals(d, payload) {
+  const ms = payload.addresses.shipTo.country;
+  const nationalFeeNotes = {
+    'FR': '🇫🇷 France: €5 × distinct HS6 lines',
+    'IT': '🇮🇹 Italy: €2 per parcel (flat)',
+    'RO': '🇷🇴 Romania: ~€5 (25 RON) per parcel',
+  };
+  let html = `
+    <div class="total-row"><span>Goods value</span><span>${fmt(d.consignment_value_eur)}</span></div>
+    <div class="total-row"><span>Customs duty</span><span><strong>${fmt(d.duty_total_eur)}</strong></span></div>
+    <div class="total-row"><span>VAT (${d.vat.collected_via})</span><span>${fmt(d.vat.vat_eur)}</span></div>
+    <div class="total-row"><span>Union handling fee</span><span>${fmt(d.fees.union_handling_fee_eur)}</span></div>
+    <div class="total-row"><span>National fee${nationalFeeNotes[ms] ? ` — ${nationalFeeNotes[ms]}` : ''}</span><span>${fmt(d.fees.national_fee_eur)}</span></div>
+    <div class="total-row grand"><span>Total landed cost</span><span>${fmt(d.landed_cost_eur)}</span></div>
+    <div class="meta-tags" style="margin-top:8px">
+      <span class="meta-tag">Decl: ${d.declaration_type}</span>
+      <span class="meta-tag">Declarant: ${d.declarant}</span>
+      <span class="meta-tag">VAT base: ${fmt(d.vat.vat_base_eur)} @ ${(d.vat.vat_rate*100).toFixed(1)}%</span>
+    </div>
+  `;
+  if (d.fees.national_fee_eur > 0) {
+    html += `<div class="fee-status"><span class="indicator">⚠ National fee active:</span> ${d.fees.national_fee_source}</div>`;
+  }
+  $('totals').innerHTML = html;
+}
+
+function renderWork(d, payload) {
+  let html = '';
+
+  // Inputs
+  html += '<h3>1. Inputs received</h3>';
+  html += `<div class="step input">
+    <span class="label">Route:</span> ${payload.addresses.shipFrom.country} → ${payload.addresses.shipTo.country} ·
+    <span class="label">Date:</span> ${payload.date} ·
+    <span class="label">Channel:</span> ${payload.euReform2026.shipmentChannel}<br>
+    <span class="label">B2B:</span> ${payload.customer.euReform2026.isBusinessBuyer} ·
+    <span class="label">IOSS:</span> ${payload.euReform2026.iossNumber ? 'yes' : 'no'} ·
+    <span class="label">Postal DO:</span> ${payload.euReform2026.postalDesignatedOperator} ·
+    <span class="label">Buyer agent:</span> ${payload.euReform2026.buyerAgent}
+  </div>`;
+
+  // Defaults applied
+  if (d.defaults_applied && d.defaults_applied.length > 0) {
+    html += '<h3>2. Defaults applied (caller omitted)</h3>';
+    d.defaults_applied.forEach(def => {
+      html += `<div class="default-item"><span class="field">${def.field}</span> = <code>${JSON.stringify(def.default)}</code><br>${def.rationale}</div>`;
+    });
+  } else {
+    html += '<h3>2. Defaults applied</h3><div class="step calc">None — caller supplied all fields.</div>';
+  }
+
+  // Decision tree
+  html += '<h3>3. Decision tree per item</h3>';
+  d.item_breakdown.forEach((item, i) => {
+    const regimeClass = item.regime.startsWith('e3') ? 'e3' :
+                        item.regime.includes('fta') ? 'fta' :
+                        item.regime === 'no_duty' ? 'no_duty' : 'std';
+    html += `<div class="item-breakdown">
+      <div class="line-key">${item.grouping_key.join(' / ')}</div>
+      <div>Qty ${item.qty_total} · Line value ${fmt(item.line_value_eur)}</div>
+      <span class="regime ${regimeClass}">${item.regime}</span>
+      <strong style="float:right">${fmt(item.duty_eur)}</strong>
+      ${item.notes && item.notes.length ? '<div style="font-size:11px;color:#6b7280;margin-top:4px">' + item.notes.join('<br>') + '</div>' : ''}
+    </div>`;
+  });
+
+  // VAT calc
+  html += '<h3>4. VAT routing</h3>';
+  html += `<div class="step calc">
+    <span class="label">Base:</span> ${fmt(d.vat.vat_base_eur)} ×
+    <span class="label">Rate:</span> ${(d.vat.vat_rate*100).toFixed(1)}% =
+    <span class="label">${fmt(d.vat.vat_eur)}</span><br>
+    <span class="label">Collected via:</span> <code>${d.vat.collected_via}</code>
+  </div>`;
+
+  // Fees
+  if (d.fees.national_fee_eur > 0 || d.fees.union_handling_fee_eur > 0) {
+    html += '<h3>5. Fees</h3>';
+    if (d.fees.union_handling_fee_eur > 0) {
+      html += `<div class="step calc"><span class="label">Union handling:</span> ${fmt(d.fees.union_handling_fee_eur)}</div>`;
+    }
+    if (d.fees.national_fee_eur > 0) {
+      html += `<div class="step calc"><span class="label">National (${payload.addresses.shipTo.country}):</span> ${fmt(d.fees.national_fee_eur)}<br><small>${d.fees.national_fee_source}</small></div>`;
+    }
+  }
+
+  // Result
+  html += '<h3>6. Final result</h3>';
+  html += `<div class="step result">
+    <span class="label">Duty:</span> ${fmt(d.duty_total_eur)} ·
+    <span class="label">VAT:</span> ${fmt(d.vat.vat_eur)} ·
+    <span class="label">Fees:</span> ${fmt(parseFloat(d.fees.union_handling_fee_eur) + parseFloat(d.fees.national_fee_eur))}<br>
+    <span class="label">Landed:</span> ${fmt(d.landed_cost_eur)}
+  </div>`;
+
+  // Warnings
+  if (d.compliance_warnings && d.compliance_warnings.length) {
+    html += '<h3>⚠ Compliance warnings</h3>';
+    d.compliance_warnings.forEach(w => { html += `<div class="warning">${w}</div>`; });
+  }
+
+  // Legal refs
+  if (d.legal_references && d.legal_references.length) {
+    html += '<h3>📚 Legal references</h3><ul class="ref-list">';
+    d.legal_references.forEach(r => { html += `<li>${r}</li>`; });
+    html += '</ul>';
+  }
+
+  $('work').innerHTML = html;
+}
+
+function renderStrategies(strategies) {
+  let html = '<h3>Strategies ranked by landed cost</h3>';
+  strategies.forEach((s, i) => {
+    const color = i === 0 ? '#10b981' : '#6b7280';
+    html += `<div class="item-breakdown" style="border-left: 3px solid ${color}">
+      <div><strong>${s.name}</strong> · complexity ${s.complexity}/5</div>
+      <div style="font-size: 18px; color: ${color}; font-weight: 700;">${fmt(s.result.landed_cost_eur)}</div>
+      <div style="font-size: 11px; color: #4b5563; margin-top: 4px;">${s.description}</div>
+      ${s.risk_notes && s.risk_notes.length ? '<ul style="margin: 4px 0 0; padding-left: 18px; font-size: 10px; color: #6b7280;">' + s.risk_notes.map(n => '<li>' + n + '</li>').join('') + '</ul>' : ''}
+    </div>`;
+  });
+  $('work').innerHTML = html;
+}
+
+// ---- Init ----
+function initScenarios() {
+  const wrap = $('scenarios');
+  SCENARIOS.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'scenario-btn';
+    btn.textContent = s.label;
+    btn.title = s.desc;
+    btn.onclick = () => {
+      document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      s.setup();
+      runCalculate();
+    };
+    wrap.appendChild(btn);
+  });
+}
+
+initScenarios();
+SCENARIOS[0].setup();   // Pre-load the FTA exclusion demo so users see something interesting first
+</script>
+
+</body>
+</html>
