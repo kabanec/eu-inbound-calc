@@ -797,7 +797,7 @@ function renderTotals(d, payload) {
     <div class="total-row"><span>Goods value</span><span>${fmt(d.consignment_value_eur)}</span></div>
     <div class="total-row"><span>Customs duty</span><span><strong>${fmt(d.duty_total_eur)}</strong></span></div>
     <div class="total-row"><span>VAT (${d.vat.collected_via})</span><span>${fmt(d.vat.vat_eur)}</span></div>
-    <div class="total-row"><span>Union handling fee</span><span>${fmt(d.fees.union_handling_fee_eur)}</span></div>
+    <div class="total-row"><span>Union handling fee — from 1 Nov 2026</span><span>${fmt(d.fees.union_handling_fee_eur)}</span></div>
     <div class="total-row"><span>National fee${nationalFeeNotes[ms] ? ` — ${nationalFeeNotes[ms]}` : ''}</span><span>${fmt(d.fees.national_fee_eur)}</span></div>
     <div class="total-row grand"><span>Total landed cost</span><span>${fmt(d.landed_cost_eur)}</span></div>
     <div class="meta-tags" style="margin-top:8px">
@@ -867,7 +867,7 @@ function renderWork(d, payload) {
   if (d.fees.national_fee_eur > 0 || d.fees.union_handling_fee_eur > 0) {
     html += '<h3>5. Fees</h3>';
     if (d.fees.union_handling_fee_eur > 0) {
-      html += `<div class="step calc"><span class="label">Union handling:</span> ${fmt(d.fees.union_handling_fee_eur)}</div>`;
+      html += `<div class="step calc"><span class="label">Union handling:</span> ${fmt(d.fees.union_handling_fee_eur)}<br><small>EU-wide flat fee, effective 1 Nov 2026 (Reg. 2026/382, working assumption pending implementing act)</small></div>`;
     }
     if (d.fees.national_fee_eur > 0) {
       const feeKey2 = FEE_REF_MAP[payload.addresses.shipTo.country];

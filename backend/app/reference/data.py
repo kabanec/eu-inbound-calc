@@ -67,7 +67,7 @@ NATIONAL_FEES = {
     },
 }
 
-UNION_HANDLING_FEE_EUR = Decimal("2.00")  # Working assumption pending implementing act
+UNION_HANDLING_FEE_EUR = Decimal("2.00")  # Effective 1 Nov 2026 (DATE_UNION_HANDLING_FEE); working assumption pending implementing act (Reg. (EU) 2026/382)
 
 # Standard EU VAT rates (destination-MS), May 2026 --------------------------
 VAT_RATES = {
