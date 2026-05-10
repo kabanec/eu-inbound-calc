@@ -50,21 +50,34 @@ class TestPayloadStructure:
         assert payload["currency"] == "EUR"
         assert payload["type"] == "QUOTE_ENHANCED10"
 
+    def test_basket_parameters_include_administrative_fee_and_total_price(self, mock_avalara):
+        """Basket parameters contain administrative_fee=true and TOTAL_PRICE."""
+        from app.services.avalara_client import _build_payload
+        c = _ready_consignment()
+        payload = _build_payload(c)
+        params = {p["name"]: p["value"] for p in payload.get("parameters", [])}
+        assert params["administrative_fee"] == "true"
+        assert "TOTAL_PRICE" in params
+
 
 class TestResponseParsing:
-    def _gc_response(self, line_number, cost_lines, duty_summary=None, granularity=None, request_id="req-001"):
+    def _gc_response(self, line_number, cost_lines, duty_summary=None, granularity=None,
+                     request_id="req-001", quote_cost_lines=None):
         """Build a minimal globalCompliance response."""
         return {
             "id": request_id, "currency": "EUR", "summary": [],
-            "globalCompliance": [{"quote": {"lines": [{
-                "number": line_number,
-                "hsCode": "610910",
-                "costLines": cost_lines,
-                "calculationSummary": {
-                    "dutyCalculationSummary": duty_summary or [],
-                    "dutyGranularity": granularity or [],
-                },
-            }]}}],
+            "globalCompliance": [{"quote": {
+                "costLines": quote_cost_lines or [],
+                "lines": [{
+                    "number": line_number,
+                    "hsCode": "610910",
+                    "costLines": cost_lines,
+                    "calculationSummary": {
+                        "dutyCalculationSummary": duty_summary or [],
+                        "dutyGranularity": granularity or [],
+                    },
+                }],
+            }}],
         }
 
     def test_duty_summed_from_multiple_duty_cost_lines(self, mock_avalara):
@@ -115,6 +128,32 @@ class TestResponseParsing:
         resp = get_quote(_ready_consignment())
         assert resp.line_results[0].is_preferential is True
         assert resp.line_results[0].duty_eur == Decimal("0.00")
+
+    def test_ccf_basket_cost_lines_summed_into_national_fee(self, mock_avalara):
+        """Basket-level CCF cost lines are summed into national_fee_eur."""
+        mock_avalara.reset()
+        mock_avalara.add(mock_avalara.POST, AVALARA_URL, json=self._gc_response(
+            1,
+            cost_lines=[{"type": "DUTY", "name": "MFN duty", "value": 3.00, "currency": "EUR"}],
+            duty_summary=[{"name": "RATE", "value": "0.15", "unit": "PERCENTAGE"}],
+            quote_cost_lines=[
+                {"type": "CCF", "name": "Customs clearance fee", "value": 2.00, "currency": "EUR"},
+            ],
+        ), status=200)
+
+        resp = get_quote(_ready_consignment())
+        assert resp.national_fee_eur == Decimal("2.00")
+        assert resp.total_duty_eur == Decimal("3.00")
+
+    def test_no_ccf_returns_zero_national_fee(self, mock_avalara):
+        """Absent CCF cost lines leave national_fee_eur at zero."""
+        mock_avalara.reset()
+        mock_avalara.add(mock_avalara.POST, AVALARA_URL, json=self._gc_response(
+            1, cost_lines=[], quote_cost_lines=[],
+        ), status=200)
+
+        resp = get_quote(_ready_consignment())
+        assert resp.national_fee_eur == Decimal("0.00")
 
 
 class TestErrorHandling:

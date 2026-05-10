@@ -43,6 +43,7 @@ class AvalaraResponse:
     currency: str
     line_results: list[AvalaraLineResult]
     total_duty_eur: Decimal
+    national_fee_eur: Decimal
     messages: list[str]
     raw_response: dict
 
@@ -119,6 +120,10 @@ def _build_payload(c: Consignment) -> dict:
         "disableCalculationSummary": False,
         "restrictionsCheck": True,
         "program": "Regular",
+        "parameters": [
+            {"name": "administrative_fee", "value": "true"},
+            {"name": "TOTAL_PRICE", "value": str(c.intrinsic_value_eur or "0.00"), "unit": "EUR"},
+        ],
     }
 
 
@@ -178,12 +183,21 @@ def _parse_avalara_response(raw: dict) -> AvalaraResponse:
             duty_details=duty_details,
         ))
 
+    # Parse basket-level CCF (administrative / customs clearance fee).
+    # Returned under globalCompliance[0].quote.costLines when administrative_fee=true.
+    basket_cost_lines = (gc[0].get("quote") or {}).get("costLines") or [] if gc else []
+    national_fee_eur = Decimal("0.00")
+    for cl in basket_cost_lines:
+        if (cl.get("type") or "").upper() == "CCF":
+            national_fee_eur += Decimal(str(cl.get("value") or 0))
+
     total_duty = sum((lr.duty_eur for lr in line_results), Decimal("0.00"))
     return AvalaraResponse(
         request_id=str(raw.get("id") or ""),
         currency=str(raw.get("currency") or "EUR"),
         line_results=line_results,
         total_duty_eur=total_duty,
+        national_fee_eur=national_fee_eur,
         messages=[f"{s['name']}={s['value']}" for s in (raw.get("summary") or [])],
         raw_response=raw,
     )

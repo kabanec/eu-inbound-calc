@@ -46,7 +46,7 @@ def make_avalara_body(
     return {
         "id": request_id,
         "currency": "EUR",
-        "globalCompliance": [{"quote": {"lines": lines}}],
+        "globalCompliance": [{"quote": {"costLines": [], "lines": lines}}],
         "summary": [],
     }
 
@@ -82,7 +82,7 @@ def mock_avalara(responses, avalara_env):
         n = len(body.get("lines", []))
         resp = {
             "id": "mock-req", "currency": "EUR", "summary": [],
-            "globalCompliance": [{"quote": {"lines": [
+            "globalCompliance": [{"quote": {"costLines": [], "lines": [
                 {"number": i + 1, "hsCode": "", "costLines": [],
                  "calculationSummary": {"dutyCalculationSummary": [], "dutyGranularity": []}}
                 for i in range(n)

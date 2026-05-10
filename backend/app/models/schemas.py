@@ -122,4 +122,5 @@ class CalculationResult:
     legal_references: list[str] = field(default_factory=list)
     avalara_request_id: str = ""
     avalara_total_eur: Decimal = Decimal("0.00")
+    avalara_national_fee_eur: Decimal = Decimal("0.00")
     avalara_messages: list[str] = field(default_factory=list)

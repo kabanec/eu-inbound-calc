@@ -271,6 +271,21 @@ def calculate(c: Consignment) -> CalculationResult:
         ))
 
     fees = _calculate_fees(c, distinct_groups=len(groups))
+
+    # If Avalara returned a CCF (administrative fee), use it as the national fee
+    # — it is more accurate than our lookup table for FR/IT/RO.
+    # IT suspension guard: only override when the fee is actually live.
+    if ava_resp.national_fee_eur > Decimal("0.00"):
+        nf_data = NATIONAL_FEES.get(c.destination_ms)
+        suspended = (
+            nf_data is not None
+            and nf_data.get("suspended_until") is not None
+            and c.transaction_date < nf_data["suspended_until"]
+        )
+        if not suspended:
+            fees.national_fee_eur = ava_resp.national_fee_eur
+            fees.national_fee_source = "Avalara CCF"
+
     vat = _calculate_vat(c, duty_total, fees)
 
     landed = (
@@ -297,5 +312,6 @@ def calculate(c: Consignment) -> CalculationResult:
         ],
         avalara_request_id=ava_resp.request_id,
         avalara_total_eur=ava_resp.total_duty_eur,
+        avalara_national_fee_eur=ava_resp.national_fee_eur,
         avalara_messages=ava_resp.messages,
     )
