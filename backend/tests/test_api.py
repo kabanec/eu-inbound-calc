@@ -96,6 +96,36 @@ class TestAvalaraAdapter:
                 {"addresses": {"shipTo": {"country": "DE"}}, "lines": []}
             )
 
+    def test_coo_defaults_to_ship_from_when_omitted(self):
+        """If line has no countryOfOrigin, fall back to consignment shipFrom."""
+        payload = {
+            "addresses": {"shipTo": {"country": "DE"}, "shipFrom": {"country": "CN"}},
+            "date": "2026-08-01",
+            "lines": [{"hsCode": "610910", "quantity": 1, "amount": 20}],
+        }
+        c = from_avalara_getquote(payload)
+        assert c.items[0].origin == "CN"
+
+    def test_coo_unknown_when_neither_line_coo_nor_ship_from(self):
+        """If both shipFrom and line countryOfOrigin are missing, falls back to UNKNOWN."""
+        payload = {
+            "addresses": {"shipTo": {"country": "DE"}},
+            "date": "2026-08-01",
+            "lines": [{"hsCode": "610910", "quantity": 1, "amount": 20}],
+        }
+        c = from_avalara_getquote(payload)
+        assert c.items[0].origin == "UNKNOWN"
+
+    def test_explicit_line_coo_wins_over_ship_from(self):
+        payload = {
+            "addresses": {"shipTo": {"country": "DE"}, "shipFrom": {"country": "CN"}},
+            "date": "2026-08-01",
+            "lines": [{"hsCode": "610910", "quantity": 1, "amount": 20,
+                       "countryOfOrigin": "GB"}],
+        }
+        c = from_avalara_getquote(payload)
+        assert c.items[0].origin == "GB"
+
 
 # API endpoints -----------------------------------------------------------
 class TestAPI:

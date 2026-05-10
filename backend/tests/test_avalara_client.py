@@ -59,6 +59,36 @@ class TestPayloadStructure:
         assert params["administrative_fee"] == "true"
         assert "TOTAL_PRICE" in params
 
+    def test_empty_hs6_omits_classifications(self, mock_avalara):
+        """When HS6 is empty, the line's classifications array is omitted so
+        Avalara's AI classification can run from description + parameters.
+        Sending hscode='' triggers a 500 InternalServerError from Avalara.
+        """
+        from app.services.avalara_client import _build_payload
+        from app.models.schemas import Item, Consignment
+        from app.services.defaults import apply_all_defaults
+        c = Consignment(
+            items=[Item(hs6="", description="cotton tee", origin="CN",
+                        qty=1, unit_value_eur=Decimal("20.00"))],
+            destination_ms="DE",
+            ioss_registered=True,
+        )
+        c, _ = apply_all_defaults(c)
+        payload = _build_payload(c)
+        item_node = payload["lines"][0]["item"]
+        assert "classifications" not in item_node
+        # Description + classificationParameters must still be present so
+        # AI classification has something to work with.
+        assert item_node["description"] == "cotton tee"
+        assert any(p["name"] == "coo" for p in item_node["classificationParameters"])
+
+    def test_present_hs6_includes_classifications(self, mock_avalara):
+        from app.services.avalara_client import _build_payload
+        c = _ready_consignment()
+        payload = _build_payload(c)
+        item_node = payload["lines"][0]["item"]
+        assert item_node["classifications"][0]["hscode"] == "61091000"
+
 
 class TestResponseParsing:
     def _gc_response(self, line_number, cost_lines, duty_summary=None, granularity=None,

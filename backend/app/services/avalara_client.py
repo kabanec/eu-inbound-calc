@@ -77,6 +77,39 @@ def _to_cn8(hs6: str) -> str:
     return code + "00" if len(code) == 6 else code
 
 
+def _build_line(i: int, item, c: Consignment) -> dict:
+    """Build one Avalara line entry.
+
+    When HS6 is empty, the `classifications` array is omitted so Avalara's
+    AI classification kicks in based on description + classificationParameters.
+    Sending `hscode: ""` triggers a 500 InternalServerError.
+    """
+    line: dict = {
+        "lineNumber": i + 1,
+        "quantity": item.qty,
+        "preferenceProgramApplicable": item.fta_proof_held,
+        "item": {
+            "itemCode": f"LINE-{i + 1}",
+            "description": item.description or f"Item {i + 1}",
+            "classificationParameters": [
+                {"name": "price", "value": str(item.unit_value_eur), "unit": "EUR"},
+                {"name": "coo", "value": item.origin.upper()},
+            ],
+            "parameters": [
+                {"name": "weight", "value": "0", "unit": "kg"},
+                {"name": "SHIPPING", "value": "0.00", "unit": "EUR"},
+            ],
+        },
+        "classificationParameters": [],
+    }
+    if item.hs6:
+        line["item"]["classifications"] = [{
+            "country": c.destination_ms.upper(),
+            "hscode": _to_cn8(item.hs6),
+        }]
+    return line
+
+
 def _build_payload(c: Consignment) -> dict:
     return {
         "id": f"EU-INBOUND-{uuid4().hex[:8]}",
@@ -91,31 +124,7 @@ def _build_payload(c: Consignment) -> dict:
             "parameters": [],
             "taxRegistered": bool(c.b2b),
         }],
-        "lines": [
-            {
-                "lineNumber": i + 1,
-                "quantity": item.qty,
-                "preferenceProgramApplicable": item.fta_proof_held,
-                "item": {
-                    "itemCode": f"LINE-{i + 1}",
-                    "description": item.description or f"Item {i + 1}",
-                    "classifications": [{
-                        "country": c.destination_ms.upper(),
-                        "hscode": _to_cn8(item.hs6),
-                    }],
-                    "classificationParameters": [
-                        {"name": "price", "value": str(item.unit_value_eur), "unit": "EUR"},
-                        {"name": "coo", "value": item.origin.upper()},
-                    ],
-                    "parameters": [
-                        {"name": "weight", "value": "0", "unit": "kg"},
-                        {"name": "SHIPPING", "value": "0.00", "unit": "EUR"},
-                    ],
-                },
-                "classificationParameters": [],
-            }
-            for i, item in enumerate(c.items)
-        ],
+        "lines": [_build_line(i, item, c) for i, item in enumerate(c.items)],
         "type": "QUOTE_ENHANCED10",
         "disableCalculationSummary": False,
         "restrictionsCheck": True,

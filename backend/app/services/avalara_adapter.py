@@ -50,7 +50,9 @@ def from_avalara_getquote(payload: dict[str, Any]) -> Consignment:
     ioss_number = eu_ext.get("iossNumber") or eu_ext.get("platformIossNumber")
     ioss_registered = True if ioss_number else None  # None lets defaults engine decide
 
-    items = [_item_from_line(line) for line in payload.get("lines", [])]
+    default_origin = ship_from_raw.upper() if ship_from_raw else None
+    items = [_item_from_line(line, default_origin=default_origin)
+             for line in payload.get("lines", [])]
     if not items:
         raise ValueError("lines[] must contain at least one line item")
 
@@ -76,7 +78,7 @@ def from_avalara_getquote(payload: dict[str, Any]) -> Consignment:
     )
 
 
-def _item_from_line(line: dict[str, Any]) -> Item:
+def _item_from_line(line: dict[str, Any], *, default_origin: str | None = None) -> Item:
     eu_ext = line.get("euReform2026", {}) or {}
     pid = eu_ext.get("productIdentifiers", {}) or {}
 
@@ -93,10 +95,19 @@ def _item_from_line(line: dict[str, Any]) -> Item:
 
     fta_proof = bool(eu_ext.get("ftaProofType"))
 
+    # COO defaults to consignment's shipFrom when the line omits it.
+    # This avoids "country UNKNOWN" errors from Avalara when the parent
+    # caller (e.g., embed URL) only supplies a ship-from country.
+    raw_coo = line.get("countryOfOrigin") or line.get("origin")
+    origin = (
+        str(raw_coo).upper() if raw_coo
+        else (default_origin.upper() if default_origin else "UNKNOWN")
+    )
+
     return Item(
         hs6=hs6,
         description=str(line.get("description", "")),
-        origin=str(line.get("countryOfOrigin") or line.get("origin") or "UNKNOWN").upper(),
+        origin=origin,
         qty=qty,
         unit_value_eur=unit_value,
         fta_proof_held=fta_proof,

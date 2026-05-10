@@ -763,7 +763,9 @@ async function runCalculate() {
     const r = await fetch('/api/calculate', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
     const data = await r.json();
     if (data.error) {
-      $('totals').innerHTML = `<div class="warning">${data.error}</div>`;
+      const detail = data.detail ? `<div style="font-size:11px;color:#7f1d1d;margin-top:6px;font-family:monospace;word-break:break-word;">${data.detail.replace(/^Avalara API error \d+: /, '').slice(0, 400)}</div>` : '';
+      const status = data.avalara_status ? ` (HTTP ${data.avalara_status})` : '';
+      $('totals').innerHTML = `<div class="warning"><strong>${data.error}${status}</strong>${detail}</div>`;
       $('work').innerHTML = '';
       return;
     }
@@ -1002,20 +1004,36 @@ document.getElementById('buyer_agent').addEventListener('change', updateMutualEx
 // Behavior: when ANY supported param is present, the URL prefill takes over
 // and the default scenario is not loaded. The calculator runs once after
 // prefill so the embed shows results immediately.
-function _boolParam(p, ...keys) {
+// Build a case-and-separator-insensitive map of URL params.
+// `hsCode`, `hs_code`, `HSCode`, `hscode` all collapse to the same key `hscode`.
+function _normKey(k) { return String(k).toLowerCase().replace(/[\s_\-.]/g, ''); }
+function _paramMap(searchParams) {
+  const m = new Map();
+  for (const [k, v] of searchParams) {
+    const nk = _normKey(k);
+    if (!m.has(nk)) m.set(nk, v);  // first occurrence wins
+  }
+  return m;
+}
+function _boolParam(m, ...keys) {
   for (const k of keys) {
-    if (p.has(k)) {
-      const v = (p.get(k) || '').toLowerCase();
+    const nk = _normKey(k);
+    if (m.has(nk)) {
+      const v = (m.get(nk) || '').toLowerCase();
       return v === 'true' || v === '1' || v === 'yes' || v === 'on';
     }
   }
   return null;
 }
-function _firstParam(p, ...keys) {
+function _firstParam(m, ...keys) {
   for (const k of keys) {
-    if (p.has(k)) return p.get(k);
+    const nk = _normKey(k);
+    if (m.has(nk)) return m.get(nk);
   }
   return null;
+}
+function _hasParam(m, ...keys) {
+  return keys.some(k => m.has(_normKey(k)));
 }
 // Normalise country aliases to ISO 3166-1 alpha-2 used by our select options.
 // UK is the most common alias for GB; EL is the EU's own code for Greece (ISO uses GR).
@@ -1026,42 +1044,46 @@ function _normCountry(code) {
   return _COUNTRY_ALIASES[c] || c;
 }
 function prefillFromURL() {
-  const p = new URLSearchParams(window.location.search);
+  const m = _paramMap(new URLSearchParams(window.location.search));
+  if (m.size === 0) return false;
   const known = ['shipTo','destination','shipFrom','origin','coo','itemOrigin',
-                 'hsCode','hs6','description','desc','qty','quantity',
+                 'hsCode','hs6','tariff','tariffCode','commodityCode',
+                 'description','desc','qty','quantity',
                  'unitValue','totalValue','value','currency','weightKg','weight',
-                 'method','b2b','buyerAgent','buyer_agent','ioss','iossRegistered',
+                 'method','b2b','buyerAgent','ioss','iossRegistered',
                  'date','transactionDate','lithiumBattery','dgr'];
-  if (!known.some(k => p.has(k))) return false;
+  if (!known.some(k => m.has(_normKey(k)))) return false;
 
   reset();
 
-  const shipTo   = _normCountry(_firstParam(p, 'shipTo', 'destination'));
-  const shipFrom = _normCountry(_firstParam(p, 'shipFrom', 'origin'));
+  const shipTo   = _normCountry(_firstParam(m, 'shipTo', 'destination'));
+  const shipFrom = _normCountry(_firstParam(m, 'shipFrom', 'origin'));
   if (shipTo)   setSelect('destination_ms', shipTo);
   if (shipFrom) setSelect('ship_from', shipFrom);
 
-  const txnDate = _firstParam(p, 'date', 'transactionDate');
+  const txnDate = _firstParam(m, 'date', 'transactionDate');
   if (txnDate) $('transaction_date').value = txnDate;
 
-  const method = (_firstParam(p, 'method') || '').toLowerCase().replace(/[\s_-]/g, '');
+  const method = (_firstParam(m, 'method') || '').toLowerCase().replace(/[\s_\-.]/g, '');
   if (method === 'postal') setMethod('postal');
   else if (method) setMethod('express');
 
-  const b2b = _boolParam(p, 'b2b');
-  const buyerAgent = _boolParam(p, 'buyerAgent', 'buyer_agent');
-  const ioss = _boolParam(p, 'ioss', 'iossRegistered');
+  const b2b = _boolParam(m, 'b2b');
+  const buyerAgent = _boolParam(m, 'buyerAgent');
+  const ioss = _boolParam(m, 'ioss', 'iossRegistered');
   if (b2b !== null)        $('b2b').checked = b2b;
   if (buyerAgent !== null) $('buyer_agent').checked = buyerAgent;
   if (ioss !== null)       $('ioss_registered').checked = ioss;
 
-  const qty = Math.max(1, parseInt(_firstParam(p, 'qty', 'quantity') || '1', 10) || 1);
-  const hs6 = (_firstParam(p, 'hsCode', 'hs6') || '').replace(/\D/g, '').slice(0, 6);
-  const desc = _firstParam(p, 'description', 'desc') || '';
-  const coo = _normCountry(_firstParam(p, 'coo', 'itemOrigin') || shipFrom || 'CN');
+  const qty = Math.max(1, parseInt(_firstParam(m, 'qty', 'quantity') || '1', 10) || 1);
+  const hs6 = (_firstParam(m, 'hsCode', 'hs6', 'tariff', 'tariffCode', 'commodityCode') || '')
+              .replace(/\D/g, '').slice(0, 6);
+  const desc = _firstParam(m, 'description', 'desc') || '';
+  // COO defaults to shipFrom when not provided (per parent system convention).
+  const coo = _normCountry(_firstParam(m, 'coo', 'itemOrigin') || shipFrom || 'CN');
 
-  const unitValueRaw = _firstParam(p, 'unitValue');
-  const totalValueRaw = _firstParam(p, 'totalValue', 'value');
+  const unitValueRaw = _firstParam(m, 'unitValue');
+  const totalValueRaw = _firstParam(m, 'totalValue', 'value');
   let unitValue = 0;
   if (unitValueRaw !== null) {
     unitValue = parseFloat(unitValueRaw) || 0;
@@ -1070,13 +1092,13 @@ function prefillFromURL() {
     unitValue = qty > 0 ? total / qty : total;
   }
 
-  const currency = (_firstParam(p, 'currency') || 'EUR').toUpperCase();
+  const currency = (_firstParam(m, 'currency') || 'EUR').toUpperCase();
   if (currency !== 'EUR') {
     console.warn(`[URL prefill] currency=${currency} treated as EUR (demo has no FX conversion)`);
   }
 
-  const weightKg = parseFloat(_firstParam(p, 'weightKg', 'weight') || '0') || 0;
-  const dgr = _boolParam(p, 'lithiumBattery', 'dgr');
+  const weightKg = parseFloat(_firstParam(m, 'weightKg', 'weight') || '0') || 0;
+  const dgr = _boolParam(m, 'lithiumBattery', 'dgr');
   if (dgr !== null) {
     console.info(`[URL prefill] lithiumBattery/dgr=${dgr} — not yet wired into calc`);
   }
@@ -1084,7 +1106,7 @@ function prefillFromURL() {
   // Always add a line item when any product-level param is present;
   // otherwise the form is left empty and the user adds lines manually.
   const hasProduct = hs6 || desc || unitValueRaw !== null || totalValueRaw !== null
-                  || p.has('qty') || p.has('quantity') || p.has('coo') || p.has('itemOrigin');
+                  || _hasParam(m, 'qty', 'quantity', 'coo', 'itemOrigin');
   if (hasProduct) {
     addItem({
       hs6, desc, origin: coo, qty,
