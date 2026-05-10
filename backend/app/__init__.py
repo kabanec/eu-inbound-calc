@@ -20,6 +20,10 @@ def create_app() -> Flask:
     def index() -> str:
         return render_template("index.html")
 
+    @app.route("/demo")
+    def demo() -> str:
+        return render_template("demo.html")
+
     return app
 
 

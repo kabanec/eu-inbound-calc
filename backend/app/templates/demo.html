@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EU Inbound Calculator — Live Demo</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-300: #cbd5e1;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --slate-50:  #f8fafc;
+      --accent:    #10b981; /* emerald-500 */
+      --accent-dk: #059669; /* emerald-600 */
+      --ink:       #0f172a;
+      --muted:     #6b7280;
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0; background: var(--slate-100); color: var(--ink); font-size: 14px;
+    }
+
+    /* Header */
+    .topbar {
+      background: var(--slate-900); color: #fff;
+      padding: 14px 22px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #000;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 14px; }
+    .topbar h1 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+    .topbar .sub { font-size: 11px; color: var(--slate-300); margin-top: 2px; }
+    .demo-pill {
+      background: var(--accent); color: #052e1c;
+      padding: 4px 10px; border-radius: 999px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .topbar-right { display: flex; gap: 10px; align-items: center; }
+    .header-btn {
+      background: rgba(255,255,255,0.08); color: #fff;
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 7px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
+    }
+    .header-btn:hover { background: rgba(255,255,255,0.16); }
+
+    /* App layout */
+    .app {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: calc(100vh - 56px);
+    }
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { border-right: none; border-bottom: 1px solid #000; }
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: var(--slate-800); color: var(--slate-300);
+      border-right: 1px solid #000;
+      padding: 14px 0;
+    }
+    .sidebar-title {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: #94a3b8;
+      padding: 6px 18px 10px;
+    }
+    .scenario-item {
+      display: block; width: 100%;
+      background: transparent; color: var(--slate-300);
+      border: none; border-left: 3px solid transparent;
+      padding: 10px 16px 10px 15px;
+      text-align: left; cursor: pointer;
+      font-family: inherit; font-size: 13px; line-height: 1.35;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+    }
+    .scenario-item:hover { background: rgba(255,255,255,0.04); color: #fff; }
+    .scenario-item.active {
+      background: var(--slate-900);
+      border-left-color: var(--accent);
+      color: #fff;
+    }
+    .scenario-item .label { font-weight: 600; display: block; }
+    .scenario-item .desc { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+    .scenario-item.active .desc { color: var(--slate-300); }
+
+    /* Detail pane */
+    .detail {
+      padding: 26px 32px 60px;
+      overflow-y: auto;
+    }
+    @media (max-width: 700px) { .detail { padding: 18px 14px 40px; } }
+
+    .summary-strip {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin-bottom: 18px;
+    }
+    .tag {
+      background: #fff; border: 1px solid var(--slate-200);
+      padding: 4px 10px; border-radius: 999px;
+      font-size: 11px; color: var(--slate-700);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .tag strong { color: var(--ink); font-weight: 700; }
+    .tag.ioss-yes { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+    .tag.ioss-no  { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+    .tag.b2b-yes  { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+
+    /* Hero card */
+    .hero {
+      background: #fff; border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      padding: 26px 28px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+      margin-bottom: 16px;
+    }
+    .hero-label {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--muted); font-weight: 600;
+    }
+    .hero-amount {
+      font-size: 48px; font-weight: 700;
+      color: var(--accent); line-height: 1.0;
+      margin: 6px 0 4px;
+      letter-spacing: -0.02em;
+    }
+    .hero-sub { font-size: 13px; color: var(--slate-700); }
+    .hero-sub .pill {
+      display: inline-block;
+      background: var(--slate-100); color: var(--slate-700);
+      padding: 2px 8px; border-radius: 6px;
+      font-size: 11px; font-weight: 600;
+      margin-left: 6px;
+    }
+
+    /* Cost breakdown grid */
+    .cost-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+      margin-bottom: 18px;
+    }
+    @media (max-width: 800px) { .cost-grid { grid-template-columns: repeat(2, 1fr); } }
+    .cost-card {
+      background: #fff; border: 1px solid var(--slate-200);
+      border-radius: 10px; padding: 14px 16px;
+    }
+    .cost-card .lbl {
+      font-size: 11px; color: var(--muted); font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .cost-card .val {
+      font-size: 22px; color: var(--ink); font-weight: 700; margin-top: 4px;
+    }
+    .cost-card .note { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+    /* Section card */
+    .section {
+      background: #fff; border: 1px solid var(--slate-200);
+      border-radius: 12px; padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+    .section h2 {
+      font-size: 13px; margin: 0 0 12px;
+      color: var(--slate-900); font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+
+    /* Line items table */
+    table.lines { width: 100%; border-collapse: collapse; font-size: 12px; }
+    table.lines th {
+      text-align: left; font-weight: 600; color: var(--slate-700);
+      background: var(--slate-50);
+      padding: 8px 10px; border-bottom: 1px solid var(--slate-200);
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    table.lines td {
+      padding: 10px; border-bottom: 1px solid var(--slate-100);
+      color: var(--slate-700); vertical-align: top;
+    }
+    table.lines tr:last-child td { border-bottom: none; }
+    table.lines td.num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-align: right; }
+    .regime-badge {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px;
+    }
+    .regime-badge.e3 { background: #fee2e2; color: #991b1b; }
+    .regime-badge.fta { background: #d1fae5; color: #065f46; }
+    .regime-badge.std { background: #fef3c7; color: #92400e; }
+    .regime-badge.no_duty { background: #e5e7eb; color: #4b5563; }
+
+    /* Show your work — accordion */
+    details.work {
+      background: #fff; border: 1px solid var(--slate-200);
+      border-radius: 12px; padding: 0; margin-bottom: 16px; overflow: hidden;
+    }
+    details.work > summary {
+      list-style: none; cursor: pointer;
+      padding: 14px 20px;
+      font-weight: 700; font-size: 13px;
+      color: var(--slate-900);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    details.work > summary::-webkit-details-marker { display: none; }
+    details.work > summary::after {
+      content: "▼"; font-size: 10px; color: var(--muted);
+      transition: transform 0.15s;
+    }
+    details.work[open] > summary::after { transform: rotate(180deg); }
+    details.work[open] > summary { border-bottom: 1px solid var(--slate-200); }
+    details.work .work-body { padding: 14px 20px 18px; }
+
+    .step { padding: 8px 10px; margin-bottom: 6px; border-radius: 4px; font-size: 12px; line-height: 1.55; }
+    .step.input { background: #eff6ff; border-left: 3px solid #3b82f6; }
+    .step.calc  { background: #f3f4f6; border-left: 3px solid #6b7280; }
+    .step.result{ background: #d1fae5; border-left: 3px solid #10b981; }
+    .step .label { font-weight: 700; color: var(--slate-900); }
+    .step code { background: #e5e7eb; padding: 1px 5px; border-radius: 3px; font-family: ui-monospace, monospace; font-size: 11px; }
+
+    .work-body h3 {
+      font-size: 11px; color: var(--slate-700);
+      margin: 14px 0 6px; text-transform: uppercase;
+      letter-spacing: 0.06em; font-weight: 700;
+    }
+    .item-breakdown {
+      background: var(--slate-50); padding: 10px 12px;
+      border-radius: 6px; margin-bottom: 8px; font-size: 12px;
+      border: 1px solid var(--slate-200);
+    }
+    .item-breakdown .line-key { font-family: ui-monospace, monospace; font-size: 11px; color: var(--muted); }
+    .default-item {
+      background: #fffbeb; padding: 6px 8px; margin-bottom: 4px;
+      border-left: 2px solid #f59e0b; font-size: 11px; border-radius: 2px;
+    }
+    .default-item .field { font-family: ui-monospace, monospace; color: #92400e; font-weight: 600; }
+    .warning {
+      background: #fef2f2; border-left: 3px solid #ef4444;
+      padding: 7px 10px; font-size: 11px; margin-bottom: 6px;
+      border-radius: 2px; color: #991b1b;
+    }
+    .ref-list { font-size: 11px; color: var(--slate-700); line-height: 1.55; padding-left: 18px; margin: 4px 0 0; }
+    .ref-list li { margin-bottom: 3px; }
+    .fee-status {
+      background: #fff7ed; padding: 8px 10px;
+      border-radius: 4px; margin-top: 8px; font-size: 11px;
+      border-left: 3px solid #ea580c;
+    }
+    .fee-status .indicator { font-weight: 700; color: #ea580c; }
+
+    .cite-link { color: #2563eb; text-decoration: none; border-bottom: 1px dotted #2563eb; font-size: 0.9em; }
+    .cite-link:hover { border-bottom-style: solid; }
+
+    /* Modal — reused from index */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9000; display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 24px 16px; }
+    .modal-content { background: #fff; border-radius: 10px; width: 100%; max-width: 860px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); margin: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px 16px; border-bottom: 1px solid #e5e7eb; }
+    .modal-header h2 { margin: 0; font-size: 18px; color: #111827; }
+    .modal-close { background: none; border: none; font-size: 18px; cursor: pointer; color: #6b7280; padding: 4px 8px; border-radius: 4px; }
+    .modal-close:hover { background: #f3f4f6; color: #111827; }
+    .modal-body { padding: 20px 24px 28px; overflow-y: auto; max-height: calc(100vh - 130px); }
+    .modal-section { margin-bottom: 28px; }
+    .modal-section h3 { font-size: 14px; font-weight: 700; color: #1f2937; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1px solid #f3f4f6; }
+    .regime-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .regime-card { padding: 12px; border-radius: 6px; border: 1px solid; }
+    .regime-card.e3  { background: #fff1f2; border-color: #fecdd3; }
+    .regime-card.std { background: #fffbeb; border-color: #fde68a; }
+    .regime-card.fta { background: #f0fdf4; border-color: #bbf7d0; }
+    .regime-card.b2b { background: #eff6ff; border-color: #bfdbfe; }
+    .regime-card.postal { background: #faf5ff; border-color: #e9d5ff; }
+    .regime-card .regime-name { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+    .regime-card .regime-desc { font-size: 11px; color: #4b5563; line-height: 1.4; }
+    .regime-citation { font-size: 10px; color: #6b7280; margin-top: 6px; }
+    .fees-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .fees-table th { background: #f3f4f6; padding: 8px 10px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+    .fees-table td { padding: 7px 10px; border-bottom: 1px solid #f3f4f6; color: #374151; vertical-align: top; }
+    .fees-table tr:last-child td { border-bottom: none; }
+    .suspended-badge { background: #fef3c7; color: #92400e; padding: 1px 6px; border-radius: 8px; font-size: 10px; font-weight: 600; }
+    .active-badge { background: #d1fae5; color: #065f46; padding: 1px 6px; border-radius: 8px; font-size: 10px; font-weight: 600; }
+    .reference-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+    .reference-card { padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #f9fafb; }
+    .reference-card .ref-short { font-size: 12px; font-weight: 600; color: #1e40af; margin-bottom: 3px; }
+    .reference-card .ref-full { font-size: 10px; color: #4b5563; line-height: 1.4; margin-bottom: 6px; }
+    .reference-card a { font-size: 10px; color: #2563eb; text-decoration: none; }
+    .reference-card a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-left">
+    <div>
+      <h1>EU Inbound Calculator — Live Demo</h1>
+      <div class="sub">Council Reg. (EU) 2026/382 · Delegated Reg. C(2026)2760</div>
+    </div>
+    <span class="demo-pill">Demo · No live API</span>
+  </div>
+  <div class="topbar-right">
+    <button class="header-btn" onclick="openExplainer()">How does this work?</button>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- LEFT: scenario list -->
+  <aside class="sidebar">
+    <div class="sidebar-title">Scenarios</div>
+    <div id="scenario-list"></div>
+  </aside>
+
+  <!-- RIGHT: detail pane -->
+  <main class="detail" id="detail">
+    <div id="summary-strip" class="summary-strip"></div>
+    <div id="hero" class="hero"></div>
+    <div id="cost-grid" class="cost-grid"></div>
+
+    <div class="section">
+      <h2>Line items</h2>
+      <table class="lines" id="lines-table"></table>
+    </div>
+
+    <details class="work">
+      <summary>Show your work</summary>
+      <div class="work-body" id="work"></div>
+    </details>
+  </main>
+</div>
+
+<!-- EU Fees 101 Modal -->
+<div id="explainer-overlay" class="modal-overlay" onclick="if(event.target===this)closeExplainer()" style="display:none">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>EU Customs Fees 101</h2>
+      <button class="modal-close" onclick="closeExplainer()">×</button>
+    </div>
+    <div class="modal-body" id="explainer-body"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// Citation registry — same as index.html
+// ============================================================
+const CITATIONS = {
+  reg_2026_382: {
+    short: 'Reg. (EU) 2026/382',
+    full: 'Council Regulation (EU) 2026/382 of 11 February 2026 amending Regulation (EU) No 952/2013 (Union Customs Code) — new customs framework for low-value e-commerce',
+    url: 'https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32026R0382',
+  },
+  da_c_2026_2760: {
+    short: 'DA C(2026)2760',
+    full: 'Commission Delegated Regulation C(2026)2760 of 30 April 2026 — €3 per-item simplified duty fee and conditions for the e-commerce simplified regime',
+    url: 'https://ec.europa.eu/taxation_customs/customs/key-policies/e-commerce_en',
+  },
+  dir_2006_112: {
+    short: 'VAT Directive 2006/112/EC',
+    full: 'Council Directive 2006/112/EC of 28 November 2006 on the common system of value added tax',
+    url: 'https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=celex%3A32006L0112',
+  },
+  ioss_dir_2017_2455: {
+    short: 'IOSS Dir. 2017/2455/EU',
+    full: 'Council Directive (EU) 2017/2455 of 5 December 2017 introducing the Import One-Stop Shop (IOSS) for distance sales of imported goods',
+    url: 'https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32017L2455',
+  },
+  ucc_952_2013: {
+    short: 'UCC Reg. 952/2013',
+    full: 'Regulation (EU) No 952/2013 of the European Parliament and of the Council of 9 October 2013 laying down the Union Customs Code',
+    url: 'https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32013R0952',
+  },
+  da_2015_2446: {
+    short: 'DA (EU) 2015/2446',
+    full: 'Commission Delegated Regulation (EU) 2015/2446 of 28 July 2015 supplementing the Union Customs Code — H6 postal declaration procedures',
+    url: 'https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32015R2446',
+  },
+  cp42_da: {
+    short: 'DA 2015/2446 Art. 143(1)(d)',
+    full: 'Commission Delegated Regulation (EU) 2015/2446, Article 143(1)(d) — CP 42 VAT exemption for intra-EU B2B supplies',
+    url: 'https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32015R2446',
+  },
+  fr_ldf_2026: {
+    short: 'FR LdF 2026, Art. 82',
+    full: 'Loi de finances pour 2026, Law n° 2026-103, Article 82 — Taxe sur les petits colis (TPC), €2 per distinct HS6 line, effective 1 March 2026',
+    url: 'https://www.legifrance.gouv.fr/loda/id/JORFTEXT000051224559',
+  },
+  it_budget_2026: {
+    short: 'IT Budget Law 2026 §126-128',
+    full: 'Italian Budget Law 2026, Law no. 199/2025, Article 1, paragraphs 126-128 — €2 per-parcel flat fee, introduced Jan 2026, suspended until 1 July 2026',
+    url: 'https://www.gazzettaufficiale.it/eli/id/2025/12/31/25G00233/SG',
+  },
+  ro_og_2025: {
+    short: 'RO Fiscal Package Nov 2025',
+    full: 'Romanian Parliament, Law adopted 18 November 2025 (fiscal package) — 25 RON (≈ €4.90) per-parcel logistics tax, effective 1 January 2026, B2C only',
+    url: 'https://taxsummaries.pwc.com/romania/corporate/other-taxes',
+  },
+};
+
+function cite(key, anchorText) {
+  const c = CITATIONS[key];
+  if (!c) return anchorText || key;
+  return `<a class="cite-link" href="${c.url}" target="_blank" rel="noopener" title="${c.full}">${anchorText || c.short}</a>`;
+}
+
+const FEE_REF_MAP = { FR: 'fr_ldf_2026', IT: 'it_budget_2026', RO: 'ro_og_2025' };
+const LEGAL_REF_MAP = {
+  '2026/382': 'reg_2026_382',
+  'C(2026)2760': 'da_c_2026_2760',
+  '2006/112': 'dir_2006_112',
+  '2017/2455': 'ioss_dir_2017_2455',
+  '952/2013': 'ucc_952_2013',
+};
+
+// ============================================================
+// Modal: EU Fees 101 — same content/structure as index.html
+// ============================================================
+function openExplainer() {
+  document.getElementById('explainer-body').innerHTML = buildExplainerHTML();
+  populateReferenceGrid();
+  document.getElementById('explainer-overlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeExplainer() {
+  document.getElementById('explainer-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function buildExplainerHTML() {
+  let h = '';
+  h += `<div class="modal-section">
+    <h3>The Big Picture</h3>
+    <p style="font-size:13px;line-height:1.7;color:#374151;margin:0">
+      From <strong>1 July 2026</strong>, every low-value parcel (≤ €150) entering the EU pays a per-item
+      customs fee under the new €3 simplified regime — ${cite('reg_2026_382')} + ${cite('da_c_2026_2760')}.
+      The old €22 VAT exemption is gone. IOSS (Import One-Stop Shop) handles VAT collection for registered
+      sellers under ${cite('ioss_dir_2017_2455')}. Some member states layer additional national fees on top.
+    </p>
+  </div>`;
+  h += `<div class="modal-section">
+    <h3>Which regime applies to each item?</h3>
+    <div class="regime-cards">
+      <div class="regime-card e3">
+        <div class="regime-name">€3 / item</div>
+        <div class="regime-desc">B2C · ≤ €150 · non-FTA origin. Flat simplified duty per line item.</div>
+        <div class="regime-citation">${cite('da_c_2026_2760', 'DA C(2026)2760')}</div>
+      </div>
+      <div class="regime-card fta">
+        <div class="regime-name">FTA €0</div>
+        <div class="regime-desc">Origin country has EU FTA + valid proof (REX, EUR.1, etc.) → zero duty.</div>
+        <div class="regime-citation">${cite('da_c_2026_2760', 'DA Art. 1(1)(a)')}</div>
+      </div>
+      <div class="regime-card std">
+        <div class="regime-name">Standard tariff</div>
+        <div class="regime-desc">Value > €150, or €3 overridden. Full MFN or FTA ad-valorem rate applies.</div>
+        <div class="regime-citation">${cite('ucc_952_2013', 'UCC 952/2013')}</div>
+      </div>
+      <div class="regime-card b2b">
+        <div class="regime-name">B2B / CP42</div>
+        <div class="regime-desc">Business buyer → full customs procedures, no IOSS, standard tariff.</div>
+        <div class="regime-citation">${cite('cp42_da', 'DA Art. 143(1)(d)')}</div>
+      </div>
+      <div class="regime-card postal">
+        <div class="regime-name">H6 postal</div>
+        <div class="regime-desc">Non-IOSS postal consignment ≤ €1 000: simplified H6 declaration.</div>
+        <div class="regime-citation">${cite('da_2015_2446', 'DA 2015/2446')}</div>
+      </div>
+    </div>
+  </div>`;
+  h += `<div class="modal-section">
+    <h3>National fees (as of May 2026)</h3>
+    <table class="fees-table">
+      <thead><tr><th>Country</th><th>Amount</th><th>Basis</th><th>Status</th><th>Legal source</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>France</td><td><strong>€2.00</strong></td><td>per HS6 line</td>
+          <td><span class="active-badge">Active from Mar 2026</span></td>
+          <td>${cite('fr_ldf_2026', 'LdF 2026, Art. 82')}</td>
+        </tr>
+        <tr>
+          <td>Italy</td><td><strong>€2.00</strong></td><td>per parcel</td>
+          <td><span class="suspended-badge">Suspended → 1 Jul 2026</span></td>
+          <td>${cite('it_budget_2026', 'Budget Law 2026 §126')}</td>
+        </tr>
+        <tr>
+          <td>Romania</td><td><strong>€4.90</strong></td><td>per parcel</td>
+          <td><span class="active-badge">Active from Jan 2026</span></td>
+          <td>${cite('ro_og_2025', 'RO Fiscal Pkg Nov 2025')}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:#6b7280;margin:8px 0 0">
+      National fees are excluded from the VAT base per each respective law. Other member states may introduce fees later.
+    </p>
+  </div>`;
+  h += `<div class="modal-section">
+    <h3>VAT routing</h3>
+    <p style="font-size:12px;line-height:1.7;color:#374151;margin:0">
+      <strong>IOSS-registered seller:</strong> VAT collected at checkout, remitted monthly via the IOSS portal. No VAT collected at import. ${cite('ioss_dir_2017_2455')}<br>
+      <strong>Non-IOSS B2C (express):</strong> Customs/broker collects import VAT on behalf of buyer. ${cite('reg_2026_382')}<br>
+      <strong>Non-IOSS postal:</strong> Designated postal operator uses Special Arrangements scheme. ${cite('reg_2026_382')}<br>
+      <strong>B2B:</strong> Reverse-charge applies at destination; no IOSS. Full customs entry required. ${cite('dir_2006_112')}
+    </p>
+  </div>`;
+  h += `<div class="modal-section">
+    <h3>Primary sources</h3>
+    <div class="reference-grid" id="ref-grid"></div>
+  </div>`;
+  return h;
+}
+function populateReferenceGrid() {
+  const grid = document.getElementById('ref-grid');
+  if (!grid) return;
+  grid.innerHTML = Object.entries(CITATIONS).map(([, c]) => `
+    <div class="reference-card">
+      <div class="ref-short">${c.short}</div>
+      <div class="ref-full">${c.full}</div>
+      <a href="${c.url}" target="_blank" rel="noopener">Open source ↗</a>
+    </div>`).join('');
+}
+
+// ============================================================
+// Sidebar scenario list metadata (id, label, desc) — display only
+// ============================================================
+const SCENARIOS = [
+  { id: 'gb_fta',         label: '🇬🇧 GB→DE: FTA exclusion demo',           desc: 'UK origin with FTA proof — €3 bypassed, standard tariff (0%) applies' },
+  { id: 'fr_stack',       label: '🇫🇷 CN→FR: French €2/HS6 stack',          desc: 'Multi-HS basket to France — national €2/line (TPC) on top of EU €3' },
+  { id: 'it_parcel',      label: '🇮🇹 CN→IT: Italian €2/parcel (Jul 2026)', desc: 'Italy flat €2/parcel — suspended until 1 Jul 2026, then active' },
+  { id: 'ro_logistics',   label: '🇷🇴 CN→RO: Romanian €4.90 logistics tax', desc: '25 RON per-parcel logistics tax (≈ €4.90) on top of EU regime' },
+  { id: 'b2b_exit',       label: '🏢 CN→DE: B2B hard exit',                  desc: 'B2B import → CP42 exclusion → standard tariff, no €3, no IOSS' },
+  { id: 'over_150',       label: '💸 CN→DE: >€150 forces standard',          desc: 'Value exceeds €150 cap — €3 simplified regime no longer applies' },
+  { id: 'postal_no_ioss', label: '📮 CN→DE: Postal non-IOSS',                desc: 'Postal Designated Op channel — €3 still triggered without IOSS' },
+  { id: 'vanilla',        label: '🟢 CN→DE: Vanilla €3',                     desc: 'Baseline scenario — single B2C IOSS tee, simplest €3 path' },
+];
+
+// ============================================================
+// SCENARIO_DATA — pre-computed responses (no API calls).
+// Embedded JSON has been stripped of avalara_* fields.
+// ============================================================
+const SCENARIO_DATA = {
+  "gb_fta": {
+    "payload": {
+      "addresses": {
+        "shipFrom": {
+          "country": "GB"
+        },
+        "shipTo": {
+          "country": "DE"
+        }
+      },
+      "date": "2026-08-01",
+      "currencyCode": "EUR",
+      "euReform2026": {
+        "iossNumber": "IM3720000123",
+        "buyerAgent": false,
+        "postalDesignatedOperator": false,
+        "shipmentChannel": "express"
+      },
+      "customer": {
+        "euReform2026": {
+          "isBusinessBuyer": false
+        }
+      },
+      "lines": [
+        {
+          "hsCode": "610910",
+          "description": "Cotton t-shirt",
+          "countryOfOrigin": "GB",
+          "quantity": 2,
+          "amount": 24,
+          "standard_duty_rate": 0.12,
+          "fta_duty_rate": 0.0,
+          "euReform2026": {
+            "ftaProofType": "REX"
+          }
+        }
+      ]
+    },
+    "response": {
+      "compliance_warnings": [
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
+      ],
+      "consignment_value_eur": 24.0,
+      "declarant": "seller",
+      "declaration_type": "H7",
+      "defaults_applied": [],
+      "duty_total_eur": 0.0,
+      "fees": {
+        "national_fee_eur": 0.0,
+        "national_fee_source": null,
+        "union_handling_fee_eur": 0.0
+      },
+      "item_breakdown": [
+        {
+          "duty_eur": 0.0,
+          "grouping_key": [
+            "610910",
+            "cotton t-shirt",
+            "GB"
+          ],
+          "line_value_eur": 24.0,
+          "notes": [
+            "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
+          ],
+          "qty_total": 2,
+          "regime": "standard_tariff_fta"
+        }
+      ],
+      "landed_cost_eur": 28.56,
+      "legal_references": [
+        "Council Regulation (EU) 2026/382 of 11 February 2026",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+        "UCC Regulation (EU) 952/2013, Article 77"
+      ],
+      "vat": {
+        "collected_via": "ioss_at_checkout",
+        "vat_base_eur": 24.0,
+        "vat_eur": 4.56,
+        "vat_rate": 0.19
+      }
+    }
+  },
+  "fr_stack": {
+    "payload": {
+      "addresses": {
+        "shipFrom": {
+          "country": "CN"
+        },
+        "shipTo": {
+          "country": "FR"
+        }
+      },
+      "date": "2026-08-01",
+      "currencyCode": "EUR",
+      "euReform2026": {
+        "iossNumber": "IM3720000123",
+        "buyerAgent": false,
+        "postalDesignatedOperator": false,
+        "shipmentChannel": "express"
+      },
+      "customer": {
+        "euReform2026": {
+          "isBusinessBuyer": false
+        }
+      },
+      "lines": [
+        {
+          "hsCode": "610910",
+          "description": "Cotton t-shirt",
+          "countryOfOrigin": "CN",
+          "quantity": 1,
+          "amount": 12,
+          "standard_duty_rate": 0.12,
+          "fta_duty_rate": 0,
+          "euReform2026": {}
+        },
+        {
+          "hsCode": "640399",
+          "description": "Leather shoe",
+          "countryOfOrigin": "CN",
+          "quantity": 1,
+          "amount": 35,
+          "standard_duty_rate": 0.08,
+          "fta_duty_rate": 0,
+          "euReform2026": {}
+        },
+        {
+          "hsCode": "420232",
+          "description": "Leather wallet",
+          "countryOfOrigin": "CN",
+          "quantity": 1,
+          "amount": 25,
+          "standard_duty_rate": 0.03,
+          "fta_duty_rate": 0,
+          "euReform2026": {}
+        }
+      ]
+    },
+    "response": {
+      "compliance_warnings": [
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
+      ],
+      "consignment_value_eur": 72.0,
+      "declarant": "seller",
+      "declaration_type": "H7",
+      "defaults_applied": [],
+      "duty_total_eur": 9.0,
+      "fees": {
+        "national_fee_eur": 6.0,
+        "national_fee_source": "Customs administrative fee",
+        "union_handling_fee_eur": 0.0
+      },
+      "item_breakdown": [
+        {
+          "duty_eur": 3.0,
+          "grouping_key": [
+            "610910",
+            "cotton t-shirt",
+            "CN"
+          ],
+          "line_value_eur": 12.0,
+          "notes": [],
+          "qty_total": 1,
+          "regime": "e3_simplified"
+        },
+        {
+          "duty_eur": 3.0,
+          "grouping_key": [
+            "640399",
+            "leather shoe",
+            "CN"
+          ],
+          "line_value_eur": 35.0,
+          "notes": [],
+          "qty_total": 1,
+          "regime": "e3_simplified"
+        },
+        {
+          "duty_eur": 3.0,
+          "grouping_key": [
+            "420232",
+            "leather wallet",
+            "CN"
+          ],
+          "line_value_eur": 25.0,
+          "notes": [],
+          "qty_total": 1,
+          "regime": "e3_simplified"
+        }
+      ],
+      "landed_cost_eur": 101.4,
+      "legal_references": [
+        "Council Regulation (EU) 2026/382 of 11 February 2026",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+        "UCC Regulation (EU) 952/2013, Article 77"
+      ],
+      "vat": {
+        "collected_via": "ioss_at_checkout",
+        "vat_base_eur": 72.0,
+        "vat_eur": 14.4,
+        "vat_rate": 0.2
+      }
+    }
+  },
+  "it_parcel": {
+    "payload": {
+      "addresses": {
+        "shipFrom": {
+          "country": "CN"
+        },
+        "shipTo": {
+          "country": "IT"
+        }
+      },
+      "date": "2026-08-01",
+      "currencyCode": "EUR",
+      "euReform2026": {
+        "iossNumber": "IM3720000123",
+        "buyerAgent": false,
+        "postalDesignatedOperator": false,
+        "shipmentChannel": "express"
+      },
+      "customer": {
+        "euReform2026": {
+          "isBusinessBuyer": false
+        }
+      },
+      "lines": [
+        {
+          "hsCode": "610910",
+          "description": "Cotton t-shirt",
+          "countryOfOrigin": "CN",
+          "quantity": 1,
+          "amount": 15,
+          "standard_duty_rate": 0.12,
+          "fta_duty_rate": 0,
+          "euReform2026": {}
+        },
+        {
+          "hsCode": "640399",
+          "description": "Leather shoe",
+          "countryOfOrigin": "CN",
+          "quantity": 1,
+          "amount": 30,
+          "standard_duty_rate": 0.08,
+          "fta_duty_rate": 0,
+          "euReform2026": {}
+        }
+      ]
+    },
+    "response": {
+      "compliance_warnings": [
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
+      ],
+      "consignment_value_eur": 45.0,
+      "declarant": "seller",
+      "declaration_type": "H7",
+      "defaults_applied": [],
+      "duty_total_eur": 6.0,
+      "fees": {
+        "national_fee_eur": 2.0,
+        "national_fee_source": "Customs administrative fee",
+        "union_handling_fee_eur": 0.0
+      },
+      "item_breakdown": [
+        {
+          "duty_eur": 3.0,
+          "grouping_key": [
+            "610910",
+            "cotton t-shirt",
+            "CN"
+          ],
+          "line_value_eur": 15.0,
+          "notes": [],
+          "qty_total": 1,
+          "regime": "e3_simplified"
+        },
+        {
+          "duty_eur": 3.0,
+          "grouping_key": [
+            "640399",
+            "leather shoe",
+            "CN"
+          ],
+          "line_value_eur": 30.0,
+          "notes": [],
+          "qty_total": 1,
+          "regime": "e3_simplified"
+        }
+      ],
+      "landed_cost_eur": 62.9,
+      "legal_references": [
+        "Council Regulation (EU) 2026/382 of 11 February 2026",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+        "UCC Regulation (EU) 952/2013, Article 77"
+      ],
+      "vat": {
+        "collected_via": "ioss_at_checkout",
+        "vat_base_eur": 45.0,
+        "vat_eur": 9.9,
+        "vat_rate": 0.22
+      }
+    }
+  },
+  "ro_logistics": {
+    "payload": {
+      "addresses": {
+        "shipFrom": {
+          "country": "CN"
+        },
+        "shipTo": {
+          "country": "RO"
+        }
+      },
+      "date": "2026-08-01",
+      "currencyCode": "EUR",
+      "euReform2026": {
+        "iossNumber": "IM3720000123",
+        "buyerAgent": false,
+        "postalDesignatedOperator": false,
+        "shipmentChannel": "express"
+      },
+      "customer": {
+        "euReform2026": {
+          "isBusinessBuyer": false
+        }
+      },
+      "lines": [
+        {
+          "hsCode": "610910",
+          "description": "Cotton t-shirt",
+          "countryOfOrigin": "CN",
+          "quantity": 1,
+          "amount": 18,
+          "standard_duty_rate": 0.12,
+          "fta_duty_rate": 0,
+          "euReform2026": {}
+        }
+      ]
+    },
+    "response": {
+      "compliance_warnings": [
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
+      ],
+      "consignment_value_eur": 18.0,
+      "declarant": "seller",
+      "declaration_type": "H7",
+      "defaults_applied": [],
+      "duty_total_eur": 3.0,
+      "fees": {
+        "national_fee_eur": 4.75,
+        "national_fee_source": "Customs administrative fee",
+        "union_handling_fee_eur": 0.0
+      },
+      "item_breakdown": [
+        {
+          "duty_eur": 3.0,
+          "grouping_key": [
+            "610910",
+            "cotton t-shirt",
+            "CN"
+          ],
+          "line_value_eur": 18.0,
+          "notes": [],
+          "qty_total": 1,
+          "regime": "e3_simplified"
+        }
+      ],
+      "landed_cost_eur": 29.53,
+      "legal_references": [
+        "Council Regulation (EU) 2026/382 of 11 February 2026",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+        "UCC Regulation (EU) 952/2013, Article 77"
+      ],
+      "vat": {
+        "collected_via": "ioss_at_checkout",
+        "vat_base_eur": 18.0,
+        "vat_eur": 3.78,
+        "vat_rate": 0.21
+      }
+    }
+  },
+  "b2b_exit": {
+    "payload": {
+      "addresses": {
+        "shipFrom": {
+          "country": "CN"
+        },
+        "shipTo": {
+          "country": "DE"
+        }
+      },
+      "date": "2026-08-01",
+      "currencyCode": "EUR",
+      "euReform2026": {
+        "iossNumber": null,
+        "buyerAgent": false,
+        "postalDesignatedOperator": false,
+        "shipmentChannel": "express"
+      },
+      "customer": {
+        "euReform2026": {
+          "isBusinessBuyer": true
+        }
+      },
+      "lines": [
+        {
+          "hsCode": "610910",
+          "description": "Cotton t-shirt",
+          "countryOfOrigin": "CN",
+          "quantity": 5,
+          "amount": 60,
+          "standard_duty_rate": 0.12,
+          "fta_duty_rate": 0,
+          "euReform2026": {}
+        }
+      ]
+    },
+    "response": {
+      "compliance_warnings": [
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
+      ],
+      "consignment_value_eur": 60.0,
+      "declarant": "agent",
+      "declaration_type": "H7",
+      "defaults_applied": [],
+      "duty_total_eur": 0.0,
+      "fees": {
+        "national_fee_eur": 0.0,
+        "national_fee_source": null,
+        "union_handling_fee_eur": 0.0
+      },
+      "item_breakdown": [
+        {
+          "duty_eur": 0.0,
+          "grouping_key": [
+            "610910",
+            "cotton t-shirt",
+            "CN"
+          ],
+          "line_value_eur": 60.0,
+          "notes": [],
+          "qty_total": 5,
+          "regime": "standard_tariff"
+        }
+      ],
+      "landed_cost_eur": 60.0,
+      "legal_references": [
+        "Council Regulation (EU) 2026/382 of 11 February 2026",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+        "UCC Regulation (EU) 952/2013, Article 77"
+      ],
+      "vat": {
+        "collected_via": "oss_b2b",
+        "vat_base_eur": 0.0,
+        "vat_eur": 0.0,
+        "vat_rate": 0.19
+      }
+    }
+  },
+  "over_150": {
+    "payload": {
+      "addresses": {
+        "shipFrom": {
+          "country": "CN"
+        },
+        "shipTo": {
+          "country": "DE"
+        }
+      },
+      "date": "2026-08-01",
+      "currencyCode": "EUR",
+      "euReform2026": {
+        "iossNumber": "IM3720000123",
+        "buyerAgent": false,
+        "postalDesignatedOperator": false,
+        "shipmentChannel": "express"
+      },
+      "customer": {
+        "euReform2026": {
+          "isBusinessBuyer": false
+        }
+      },
+      "lines": [
+        {
+          "hsCode": "610910",
+          "description": "Cotton t-shirt",
+          "countryOfOrigin": "CN",
+          "quantity": 1,
+          "amount": 200,
+          "standard_duty_rate": 0.12,
+          "fta_duty_rate": 0,
+          "euReform2026": {}
+        }
+      ]
+    },
+    "response": {
+      "compliance_warnings": [
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
+      ],
+      "consignment_value_eur": 200.0,
+      "declarant": "carrier",
+      "declaration_type": "H1",
+      "defaults_applied": [
+        {
+          "default": false,
+          "field": "ioss_registered",
+          "rationale": "OVERRIDE: value > \u20ac150 \u2192 IOSS cap exceeded"
+        }
+      ],
+      "duty_total_eur": 24.0,
+      "fees": {
+        "national_fee_eur": 0.0,
+        "national_fee_source": null,
+        "union_handling_fee_eur": 0.0
+      },
+      "item_breakdown": [
+        {
+          "duty_eur": 24.0,
+          "grouping_key": [
+            "610910",
+            "cotton t-shirt",
+            "CN"
+          ],
+          "line_value_eur": 200.0,
+          "notes": [],
+          "qty_total": 1,
+          "regime": "standard_tariff"
+        }
+      ],
+      "landed_cost_eur": 266.56,
+      "legal_references": [
+        "Council Regulation (EU) 2026/382 of 11 February 2026",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+        "UCC Regulation (EU) 952/2013, Article 77"
+      ],
+      "vat": {
+        "collected_via": "import_clearance",
+        "vat_base_eur": 224.0,
+        "vat_eur": 42.56,
+        "vat_rate": 0.19
+      }
+    }
+  },
+  "postal_no_ioss": {
+    "payload": {
+      "addresses": {
+        "shipFrom": {
+          "country": "CN"
+        },
+        "shipTo": {
+          "country": "DE"
+        }
+      },
+      "date": "2026-08-01",
+      "currencyCode": "EUR",
+      "euReform2026": {
+        "iossNumber": null,
+        "buyerAgent": false,
+        "postalDesignatedOperator": true,
+        "shipmentChannel": "postal"
+      },
+      "customer": {
+        "euReform2026": {
+          "isBusinessBuyer": false
+        }
+      },
+      "lines": [
+        {
+          "hsCode": "610910",
+          "description": "Cotton t-shirt",
+          "countryOfOrigin": "CN",
+          "quantity": 1,
+          "amount": 20,
+          "standard_duty_rate": 0.12,
+          "fta_duty_rate": 0,
+          "euReform2026": {}
+        }
+      ]
+    },
+    "response": {
+      "compliance_warnings": [
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
+      ],
+      "consignment_value_eur": 20.0,
+      "declarant": "seller",
+      "declaration_type": "H6",
+      "defaults_applied": [
+        {
+          "default": true,
+          "field": "ioss_registered",
+          "rationale": "93% of B2C \u2264\u20ac150 EU imports are IOSS-registered (Council 2025-12-12)"
+        }
+      ],
+      "duty_total_eur": 3.0,
+      "fees": {
+        "national_fee_eur": 0.0,
+        "national_fee_source": null,
+        "union_handling_fee_eur": 0.0
+      },
+      "item_breakdown": [
+        {
+          "duty_eur": 3.0,
+          "grouping_key": [
+            "610910",
+            "cotton t-shirt",
+            "CN"
+          ],
+          "line_value_eur": 20.0,
+          "notes": [],
+          "qty_total": 1,
+          "regime": "e3_simplified"
+        }
+      ],
+      "landed_cost_eur": 26.8,
+      "legal_references": [
+        "Council Regulation (EU) 2026/382 of 11 February 2026",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+        "UCC Regulation (EU) 952/2013, Article 77"
+      ],
+      "vat": {
+        "collected_via": "ioss_at_checkout",
+        "vat_base_eur": 20.0,
+        "vat_eur": 3.8,
+        "vat_rate": 0.19
+      }
+    }
+  },
+  "vanilla": {
+    "payload": {
+      "addresses": {
+        "shipFrom": {
+          "country": "CN"
+        },
+        "shipTo": {
+          "country": "DE"
+        }
+      },
+      "date": "2026-08-01",
+      "currencyCode": "EUR",
+      "euReform2026": {
+        "iossNumber": "IM3720000123",
+        "buyerAgent": false,
+        "postalDesignatedOperator": false,
+        "shipmentChannel": "express"
+      },
+      "customer": {
+        "euReform2026": {
+          "isBusinessBuyer": false
+        }
+      },
+      "lines": [
+        {
+          "hsCode": "610910",
+          "description": "Cotton t-shirt",
+          "countryOfOrigin": "CN",
+          "quantity": 1,
+          "amount": 20,
+          "standard_duty_rate": 0.12,
+          "fta_duty_rate": 0,
+          "euReform2026": {}
+        }
+      ]
+    },
+    "response": {
+      "compliance_warnings": [
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
+      ],
+      "consignment_value_eur": 20.0,
+      "declarant": "seller",
+      "declaration_type": "H7",
+      "defaults_applied": [],
+      "duty_total_eur": 3.0,
+      "fees": {
+        "national_fee_eur": 0.0,
+        "national_fee_source": null,
+        "union_handling_fee_eur": 0.0
+      },
+      "item_breakdown": [
+        {
+          "duty_eur": 3.0,
+          "grouping_key": [
+            "610910",
+            "cotton t-shirt",
+            "CN"
+          ],
+          "line_value_eur": 20.0,
+          "notes": [],
+          "qty_total": 1,
+          "regime": "e3_simplified"
+        }
+      ],
+      "landed_cost_eur": 26.8,
+      "legal_references": [
+        "Council Regulation (EU) 2026/382 of 11 February 2026",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+        "UCC Regulation (EU) 952/2013, Article 77"
+      ],
+      "vat": {
+        "collected_via": "ioss_at_checkout",
+        "vat_base_eur": 20.0,
+        "vat_eur": 3.8,
+        "vat_rate": 0.19
+      }
+    }
+  }
+};
+
+// ============================================================
+// Helpers
+// ============================================================
+const $ = id => document.getElementById(id);
+const fmt = n => '€' + Number(n || 0).toFixed(2);
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function regimeClass(regime) {
+  if (!regime) return 'std';
+  if (regime.startsWith('e3')) return 'e3';
+  if (regime.includes('fta')) return 'fta';
+  if (regime === 'no_duty') return 'no_duty';
+  return 'std';
+}
+function regimeBadgeText(regime) {
+  return ({
+    'e3_simplified':         '€3 simplified',
+    'standard_tariff':       'Standard tariff',
+    'standard_tariff_fta':   'Standard tariff (FTA)',
+    'no_duty':               'No duty',
+  })[regime] || regime;
+}
+function heroSubtitle(d) {
+  // Pick a representative regime for the subtitle pill from item_breakdown.
+  const regimes = (d.item_breakdown || []).map(i => i.regime);
+  const uniq = [...new Set(regimes)];
+  if (uniq.length === 1) return regimeBadgeText(uniq[0]);
+  return regimes.length + ' lines · mixed regimes';
+}
+
+// ============================================================
+// Renderers
+// ============================================================
+function renderSummaryStrip(payload) {
+  const from = payload.addresses.shipFrom.country;
+  const to   = payload.addresses.shipTo.country;
+  const date = payload.date;
+  const channel = payload.euReform2026.shipmentChannel;
+  const ioss = !!payload.euReform2026.iossNumber;
+  const b2b  = !!payload.customer.euReform2026.isBusinessBuyer;
+  const buyerAgent = !!payload.euReform2026.buyerAgent;
+
+  const tags = [
+    `<span class="tag"><strong>${from} → ${to}</strong></span>`,
+    `<span class="tag">${date}</span>`,
+    `<span class="tag">channel: ${channel}</span>`,
+    `<span class="tag ${ioss ? 'ioss-yes' : 'ioss-no'}">IOSS: ${ioss ? 'yes' : 'no'}</span>`,
+    `<span class="tag ${b2b ? 'b2b-yes' : ''}">B2B: ${b2b ? 'yes' : 'no'}</span>`,
+  ];
+  if (buyerAgent) tags.push(`<span class="tag">buyer agent</span>`);
+  $('summary-strip').innerHTML = tags.join('');
+}
+
+function renderHero(d) {
+  $('hero').innerHTML = `
+    <div class="hero-label">Total landed cost (EUR)</div>
+    <div class="hero-amount">${fmt(d.landed_cost_eur)}</div>
+    <div class="hero-sub">
+      Regime applied <span class="pill">${heroSubtitle(d)}</span>
+      <span class="pill">Decl: ${d.declaration_type}</span>
+      <span class="pill">Declarant: ${d.declarant}</span>
+    </div>
+  `;
+}
+
+function renderCostGrid(d) {
+  const fees = d.fees || {};
+  const feesTotal = Number(fees.union_handling_fee_eur || 0) + Number(fees.national_fee_eur || 0);
+  const feeNote = [];
+  if (Number(fees.union_handling_fee_eur || 0) > 0) feeNote.push('union handling');
+  if (Number(fees.national_fee_eur || 0) > 0) feeNote.push('national');
+  $('cost-grid').innerHTML = `
+    <div class="cost-card">
+      <div class="lbl">Goods value</div>
+      <div class="val">${fmt(d.consignment_value_eur)}</div>
+    </div>
+    <div class="cost-card">
+      <div class="lbl">Customs duty</div>
+      <div class="val">${fmt(d.duty_total_eur)}</div>
+    </div>
+    <div class="cost-card">
+      <div class="lbl">VAT</div>
+      <div class="val">${fmt(d.vat.vat_eur)}</div>
+      <div class="note">${(d.vat.vat_rate*100).toFixed(1)}% on ${fmt(d.vat.vat_base_eur)} · ${escHtml(d.vat.collected_via)}</div>
+    </div>
+    <div class="cost-card">
+      <div class="lbl">Fees</div>
+      <div class="val">${fmt(feesTotal)}</div>
+      <div class="note">${feeNote.length ? feeNote.join(' + ') : 'none'}</div>
+    </div>
+  `;
+}
+
+function renderLinesTable(payload, d) {
+  // Map payload lines to per-line rows; pair with item_breakdown by index when possible.
+  const lines = payload.lines || [];
+  const breakdowns = d.item_breakdown || [];
+  let rows = '<thead><tr>' +
+    '<th>HS6</th>' +
+    '<th>Description</th>' +
+    '<th>Origin</th>' +
+    '<th>Qty</th>' +
+    '<th>Unit value</th>' +
+    '<th>Line value</th>' +
+    '<th>Regime</th>' +
+    '<th>Duty</th>' +
+    '</tr></thead><tbody>';
+
+  lines.forEach((ln, i) => {
+    const qty = Number(ln.quantity || 0);
+    const lineValue = Number(ln.amount || 0);
+    const unit = qty > 0 ? lineValue / qty : 0;
+    // Find a matching breakdown by HS6 + origin (grouping_key = [hs6, desc-lower, origin])
+    const bd = breakdowns.find(b => b.grouping_key && b.grouping_key[0] === ln.hsCode && b.grouping_key[2] === ln.countryOfOrigin)
+            || breakdowns[i] || null;
+    const regime = bd ? bd.regime : '';
+    const duty   = bd ? bd.duty_eur : 0;
+    rows += `<tr>
+      <td><code>${escHtml(ln.hsCode || '')}</code></td>
+      <td>${escHtml(ln.description || '')}</td>
+      <td>${escHtml(ln.countryOfOrigin || '')}</td>
+      <td class="num">${qty}</td>
+      <td class="num">${fmt(unit)}</td>
+      <td class="num">${fmt(lineValue)}</td>
+      <td><span class="regime-badge ${regimeClass(regime)}">${escHtml(regimeBadgeText(regime))}</span></td>
+      <td class="num">${fmt(duty)}</td>
+    </tr>`;
+  });
+  rows += '</tbody>';
+  $('lines-table').innerHTML = rows;
+}
+
+// renderWork — adapted from index.html, with section 7 (Avalara baseline) removed.
+function renderWork(d, payload) {
+  let html = '';
+
+  // 1. Inputs
+  html += '<h3>1. Inputs received</h3>';
+  html += `<div class="step input">
+    <span class="label">Route:</span> ${escHtml(payload.addresses.shipFrom.country)} → ${escHtml(payload.addresses.shipTo.country)} ·
+    <span class="label">Date:</span> ${escHtml(payload.date)} ·
+    <span class="label">Channel:</span> ${escHtml(payload.euReform2026.shipmentChannel)}<br>
+    <span class="label">B2B:</span> ${payload.customer.euReform2026.isBusinessBuyer} ·
+    <span class="label">IOSS:</span> ${payload.euReform2026.iossNumber ? 'yes' : 'no'} ·
+    <span class="label">Buyer agent:</span> ${payload.euReform2026.buyerAgent}
+  </div>`;
+
+  // 2. Defaults applied
+  if (d.defaults_applied && d.defaults_applied.length > 0) {
+    html += '<h3>2. Defaults applied (caller omitted)</h3>';
+    d.defaults_applied.forEach(def => {
+      html += `<div class="default-item"><span class="field">${escHtml(def.field)}</span> = <code>${escHtml(JSON.stringify(def.default))}</code><br>${escHtml(def.rationale)}</div>`;
+    });
+  } else {
+    html += '<h3>2. Defaults applied</h3><div class="step calc">None — caller supplied all fields.</div>';
+  }
+
+  // 3. Decision tree per item
+  html += '<h3>3. Regime decision per item</h3>';
+  (d.item_breakdown || []).forEach(item => {
+    html += `<div class="item-breakdown">
+      <div class="line-key">${item.grouping_key.map(escHtml).join(' / ')}</div>
+      <div>Qty ${item.qty_total} · Line value ${fmt(item.line_value_eur)}</div>
+      <span class="regime-badge ${regimeClass(item.regime)}">${escHtml(regimeBadgeText(item.regime))}</span>
+      <strong style="float:right">${fmt(item.duty_eur)}</strong>
+      ${item.notes && item.notes.length ? '<div style="font-size:11px;color:#6b7280;margin-top:4px">' + item.notes.map(escHtml).join('<br>') + '</div>' : ''}
+    </div>`;
+  });
+
+  // 4. VAT routing
+  html += '<h3>4. VAT routing</h3>';
+  html += `<div class="step calc">
+    <span class="label">Base:</span> ${fmt(d.vat.vat_base_eur)} ×
+    <span class="label">Rate:</span> ${(d.vat.vat_rate*100).toFixed(1)}% =
+    <span class="label">${fmt(d.vat.vat_eur)}</span><br>
+    <span class="label">Collected via:</span> <code>${escHtml(d.vat.collected_via)}</code>
+  </div>`;
+
+  // 5. Fees
+  if (Number(d.fees.national_fee_eur) > 0 || Number(d.fees.union_handling_fee_eur) > 0) {
+    html += '<h3>5. Fees</h3>';
+    if (Number(d.fees.union_handling_fee_eur) > 0) {
+      html += `<div class="step calc"><span class="label">Union handling:</span> ${fmt(d.fees.union_handling_fee_eur)}<br><small>EU-wide flat fee, effective 1 Nov 2026 (Reg. 2026/382, working assumption pending implementing act)</small></div>`;
+    }
+    if (Number(d.fees.national_fee_eur) > 0) {
+      const feeKey = FEE_REF_MAP[payload.addresses.shipTo.country];
+      const feeSrcText = d.fees.national_fee_source || 'national fee';
+      const feeSrcHtml = feeKey ? cite(feeKey, feeSrcText) : escHtml(feeSrcText);
+      html += `<div class="step calc"><span class="label">National (${escHtml(payload.addresses.shipTo.country)}):</span> ${fmt(d.fees.national_fee_eur)}<br><small>${feeSrcHtml}</small></div>`;
+    }
+  }
+
+  // 6. Final result
+  html += '<h3>6. Final result</h3>';
+  const feesTotal = Number(d.fees.union_handling_fee_eur || 0) + Number(d.fees.national_fee_eur || 0);
+  html += `<div class="step result">
+    <span class="label">Duty:</span> ${fmt(d.duty_total_eur)} ·
+    <span class="label">VAT:</span> ${fmt(d.vat.vat_eur)} ·
+    <span class="label">Fees:</span> ${fmt(feesTotal)}<br>
+    <span class="label">Landed:</span> ${fmt(d.landed_cost_eur)}
+  </div>`;
+
+  // (Section 7 — engine-vs-baseline comparison — intentionally omitted in demo.)
+
+  // National-fee status line if applicable (mirrors index renderTotals)
+  if (Number(d.fees.national_fee_eur) > 0) {
+    const ms = payload.addresses.shipTo.country;
+    const feeKey = FEE_REF_MAP[ms];
+    const feeSrcText = d.fees.national_fee_source || 'national fee';
+    const feeSrcHtml = feeKey ? cite(feeKey, feeSrcText) : escHtml(feeSrcText);
+    html += `<div class="fee-status"><span class="indicator">⚠ National fee active:</span> ${feeSrcHtml}</div>`;
+  }
+
+  // Compliance warnings
+  if (d.compliance_warnings && d.compliance_warnings.length) {
+    html += '<h3>Compliance warnings</h3>';
+    d.compliance_warnings.forEach(w => { html += `<div class="warning">${escHtml(w)}</div>`; });
+  }
+
+  // Legal references — wired to citation registry (LEGAL_REF_MAP keys are substrings).
+  if (d.legal_references && d.legal_references.length) {
+    html += '<h3>Legal references</h3><ul class="ref-list">';
+    d.legal_references.forEach(r => {
+      const citKey = Object.keys(LEGAL_REF_MAP).find(k => r.includes(k));
+      html += `<li>${citKey ? cite(LEGAL_REF_MAP[citKey], r) : escHtml(r)}</li>`;
+    });
+    html += '</ul>';
+  }
+
+  $('work').innerHTML = html;
+}
+
+// ============================================================
+// Sidebar wiring + scenario selection
+// ============================================================
+function buildSidebar() {
+  const wrap = $('scenario-list');
+  wrap.innerHTML = SCENARIOS.map(s => `
+    <button type="button" class="scenario-item" data-id="${s.id}">
+      <span class="label">${s.label}</span>
+      <span class="desc">${escHtml(s.desc)}</span>
+    </button>
+  `).join('');
+  wrap.querySelectorAll('.scenario-item').forEach(btn => {
+    btn.addEventListener('click', () => selectScenario(btn.dataset.id));
+  });
+}
+
+function selectScenario(id) {
+  const entry = SCENARIO_DATA[id];
+  if (!entry) return;
+  document.querySelectorAll('.scenario-item').forEach(b => {
+    b.classList.toggle('active', b.dataset.id === id);
+  });
+  renderSummaryStrip(entry.payload);
+  renderHero(entry.response);
+  renderCostGrid(entry.response);
+  renderLinesTable(entry.payload, entry.response);
+  renderWork(entry.response, entry.payload);
+  // Scroll detail back to top so screenshot framing stays consistent
+  $('detail').scrollTop = 0;
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+// ============================================================
+// Init: render the FIRST scenario (gb_fta) on page load.
+// ============================================================
+buildSidebar();
+selectScenario(SCENARIOS[0].id);
+</script>
+
+</body>
+</html>
