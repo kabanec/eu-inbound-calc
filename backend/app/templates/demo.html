@@ -214,6 +214,74 @@
     details.work[open] > summary { border-bottom: 1px solid var(--slate-200); }
     details.work .work-body { padding: 14px 20px 18px; }
 
+    /* Strategies — ranked optimisation list */
+    .strategies { display: flex; flex-direction: column; gap: 8px; }
+    .strategy-row {
+      display: grid;
+      grid-template-columns: 32px 1fr auto;
+      gap: 12px;
+      align-items: start;
+      padding: 12px 14px;
+      background: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-left: 3px solid var(--slate-200);
+      border-radius: 8px;
+    }
+    .strategy-row.top {
+      background: #ecfdf5;
+      border-color: #a7f3d0;
+      border-left: 3px solid var(--accent);
+    }
+    .strategy-medal {
+      font-size: 20px;
+      line-height: 1;
+      text-align: center;
+      padding-top: 2px;
+    }
+    .strategy-medal.empty {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      padding-top: 6px;
+    }
+    .strategy-main { min-width: 0; }
+    .strategy-head {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 2px;
+    }
+    .strategy-name {
+      font-size: 13px; font-weight: 700; color: var(--slate-900);
+    }
+    .strategy-badge {
+      display: inline-block;
+      font-size: 9px; font-weight: 700;
+      padding: 2px 7px; border-radius: 999px;
+      background: var(--slate-900); color: #fff;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .strategy-saves {
+      display: inline-block;
+      font-size: 10px; font-weight: 700;
+      padding: 2px 7px; border-radius: 999px;
+      background: var(--accent); color: #fff;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .strategy-desc {
+      font-size: 11px; color: var(--slate-700); line-height: 1.5;
+    }
+    .strategy-risks {
+      margin: 6px 0 0; padding-left: 16px;
+      font-size: 10px; color: var(--muted); line-height: 1.5;
+    }
+    .strategy-risks li { margin-bottom: 2px; }
+    .strategy-cost {
+      text-align: right;
+      font-size: 15px; font-weight: 700;
+      color: var(--accent-dk);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      white-space: nowrap;
+    }
+
     .step { padding: 8px 10px; margin-bottom: 6px; border-radius: 4px; font-size: 12px; line-height: 1.55; }
     .step.input { background: #eff6ff; border-left: 3px solid #3b82f6; }
     .step.calc  { background: #f3f4f6; border-left: 3px solid #6b7280; }
@@ -5288,6 +5356,77 @@ function renderLinesTable(payload, d) {
   $('lines-table').innerHTML = rows;
 }
 
+// ============================================================
+// Strategies — render the ranked optimisation list
+// ============================================================
+const STRATEGY_LABELS = {
+  status_quo:               'Status quo',
+  consolidate_descriptions: 'Consolidate descriptions',
+  split_parcels:            'Split into per-HS6 parcels',
+  push_above_150:           'Push value above €150',
+  drop_ioss_use_fta:        'Drop IOSS, use FTA postal',
+  b2b_eu_warehouse:         'B2B + EU warehouse fulfilment',
+};
+function strategyLabel(name) {
+  if (STRATEGY_LABELS[name]) return STRATEGY_LABELS[name];
+  // Graceful fallback for any unmapped strategy name.
+  return String(name || '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+function strategyMedal(idx) {
+  if (idx === 0) return '🥇'; // gold
+  if (idx === 1) return '🥈'; // silver
+  if (idx === 2) return '🥉'; // bronze
+  return String(idx + 1);
+}
+function renderStrategies(strategies) {
+  const host = $('strategies');
+  if (!host) return;
+  if (!Array.isArray(strategies) || strategies.length === 0) {
+    host.innerHTML = '<div class="strategy-desc" style="color:var(--muted)">No alternative strategies for this scenario.</div>';
+    return;
+  }
+  const statusQuo = strategies.find(s => s.name === 'status_quo');
+  const sqCost = statusQuo ? Number(statusQuo.result.landed_cost_eur || 0) : null;
+  const cheapest = strategies[0]; // pre-sorted ascending by landed cost
+  const cheapestCost = Number(cheapest.result.landed_cost_eur || 0);
+  const showSaves = statusQuo && cheapest.name !== 'status_quo' && cheapestCost < sqCost - 0.005;
+
+  host.innerHTML = strategies.map((s, i) => {
+    const isTop = i === 0;
+    const isActive = s.name === 'status_quo';
+    const cost = Number(s.result.landed_cost_eur || 0);
+    const medalRaw = strategyMedal(i);
+    const isEmoji = i < 3;
+    const medalHtml = isEmoji
+      ? `<div class="strategy-medal">${medalRaw}</div>`
+      : `<div class="strategy-medal empty">#${i + 1}</div>`;
+    const badges = [];
+    if (isActive) badges.push('<span class="strategy-badge">Active</span>');
+    if (isTop && showSaves) {
+      const delta = sqCost - cost;
+      badges.push(`<span class="strategy-saves">💸 Saves ${fmt(delta)} vs status quo</span>`);
+    }
+    const risks = (s.risk_notes || []).filter(Boolean);
+    const risksHtml = risks.length
+      ? '<ul class="strategy-risks">' + risks.map(r => `<li>${escHtml(r)}</li>`).join('') + '</ul>'
+      : '';
+    return `<div class="strategy-row${isTop ? ' top' : ''}">
+      ${medalHtml}
+      <div class="strategy-main">
+        <div class="strategy-head">
+          <span class="strategy-name">${escHtml(strategyLabel(s.name))}</span>
+          ${badges.join(' ')}
+        </div>
+        <div class="strategy-desc">${escHtml(s.description || '')}</div>
+        ${risksHtml}
+      </div>
+      <div class="strategy-cost">${fmt(cost)}</div>
+    </div>`;
+  }).join('');
+}
+
 // renderWork — adapted from index.html, with section 7 (Avalara baseline) removed.
 function renderWork(d, payload) {
   let html = '';
@@ -5414,6 +5553,7 @@ function selectScenario(id) {
   renderHero(entry.response);
   renderCostGrid(entry.response);
   renderLinesTable(entry.payload, entry.response);
+  renderStrategies(entry.strategies);
   renderWork(entry.response, entry.payload);
   // Scroll detail back to top so screenshot framing stays consistent
   $('detail').scrollTop = 0;
