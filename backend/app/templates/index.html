@@ -981,6 +981,126 @@ function updateMutualExclusion() {
 document.getElementById('b2b').addEventListener('change', updateMutualExclusion);
 document.getElementById('buyer_agent').addEventListener('change', updateMutualExclusion);
 
+// ---- URL prefill (for iframe embed from parent presentation) ----
+//
+// Supported query parameters (all optional, case-sensitive):
+//   shipTo, destination       — destination MS, 2-letter ISO (e.g. DE, FR)
+//   shipFrom, origin          — ship-from country, 2-letter ISO
+//   coo, itemOrigin           — line-item country of origin (defaults to shipFrom)
+//   hsCode, hs6               — 6-digit HS code
+//   description, desc         — commercial description
+//   qty, quantity             — integer quantity (default 1)
+//   unitValue                 — per-unit value
+//   totalValue, value         — total declared value (divided by qty for unit value)
+//   currency                  — informational; calculator works in EUR (warns on mismatch)
+//   weightKg, weight          — informational; not currently used in duty calc
+//   method                    — "postal" → postal designated op; anything else → express
+//   b2b, buyerAgent, ioss     — boolean ("true"/"1"/"yes" → checked)
+//   date, transactionDate     — YYYY-MM-DD; sets transaction_date
+//   lithiumBattery, dgr       — informational; not currently a calc input
+//
+// Behavior: when ANY supported param is present, the URL prefill takes over
+// and the default scenario is not loaded. The calculator runs once after
+// prefill so the embed shows results immediately.
+function _boolParam(p, ...keys) {
+  for (const k of keys) {
+    if (p.has(k)) {
+      const v = (p.get(k) || '').toLowerCase();
+      return v === 'true' || v === '1' || v === 'yes' || v === 'on';
+    }
+  }
+  return null;
+}
+function _firstParam(p, ...keys) {
+  for (const k of keys) {
+    if (p.has(k)) return p.get(k);
+  }
+  return null;
+}
+// Normalise country aliases to ISO 3166-1 alpha-2 used by our select options.
+// UK is the most common alias for GB; EL is the EU's own code for Greece (ISO uses GR).
+const _COUNTRY_ALIASES = { UK: 'GB', EL: 'GR', UKR: 'UA', GBR: 'GB', DEU: 'DE', FRA: 'FR', ITA: 'IT', ROU: 'RO' };
+function _normCountry(code) {
+  if (!code) return code;
+  const c = String(code).trim().toUpperCase();
+  return _COUNTRY_ALIASES[c] || c;
+}
+function prefillFromURL() {
+  const p = new URLSearchParams(window.location.search);
+  const known = ['shipTo','destination','shipFrom','origin','coo','itemOrigin',
+                 'hsCode','hs6','description','desc','qty','quantity',
+                 'unitValue','totalValue','value','currency','weightKg','weight',
+                 'method','b2b','buyerAgent','buyer_agent','ioss','iossRegistered',
+                 'date','transactionDate','lithiumBattery','dgr'];
+  if (!known.some(k => p.has(k))) return false;
+
+  reset();
+
+  const shipTo   = _normCountry(_firstParam(p, 'shipTo', 'destination'));
+  const shipFrom = _normCountry(_firstParam(p, 'shipFrom', 'origin'));
+  if (shipTo)   setSelect('destination_ms', shipTo);
+  if (shipFrom) setSelect('ship_from', shipFrom);
+
+  const txnDate = _firstParam(p, 'date', 'transactionDate');
+  if (txnDate) $('transaction_date').value = txnDate;
+
+  const method = (_firstParam(p, 'method') || '').toLowerCase().replace(/[\s_-]/g, '');
+  if (method === 'postal') setMethod('postal');
+  else if (method) setMethod('express');
+
+  const b2b = _boolParam(p, 'b2b');
+  const buyerAgent = _boolParam(p, 'buyerAgent', 'buyer_agent');
+  const ioss = _boolParam(p, 'ioss', 'iossRegistered');
+  if (b2b !== null)        $('b2b').checked = b2b;
+  if (buyerAgent !== null) $('buyer_agent').checked = buyerAgent;
+  if (ioss !== null)       $('ioss_registered').checked = ioss;
+
+  const qty = Math.max(1, parseInt(_firstParam(p, 'qty', 'quantity') || '1', 10) || 1);
+  const hs6 = (_firstParam(p, 'hsCode', 'hs6') || '').replace(/\D/g, '').slice(0, 6);
+  const desc = _firstParam(p, 'description', 'desc') || '';
+  const coo = _normCountry(_firstParam(p, 'coo', 'itemOrigin') || shipFrom || 'CN');
+
+  const unitValueRaw = _firstParam(p, 'unitValue');
+  const totalValueRaw = _firstParam(p, 'totalValue', 'value');
+  let unitValue = 0;
+  if (unitValueRaw !== null) {
+    unitValue = parseFloat(unitValueRaw) || 0;
+  } else if (totalValueRaw !== null) {
+    const total = parseFloat(totalValueRaw) || 0;
+    unitValue = qty > 0 ? total / qty : total;
+  }
+
+  const currency = (_firstParam(p, 'currency') || 'EUR').toUpperCase();
+  if (currency !== 'EUR') {
+    console.warn(`[URL prefill] currency=${currency} treated as EUR (demo has no FX conversion)`);
+  }
+
+  const weightKg = parseFloat(_firstParam(p, 'weightKg', 'weight') || '0') || 0;
+  const dgr = _boolParam(p, 'lithiumBattery', 'dgr');
+  if (dgr !== null) {
+    console.info(`[URL prefill] lithiumBattery/dgr=${dgr} — not yet wired into calc`);
+  }
+
+  // Always add a line item when any product-level param is present;
+  // otherwise the form is left empty and the user adds lines manually.
+  const hasProduct = hs6 || desc || unitValueRaw !== null || totalValueRaw !== null
+                  || p.has('qty') || p.has('quantity') || p.has('coo') || p.has('itemOrigin');
+  if (hasProduct) {
+    addItem({
+      hs6, desc, origin: coo, qty,
+      unit_value: unitValue,
+      std_rate: 0, fta_rate: 0, fta_proof: false,
+    });
+    const lastRow = document.querySelector('.item:last-child');
+    if (lastRow) {
+      lastRow.dataset.weightKg = weightKg;
+      lastRow.dataset.currency = currency;
+    }
+  }
+
+  return true;
+}
+
 // ---- Init ----
 function initScenarios() {
   const wrap = $('scenarios');
@@ -1001,8 +1121,13 @@ function initScenarios() {
 }
 
 initScenarios();
-SCENARIOS[0].setup();   // Pre-load the FTA exclusion demo so users see something interesting first
-updateMutualExclusion(); // Set initial IOSS lock state based on default checkbox values
+if (prefillFromURL()) {
+  updateMutualExclusion();
+  runCalculate();
+} else {
+  SCENARIOS[0].setup();   // No URL params → pre-load the FTA exclusion demo
+  updateMutualExclusion();
+}
 </script>
 
 </body>
