@@ -215,73 +215,108 @@
     details.work[open] > summary { border-bottom: 1px solid var(--slate-200); }
     details.work .work-body { padding: 14px 20px 18px; }
 
-    /* Strategies — ranked optimisation list */
-    .strategies { display: flex; flex-direction: column; gap: 8px; }
-    .strategy-row {
-      display: grid;
-      grid-template-columns: 32px 1fr auto;
-      gap: 12px;
-      align-items: start;
-      padding: 12px 14px;
-      background: var(--slate-50);
-      border: 1px solid var(--slate-200);
-      border-left: 3px solid var(--slate-200);
-      border-radius: 8px;
+    /* Strategy analysis — categorised */
+    .strategy-card {
+      background: #fff; border: 1px solid var(--slate-200);
+      border-radius: 8px; padding: 16px 20px; margin-bottom: 16px;
     }
-    .strategy-row.top {
-      background: #ecfdf5;
-      border-color: #a7f3d0;
-      border-left: 3px solid var(--accent);
-    }
-    .strategy-medal {
-      font-size: 20px;
-      line-height: 1;
-      text-align: center;
-      padding-top: 2px;
-    }
-    .strategy-medal.empty {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--muted);
-      padding-top: 6px;
-    }
-    .strategy-main { min-width: 0; }
-    .strategy-head {
-      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-      margin-bottom: 2px;
-    }
-    .strategy-name {
+    .strategy-card h2 {
       font-size: 13px; font-weight: 700; color: var(--slate-900);
+      margin: 0 0 4px; letter-spacing: 0.01em;
     }
-    .strategy-badge {
-      display: inline-block;
-      font-size: 9px; font-weight: 700;
-      padding: 2px 7px; border-radius: 999px;
-      background: var(--slate-900); color: #fff;
-      text-transform: uppercase; letter-spacing: 0.06em;
+    .strategy-card-summary {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      font-size: 11px; color: var(--slate-700);
+      margin-bottom: 12px;
     }
-    .strategy-saves {
-      display: inline-block;
-      font-size: 10px; font-weight: 700;
-      padding: 2px 7px; border-radius: 999px;
-      background: var(--accent); color: #fff;
+    .strategy-summary-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 999px;
+      background: var(--slate-100); color: var(--slate-700);
+      font-weight: 600; font-size: 10px;
       text-transform: uppercase; letter-spacing: 0.04em;
     }
-    .strategy-desc {
-      font-size: 11px; color: var(--slate-700); line-height: 1.5;
+    .strategy-summary-chip.saves { background: #d1fae5; color: #065f46; }
+    .strategy-summary-chip.worse { background: #fee2e2; color: #991b1b; }
+    .strategy-summary-chip.na    { background: var(--slate-100); color: var(--slate-700); }
+    .strategy-baseline {
+      background: var(--slate-50); border: 1px solid var(--slate-200);
+      border-radius: 6px; padding: 10px 14px; margin-bottom: 14px;
+      display: flex; justify-content: space-between; align-items: baseline;
+      gap: 12px;
     }
-    .strategy-risks {
-      margin: 6px 0 0; padding-left: 16px;
-      font-size: 10px; color: var(--muted); line-height: 1.5;
+    .strategy-baseline-label {
+      font-size: 11px; color: var(--slate-700); font-weight: 600;
     }
-    .strategy-risks li { margin-bottom: 2px; }
-    .strategy-cost {
+    .strategy-baseline-value {
+      font-size: 16px; font-weight: 700; color: var(--slate-900);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .strategy-bucket { margin-top: 14px; }
+    .strategy-bucket:first-of-type { margin-top: 0; }
+    .strategy-bucket h3 {
+      font-size: 11px; font-weight: 700; color: var(--slate-900);
+      margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.06em;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .strategy-bucket-meta {
+      font-size: 10px; font-weight: 600; color: var(--muted);
+      letter-spacing: 0.02em; text-transform: none;
+    }
+    .strategy-bucket-empty {
+      font-size: 11px; color: var(--muted); font-style: italic;
+      padding: 6px 0;
+    }
+    .strategy-row {
+      display: grid;
+      grid-template-columns: 24px 1fr auto;
+      column-gap: 12px; row-gap: 4px;
+      align-items: start;
+      padding: 10px 12px; margin-bottom: 6px;
+      background: var(--slate-50); border: 1px solid var(--slate-200);
+      border-left: 3px solid var(--slate-200);
+      border-radius: 6px;
+    }
+    .strategy-row.saves { border-left-color: var(--accent); background: #ecfdf5; border-color: #a7f3d0; }
+    .strategy-row.worse { border-left-color: #ef4444; background: #fef2f2; border-color: #fecaca; }
+    .strategy-row.noop  { border-left-color: var(--slate-300); }
+    .strategy-row.na    { border-left-color: var(--slate-300); opacity: 0.85; }
+    .strategy-icon {
+      grid-row: 1 / span 2;
+      font-size: 16px; line-height: 1.2; padding-top: 1px;
+      text-align: center;
+    }
+    .strategy-label {
+      font-size: 13px; font-weight: 700; color: var(--slate-900);
+      grid-column: 2;
+    }
+    .strategy-result {
+      grid-column: 3; grid-row: 1;
       text-align: right;
-      font-size: 15px; font-weight: 700;
-      color: var(--accent-dk);
+      font-size: 13px; font-weight: 700;
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       white-space: nowrap;
+      color: var(--slate-900);
     }
+    .strategy-result.na { color: var(--muted); font-style: italic; font-weight: 600; }
+    .strategy-delta {
+      font-size: 11px; font-weight: 600; margin-left: 6px;
+    }
+    .strategy-delta.saves { color: #047857; }
+    .strategy-delta.worse { color: #b91c1c; }
+    .strategy-delta.noop  { color: var(--muted); }
+    .strategy-modified {
+      grid-column: 2 / span 2;
+      font-size: 11px; color: var(--slate-700); line-height: 1.4;
+    }
+    .strategy-modified .lbl { color: var(--muted); font-weight: 600; }
+    .strategy-explain {
+      grid-column: 2 / span 2;
+      font-size: 11px; color: var(--slate-700); line-height: 1.45;
+      margin-top: 2px;
+    }
+    .strategy-explain .lbl { color: var(--muted); font-weight: 600; }
+    .strategy-explain.na .lbl { color: #92400e; }
 
     .step { padding: 8px 10px; margin-bottom: 6px; border-radius: 4px; font-size: 12px; line-height: 1.55; }
     .step.input { background: #eff6ff; border-left: 3px solid #3b82f6; }
@@ -390,6 +425,9 @@
       <h2>Line items</h2>
       <table class="lines" id="lines-table"></table>
     </div>
+
+    <!-- Strategy analysis — categorised, explained card -->
+    <div id="strategies" class="strategy-card"></div>
 
     <details class="work" open>
       <summary>Show your work</summary>
@@ -820,7 +858,7 @@ const SCENARIO_DATA = {
         "result": {
           "compliance_warnings": [
             "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Split into 1 parcels — totals are summed across parcels."
+            "Split into 1 parcels — values, duties and totals are summed across parcels."
           ],
           "consignment_value_eur": 24.0,
           "declarant": "seller",
@@ -1321,9 +1359,9 @@ const SCENARIO_DATA = {
           "compliance_warnings": [
             "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
             "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
-            "Split into 3 parcels — totals are summed across parcels."
+            "Split into 3 parcels — values, duties and totals are summed across parcels."
           ],
-          "consignment_value_eur": 12.0,
+          "consignment_value_eur": 72.0,
           "declarant": "seller",
           "declaration_type": "H7",
           "defaults_applied": [],
@@ -1764,9 +1802,9 @@ const SCENARIO_DATA = {
           "compliance_warnings": [
             "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
             "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
-            "Split into 2 parcels — totals are summed across parcels."
+            "Split into 2 parcels — values, duties and totals are summed across parcels."
           ],
-          "consignment_value_eur": 15.0,
+          "consignment_value_eur": 45.0,
           "declarant": "seller",
           "declaration_type": "H7",
           "defaults_applied": [],
@@ -2137,7 +2175,7 @@ const SCENARIO_DATA = {
           "compliance_warnings": [
             "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
             "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
-            "Split into 1 parcels — totals are summed across parcels."
+            "Split into 1 parcels — values, duties and totals are summed across parcels."
           ],
           "consignment_value_eur": 18.0,
           "declarant": "seller",
@@ -2482,7 +2520,7 @@ const SCENARIO_DATA = {
         "result": {
           "compliance_warnings": [
             "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Split into 1 parcels — totals are summed across parcels."
+            "Split into 1 parcels — values, duties and totals are summed across parcels."
           ],
           "consignment_value_eur": 60.0,
           "declarant": "agent",
@@ -2721,64 +2759,6 @@ const SCENARIO_DATA = {
     },
     "strategies": [
       {
-        "complexity": 3,
-        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
-        "name": "push_above_150",
-        "result": {
-          "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
-          ],
-          "consignment_value_eur": 150.01,
-          "declarant": "carrier",
-          "declaration_type": "H1",
-          "defaults_applied": [
-            {
-              "default": false,
-              "field": "ioss_registered",
-              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
-            }
-          ],
-          "duty_total_eur": 24.0,
-          "fees": {
-            "national_fee_eur": 0.0,
-            "national_fee_source": null,
-            "union_handling_fee_eur": 0.0
-          },
-          "item_breakdown": [
-            {
-              "duty_eur": 24.0,
-              "grouping_key": [
-                "610910",
-                "cotton t-shirt",
-                "CN"
-              ],
-              "line_value_eur": 200.0,
-              "notes": [],
-              "qty_total": 1,
-              "regime": "standard_tariff"
-            }
-          ],
-          "landed_cost_eur": 207.07,
-          "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
-          ],
-          "vat": {
-            "collected_via": "import_clearance",
-            "vat_base_eur": 174.01,
-            "vat_eur": 33.06,
-            "vat_rate": 0.19
-          }
-        },
-        "risk_notes": [
-          "Requires merchandising change (filler item or upsell).",
-          "Triggers H1 declaration with full data requirements.",
-          "Loses H7 simplification."
-        ]
-      },
-      {
         "complexity": 1,
         "description": "Ship as currently configured.",
         "name": "status_quo",
@@ -2789,13 +2769,7 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 200.0,
           "declarant": "carrier",
           "declaration_type": "H1",
-          "defaults_applied": [
-            {
-              "default": false,
-              "field": "ioss_registered",
-              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
-            }
-          ],
+          "defaults_applied": [],
           "duty_total_eur": 24.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -2843,13 +2817,7 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 200.0,
           "declarant": "carrier",
           "declaration_type": "H1",
-          "defaults_applied": [
-            {
-              "default": false,
-              "field": "ioss_registered",
-              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
-            }
-          ],
+          "defaults_applied": [],
           "duty_total_eur": 24.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -2897,18 +2865,12 @@ const SCENARIO_DATA = {
         "result": {
           "compliance_warnings": [
             "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Split into 1 parcels — totals are summed across parcels."
+            "Split into 1 parcels — values, duties and totals are summed across parcels."
           ],
           "consignment_value_eur": 200.0,
           "declarant": "carrier",
           "declaration_type": "H1",
-          "defaults_applied": [
-            {
-              "default": false,
-              "field": "ioss_registered",
-              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
-            }
-          ],
+          "defaults_applied": [],
           "duty_total_eur": 24.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -3102,13 +3064,7 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 20.0,
           "declarant": "seller",
           "declaration_type": "H6",
-          "defaults_applied": [
-            {
-              "default": true,
-              "field": "ioss_registered",
-              "rationale": "93% of B2C ≤€150 EU imports are IOSS-registered (Council 2025-12-12)"
-            }
-          ],
+          "defaults_applied": [],
           "duty_total_eur": 3.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -3157,13 +3113,7 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 20.0,
           "declarant": "seller",
           "declaration_type": "H6",
-          "defaults_applied": [
-            {
-              "default": true,
-              "field": "ioss_registered",
-              "rationale": "93% of B2C ≤€150 EU imports are IOSS-registered (Council 2025-12-12)"
-            }
-          ],
+          "defaults_applied": [],
           "duty_total_eur": 3.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -3212,18 +3162,12 @@ const SCENARIO_DATA = {
           "compliance_warnings": [
             "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
             "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
-            "Split into 1 parcels — totals are summed across parcels."
+            "Split into 1 parcels — values, duties and totals are summed across parcels."
           ],
           "consignment_value_eur": 20.0,
           "declarant": "seller",
           "declaration_type": "H6",
-          "defaults_applied": [
-            {
-              "default": true,
-              "field": "ioss_registered",
-              "rationale": "93% of B2C ≤€150 EU imports are IOSS-registered (Council 2025-12-12)"
-            }
-          ],
+          "defaults_applied": [],
           "duty_total_eur": 3.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -3275,7 +3219,13 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 150.01,
           "declarant": "postal_operator",
           "declaration_type": "H1",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+            }
+          ],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -3561,7 +3511,7 @@ const SCENARIO_DATA = {
           "compliance_warnings": [
             "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
             "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
-            "Split into 1 parcels — totals are summed across parcels."
+            "Split into 1 parcels — values, duties and totals are summed across parcels."
           ],
           "consignment_value_eur": 20.0,
           "declarant": "seller",
@@ -3816,13 +3766,7 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 30.0,
           "declarant": "agent",
           "declaration_type": "H7",
-          "defaults_applied": [
-            {
-              "default": false,
-              "field": "ioss_registered",
-              "rationale": "OVERRIDE: buyer_agent breaks distance-sale construct"
-            }
-          ],
+          "defaults_applied": [],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -3870,13 +3814,7 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 30.0,
           "declarant": "agent",
           "declaration_type": "H7",
-          "defaults_applied": [
-            {
-              "default": false,
-              "field": "ioss_registered",
-              "rationale": "OVERRIDE: buyer_agent breaks distance-sale construct"
-            }
-          ],
+          "defaults_applied": [],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -3924,18 +3862,12 @@ const SCENARIO_DATA = {
         "result": {
           "compliance_warnings": [
             "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Split into 1 parcels — totals are summed across parcels."
+            "Split into 1 parcels — values, duties and totals are summed across parcels."
           ],
           "consignment_value_eur": 30.0,
           "declarant": "agent",
           "declaration_type": "H7",
-          "defaults_applied": [
-            {
-              "default": false,
-              "field": "ioss_registered",
-              "rationale": "OVERRIDE: buyer_agent breaks distance-sale construct"
-            }
-          ],
+          "defaults_applied": [],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -3987,13 +3919,7 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 150.01,
           "declarant": "agent",
           "declaration_type": "H1",
-          "defaults_applied": [
-            {
-              "default": false,
-              "field": "ioss_registered",
-              "rationale": "OVERRIDE: buyer_agent breaks distance-sale construct"
-            }
-          ],
+          "defaults_applied": [],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -4275,7 +4201,7 @@ const SCENARIO_DATA = {
         "result": {
           "compliance_warnings": [
             "Pre-€3 regime: standard tariff with €150 de minimis still applicable. EU 2026 reform fields ignored.",
-            "Split into 1 parcels — totals are summed across parcels."
+            "Split into 1 parcels — values, duties and totals are summed across parcels."
           ],
           "consignment_value_eur": 20.0,
           "declarant": "seller",
@@ -4624,7 +4550,7 @@ const SCENARIO_DATA = {
           "compliance_warnings": [
             "MISSING_PRODUCT_IDENTIFIERS — DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026.",
             "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
-            "Split into 1 parcels — totals are summed across parcels."
+            "Split into 1 parcels — values, duties and totals are summed across parcels."
           ],
           "consignment_value_eur": 20.0,
           "declarant": "seller",
@@ -5026,9 +4952,9 @@ const SCENARIO_DATA = {
         "result": {
           "compliance_warnings": [
             "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Split into 2 parcels — totals are summed across parcels."
+            "Split into 2 parcels — values, duties and totals are summed across parcels."
           ],
-          "consignment_value_eur": 25.0,
+          "consignment_value_eur": 55.0,
           "declarant": "seller",
           "declaration_type": "H7",
           "defaults_applied": [],
@@ -5353,74 +5279,293 @@ function renderLinesTable(payload, d) {
 }
 
 // ============================================================
-// Strategies — render the ranked optimisation list
+// Strategy analysis — categorised, explained card
 // ============================================================
 const STRATEGY_LABELS = {
   status_quo:               'Status quo',
   consolidate_descriptions: 'Consolidate descriptions',
-  split_parcels:            'Split into per-HS6 parcels',
+  split_parcels:            'Split into separate parcels',
   push_above_150:           'Push value above €150',
-  drop_ioss_use_fta:        'Drop IOSS, use FTA postal',
-  b2b_eu_warehouse:         'B2B + EU warehouse fulfilment',
+  drop_ioss_use_fta:        'Drop IOSS, use postal + FTA',
+  b2b_eu_warehouse:         'Bulk B2B + EU warehouse fulfilment',
 };
 function strategyLabel(name) {
   if (STRATEGY_LABELS[name]) return STRATEGY_LABELS[name];
-  // Graceful fallback for any unmapped strategy name.
   return String(name || '')
     .replace(/_/g, ' ')
     .replace(/\b\w/g, c => c.toUpperCase());
 }
-function strategyMedal(idx) {
-  if (idx === 0) return '🥇'; // gold
-  if (idx === 1) return '🥈'; // silver
-  if (idx === 2) return '🥉'; // bronze
-  return String(idx + 1);
+
+// Bucket assignments — which category each strategy belongs to.
+const STRATEGY_BUCKETS = {
+  consolidate_descriptions: 'operational',
+  drop_ioss_use_fta:        'operational',
+  split_parcels:            'counter',
+  push_above_150:           'counter',
+  b2b_eu_warehouse:         'pivot',
+};
+const BUCKET_META = {
+  operational: { icon: '🛠', title: 'Operational fixes' },
+  counter:     { icon: '📊', title: 'Counter-examples' },
+  pivot:       { icon: '🏗', title: 'Strategic pivots' },
+};
+
+// Plain-language explanations per strategy.
+const STRATEGY_EXPLANATIONS = {
+  consolidate_descriptions: {
+    what: 'Normalise descriptions of items sharing HS6+origin so they collapse to one grouping.',
+    why_help: 'Reduces per-HS6 fee count (matters for FR €2/HS6 stacking).',
+    why_na: 'No items share HS6+origin with different descriptions — nothing to consolidate.',
+  },
+  drop_ioss_use_fta: {
+    what: 'Drop IOSS at checkout; ship via postal designated operator with FTA preference.',
+    why_help: 'The €3 simplified fee is bypassed; standard tariff applies (often 0% under FTA).',
+    why_filtered: 'No items qualify — origin not in EU FTA partner list, or FTA proof not held.',
+  },
+  split_parcels: {
+    what: 'Ship each HS6+origin grouping as a separate parcel instead of 1 consolidated.',
+    why_worse: 'Per-parcel fees apply N times (e.g. IT €2/parcel, RO €4.90/parcel), increasing total.',
+    why_na: 'Only one HS6+origin grouping in this shipment — nothing to split.',
+  },
+  push_above_150: {
+    what: 'Bump consignment value to €150.01 (filler item or upsell).',
+    why_worse_under_threshold: 'VAT base jumps to €150.01 (×3+); standard tariff replaces €3 simplified.',
+    caveat: 'Requires merchandising change.',
+    why_na: 'Already above €150 — strategy not applicable.',
+  },
+  b2b_eu_warehouse: {
+    what: 'Order in bulk (≥€1000) as B2B; fulfil EU customers from an EU warehouse.',
+    why_na: 'Requires bulk B2B (€1000+ floor), EU warehouse capacity, working capital — not a per-shipment fix.',
+  },
+};
+
+// Build the "modified input" line for each strategy from the payload.
+function modifiedInputFor(name, payload) {
+  const lines = (payload && payload.lines) || [];
+  const totalValue = lines.reduce((a, l) => a + Number(l.amount || 0), 0);
+  switch (name) {
+    case 'consolidate_descriptions':
+      return 'Description normalisation: items sharing HS6+origin get a unified description.';
+    case 'drop_ioss_use_fta':
+      return 'Channel: express → postal · IOSS: yes → no · FTA proof applied.';
+    case 'split_parcels': {
+      const groupings = new Set(lines.map(l => `${l.hsCode}|${l.countryOfOrigin}`));
+      const n = Math.max(groupings.size, 1);
+      return `Parcels: 1 → ${n} (one per HS6+origin grouping).`;
+    }
+    case 'push_above_150':
+      return `Consignment value: ${fmt(totalValue)} → €150.01.`;
+    case 'b2b_eu_warehouse': {
+      const target = Math.max(totalValue, 1000);
+      return `Buyer: B2C → B2B · Value: ${fmt(totalValue)} → ${fmt(target)} · IOSS: yes → no.`;
+    }
+    default:
+      return '';
+  }
 }
-function renderStrategies(strategies) {
+
+// Detect applicability based on the payload context, independent of cost.
+function strategyApplicability(name, payload) {
+  const lines = (payload && payload.lines) || [];
+  const totalValue = lines.reduce((a, l) => a + Number(l.amount || 0), 0);
+  switch (name) {
+    case 'consolidate_descriptions': {
+      // Applicable iff the (HS6, desc, origin) key set has more entries than (HS6, origin).
+      // i.e. at least two items share HS6+origin but differ on description.
+      const fullKeys  = new Set(lines.map(l => `${l.hsCode}|${(l.description||'').trim().toLowerCase()}|${l.countryOfOrigin}`));
+      const groupKeys = new Set(lines.map(l => `${l.hsCode}|${l.countryOfOrigin}`));
+      return fullKeys.size > groupKeys.size;
+    }
+    case 'split_parcels': {
+      const groupings = new Set(lines.map(l => `${l.hsCode}|${l.countryOfOrigin}`));
+      return groupings.size >= 2;
+    }
+    case 'push_above_150':
+      return totalValue < 150;
+    case 'b2b_eu_warehouse':
+      // Strategic pivot — never per-shipment applicable.
+      return false;
+    case 'drop_ioss_use_fta':
+      // Only resolvable from presence in strategies array (see classifyStrategy).
+      return true;
+    default:
+      return true;
+  }
+}
+
+// Classify a strategy result into one of: saves | worse | noop | na_inapplicable.
+function classifyStrategy(s, statusQuoCost, payload) {
+  if (!s) return 'na_inapplicable';
+  if (s.name === 'b2b_eu_warehouse') return 'na_inapplicable';
+  const applicable = strategyApplicability(s.name, payload);
+  if (!applicable) return 'na_inapplicable';
+  const cost = Number(s.result && s.result.landed_cost_eur || 0);
+  const sq   = Number(statusQuoCost || 0);
+  const delta = cost - sq;          // positive = worse
+  if (-delta >= 0.50) return 'saves';
+  if ( delta >= 1.00) return 'worse';
+  return 'noop';
+}
+
+const STATE_ICONS = {
+  saves: '✅',
+  worse: '⚠️',
+  noop:  '➖',
+  na_inapplicable: '🚫',
+};
+
+function renderStrategies(strategies, payload) {
   const host = $('strategies');
   if (!host) return;
-  if (!Array.isArray(strategies) || strategies.length === 0) {
-    host.innerHTML = '<div class="strategy-desc" style="color:var(--muted)">No alternative strategies for this scenario.</div>';
-    return;
-  }
-  const statusQuo = strategies.find(s => s.name === 'status_quo');
-  const sqCost = statusQuo ? Number(statusQuo.result.landed_cost_eur || 0) : null;
-  const cheapest = strategies[0]; // pre-sorted ascending by landed cost
-  const cheapestCost = Number(cheapest.result.landed_cost_eur || 0);
-  const showSaves = statusQuo && cheapest.name !== 'status_quo' && cheapestCost < sqCost - 0.005;
+  if (!Array.isArray(strategies)) strategies = [];
 
-  host.innerHTML = strategies.map((s, i) => {
-    const isTop = i === 0;
-    const isActive = s.name === 'status_quo';
-    const cost = Number(s.result.landed_cost_eur || 0);
-    const medalRaw = strategyMedal(i);
-    const isEmoji = i < 3;
-    const medalHtml = isEmoji
-      ? `<div class="strategy-medal">${medalRaw}</div>`
-      : `<div class="strategy-medal empty">#${i + 1}</div>`;
-    const badges = [];
-    if (isActive) badges.push('<span class="strategy-badge">Active</span>');
-    if (isTop && showSaves) {
-      const delta = sqCost - cost;
-      badges.push(`<span class="strategy-saves">💸 Saves ${fmt(delta)} vs status quo</span>`);
+  const statusQuo = strategies.find(s => s.name === 'status_quo');
+  const sqCost = statusQuo ? Number(statusQuo.result.landed_cost_eur || 0) : 0;
+
+  // Build a working list of strategy-name → { entry, classification }.
+  // For drop_ioss_use_fta: if it's in the strategies array, classify by cost.
+  // If missing from the array (backend filtered it out), synthesize a "filtered" N/A row.
+  const ALL_NAMES = ['consolidate_descriptions','drop_ioss_use_fta','split_parcels','push_above_150','b2b_eu_warehouse'];
+  const byName = Object.fromEntries(strategies.map(s => [s.name, s]));
+
+  const rows = ALL_NAMES.map(name => {
+    const entry = byName[name];
+    let state, cost = null, delta = null, filteredByBackend = false;
+
+    if (!entry) {
+      // Strategy is missing from the backend response.
+      // For drop_ioss_use_fta this means the FTA filter excluded it → render as N/A.
+      // For push_above_150 this means the value was already above €150 → also N/A.
+      // For others it shouldn't normally happen, but treat as N/A.
+      state = 'na_inapplicable';
+      filteredByBackend = true;
+    } else {
+      state = classifyStrategy(entry, sqCost, payload);
+      cost = Number(entry.result && entry.result.landed_cost_eur || 0);
+      delta = cost - sqCost;
     }
-    const risks = (s.risk_notes || []).filter(Boolean);
-    const risksHtml = risks.length
-      ? '<ul class="strategy-risks">' + risks.map(r => `<li>${escHtml(r)}</li>`).join('') + '</ul>'
+    return { name, entry, state, cost, delta, filteredByBackend };
+  });
+
+  // Tally summary chips.
+  const counts = { saves: 0, worse: 0, noop: 0, na: 0 };
+  rows.forEach(r => {
+    if (r.state === 'saves') counts.saves++;
+    else if (r.state === 'worse') counts.worse++;
+    else if (r.state === 'noop') counts.noop++;
+    else counts.na++;
+  });
+  const totalEvaluated = rows.length;
+
+  // Group rows by bucket.
+  const buckets = { operational: [], counter: [], pivot: [] };
+  rows.forEach(r => {
+    const b = STRATEGY_BUCKETS[r.name] || 'operational';
+    buckets[b].push(r);
+  });
+
+  function explanationFor(r) {
+    const exp = STRATEGY_EXPLANATIONS[r.name] || {};
+    const parts = [];
+    if (exp.what) parts.push(`<span class="lbl">What:</span> ${escHtml(exp.what)}`);
+    if (r.state === 'saves' && exp.why_help) {
+      parts.push(`<span class="lbl">Why it helps:</span> ${escHtml(exp.why_help)}`);
+    } else if (r.state === 'worse') {
+      const why = exp.why_worse || exp.why_worse_under_threshold;
+      if (why) parts.push(`<span class="lbl">Why worse:</span> ${escHtml(why)}`);
+      if (exp.caveat) parts.push(`<span class="lbl">Caveat:</span> ${escHtml(exp.caveat)}`);
+    } else if (r.state === 'noop') {
+      parts.push(`<span class="lbl">Result:</span> Same cost as status quo (within €0.50). Strategy ran but didn't move the needle.`);
+    } else if (r.state === 'na_inapplicable') {
+      let reason = exp.why_na || 'Strategy does not apply to this shipment.';
+      if (r.name === 'drop_ioss_use_fta' && r.filteredByBackend) {
+        reason = exp.why_filtered || reason;
+      } else if (r.name === 'push_above_150' && r.filteredByBackend) {
+        reason = exp.why_na || 'Already above €150 — strategy not applicable.';
+      }
+      parts.push(`<span class="lbl">Why N/A:</span> ${escHtml(reason)}`);
+    }
+    const cls = (r.state === 'na_inapplicable') ? 'strategy-explain na' : 'strategy-explain';
+    return `<div class="${cls}">${parts.join(' ')}</div>`;
+  }
+
+  function rowHtml(r) {
+    const stateClass = r.state === 'na_inapplicable' ? 'na' : r.state;
+    const icon = STATE_ICONS[r.state] || '·';
+    const label = strategyLabel(r.name);
+
+    let resultHtml;
+    if (r.state === 'na_inapplicable') {
+      resultHtml = `<div class="strategy-result na">N/A</div>`;
+    } else {
+      const deltaSign = r.delta > 0 ? '+' : (r.delta < 0 ? '−' : '±');
+      const deltaAbs  = fmt(Math.abs(r.delta));
+      const deltaCls  = r.state;
+      resultHtml = `<div class="strategy-result">${fmt(r.cost)}<span class="strategy-delta ${deltaCls}"> (${deltaSign}${deltaAbs.replace('€','')}€)</span></div>`;
+    }
+
+    // Modified-input line — show only for applicable rows (state !== na) OR for push_above_150 N/A
+    // because the user wants to see what the modification would be even when not applicable.
+    const showModified = r.state !== 'na_inapplicable' || (r.name === 'push_above_150' && !r.filteredByBackend);
+    const modifiedHtml = showModified
+      ? `<div class="strategy-modified"><span class="lbl">Modified:</span> ${escHtml(modifiedInputFor(r.name, payload))}</div>`
       : '';
-    return `<div class="strategy-row${isTop ? ' top' : ''}">
-      ${medalHtml}
-      <div class="strategy-main">
-        <div class="strategy-head">
-          <span class="strategy-name">${escHtml(strategyLabel(s.name))}</span>
-          ${badges.join(' ')}
-        </div>
-        <div class="strategy-desc">${escHtml(s.description || '')}</div>
-        ${risksHtml}
-      </div>
-      <div class="strategy-cost">${fmt(cost)}</div>
+
+    return `<div class="strategy-row ${stateClass}">
+      <div class="strategy-icon">${icon}</div>
+      <div class="strategy-label">${escHtml(label)}</div>
+      ${resultHtml}
+      ${modifiedHtml}
+      ${explanationFor(r)}
     </div>`;
-  }).join('');
+  }
+
+  function bucketHtml(key) {
+    const meta = BUCKET_META[key];
+    const items = buckets[key];
+    const total = items.length;
+    const applicable = items.filter(r => r.state !== 'na_inapplicable').length;
+    const worse = items.filter(r => r.state === 'worse').length;
+    const saves = items.filter(r => r.state === 'saves').length;
+    let metaText;
+    if (key === 'pivot') {
+      metaText = '(out of scope per-shipment)';
+    } else {
+      const bits = [`${applicable} of ${total} applicable`];
+      if (saves) bits.push(`${saves} save`);
+      if (worse) bits.push(`${worse} worse`);
+      metaText = `(${bits.join(', ')})`;
+    }
+    const body = items.length
+      ? items.map(rowHtml).join('')
+      : '<div class="strategy-bucket-empty">(none for this configuration)</div>';
+    return `<div class="strategy-bucket">
+      <h3>${meta.icon} ${escHtml(meta.title)} <span class="strategy-bucket-meta">${escHtml(metaText)}</span></h3>
+      ${body}
+    </div>`;
+  }
+
+  const summaryChips = [
+    `<span class="strategy-summary-chip">${totalEvaluated} evaluated</span>`,
+    `<span class="strategy-summary-chip saves">✅ ${counts.saves} save${counts.saves === 1 ? '' : 's'}</span>`,
+    `<span class="strategy-summary-chip worse">⚠️ ${counts.worse} worse</span>`,
+    `<span class="strategy-summary-chip na">🚫 ${counts.na} N/A</span>`,
+  ];
+  if (counts.noop) {
+    summaryChips.splice(3, 0, `<span class="strategy-summary-chip">➖ ${counts.noop} no-op</span>`);
+  }
+
+  host.innerHTML = `
+    <h2>🧠 Strategy analysis</h2>
+    <div class="strategy-card-summary">${summaryChips.join('')}</div>
+    <div class="strategy-baseline">
+      <span class="strategy-baseline-label">Status quo (current configuration)</span>
+      <span class="strategy-baseline-value">${fmt(sqCost)}</span>
+    </div>
+    ${bucketHtml('operational')}
+    ${bucketHtml('counter')}
+    ${bucketHtml('pivot')}
+  `;
 }
 
 // renderWork — adapted from index.html, with section 7 (Avalara baseline) removed.
@@ -5549,6 +5694,7 @@ function selectScenario(id) {
   renderHero(entry.response);
   renderCostGrid(entry.response);
   renderLinesTable(entry.payload, entry.response);
+  renderStrategies(entry.strategies, entry.payload);
   renderWork(entry.response, entry.payload);
   // Scroll detail back to top so screenshot framing stays consistent
   $('detail').scrollTop = 0;
