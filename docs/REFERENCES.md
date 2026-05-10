@@ -12,7 +12,7 @@ All legal references used in code (`reference/data.py`), tests, and the UI modal
 | Key | Short | Full title | EUR-Lex / Official link |
 |-----|-------|-----------|-------------------------|
 | `reg_2026_382` | Reg. (EU) 2026/382 | Council Regulation (EU) 2026/382 of 11 February 2026 amending Reg. (EU) No 952/2013 (Union Customs Code) — new customs framework for low-value e-commerce | https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32026R0382 |
-| `da_c_2026_2760` | DA C(2026)2760 | Commission Delegated Regulation C(2026)2760 of 30 April 2026 — €3 per-item simplified duty fee and eligibility conditions for the e-commerce simplified regime | https://ec.europa.eu/taxation_customs/customs/key-policies/e-commerce_en |
+| `da_c_2026_2760` | DA C(2026)2760 | Commission Delegated Regulation C(2026)2760 of 30 April 2026 — €3 per-item simplified duty fee and eligibility conditions for the e-commerce simplified regime | https://taxation-customs.ec.europa.eu/customs/eu-customs-reform_en |
 | `ucc_952_2013` | UCC Reg. 952/2013 | Regulation (EU) No 952/2013 of the European Parliament and of the Council of 9 October 2013 laying down the Union Customs Code | https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32013R0952 |
 | `da_2015_2446` | DA (EU) 2015/2446 | Commission Delegated Regulation (EU) 2015/2446 of 28 July 2015 supplementing the Union Customs Code — H6 postal declaration procedures, Art. 143(1)(d) CP42 | https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32015R2446 |
 | `dir_2006_112` | VAT Directive 2006/112/EC | Council Directive 2006/112/EC of 28 November 2006 on the common system of value added tax | https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=celex%3A32006L0112 |
@@ -34,7 +34,7 @@ All legal references used in code (`reference/data.py`), tests, and the UI modal
 | **Basis** | per_hs6_line |
 | **Effective** | 1 March 2026 |
 | **VAT base** | Excluded (not added to VAT base) |
-| **Link** | https://www.legifrance.gouv.fr/loda/id/JORFTEXT000051224559 |
+| **Link** | https://www.legifrance.gouv.fr/eli/loi/2026/2/19/CPPX2524517L/jo/article_82 |
 
 ### Italy — €2/parcel flat fee
 
@@ -50,7 +50,7 @@ All legal references used in code (`reference/data.py`), tests, and the UI modal
 | **Applies to** | B2C and B2B |
 | **VAT base** | Excluded |
 | **Link** | https://www.gazzettaufficiale.it/eli/id/2025/12/31/25G00233/SG |
-| **Secondary source** | https://www.twobirds.com/en/insights/2025/italy/italy-budget-law-2026 |
+| **Secondary source** | https://en.ilsole24ore.com/art/manoeuvre-parcels-short-rentals-all-taxes-coming-2026-AINt1kV |
 
 ### Romania — Logistics tax
 

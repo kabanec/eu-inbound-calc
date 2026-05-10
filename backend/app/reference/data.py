@@ -43,7 +43,7 @@ NATIONAL_FEES = {
         "since": date(2026, 3, 1),
         "in_vat_base": False,
         "source": "Loi de finances pour 2026, Law n° 2026-103, Article 82",
-        "source_url": "https://www.legifrance.gouv.fr/loda/id/JORFTEXT000051224559",
+        "source_url": "https://www.legifrance.gouv.fr/eli/loi/2026/2/19/CPPX2524517L/jo/article_82",
         "official_name": "Taxe sur les petits colis (TPC)",
     },
     "IT": {

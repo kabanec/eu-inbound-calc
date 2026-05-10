@@ -322,7 +322,12 @@
       <table class="lines" id="lines-table"></table>
     </div>
 
-    <details class="work">
+    <div class="section strategies-section" id="strategies-section">
+      <h2>💡 Optimisation strategies (ranked by landed cost)</h2>
+      <div class="strategies" id="strategies"></div>
+    </div>
+
+    <details class="work" open>
       <summary>Show your work</summary>
       <div class="work-body" id="work"></div>
     </details>
@@ -353,7 +358,7 @@ const CITATIONS = {
   da_c_2026_2760: {
     short: 'DA C(2026)2760',
     full: 'Commission Delegated Regulation C(2026)2760 of 30 April 2026 — €3 per-item simplified duty fee and conditions for the e-commerce simplified regime',
-    url: 'https://ec.europa.eu/taxation_customs/customs/key-policies/e-commerce_en',
+    url: 'https://taxation-customs.ec.europa.eu/customs/eu-customs-reform_en',
   },
   dir_2006_112: {
     short: 'VAT Directive 2006/112/EC',
@@ -383,7 +388,7 @@ const CITATIONS = {
   fr_ldf_2026: {
     short: 'FR LdF 2026, Art. 82',
     full: 'Loi de finances pour 2026, Law n° 2026-103, Article 82 — Taxe sur les petits colis (TPC), €2 per distinct HS6 line, effective 1 March 2026',
-    url: 'https://www.legifrance.gouv.fr/loda/id/JORFTEXT000051224559',
+    url: 'https://www.legifrance.gouv.fr/eli/loi/2026/2/19/CPPX2524517L/jo/article_82',
   },
   it_budget_2026: {
     short: 'IT Budget Law 2026 §126-128',
@@ -530,6 +535,26 @@ const SCENARIOS = [
   { id: 'over_150',       label: '💸 CN→DE: >€150 forces standard',          desc: 'Value exceeds €150 cap — €3 simplified regime no longer applies' },
   { id: 'postal_no_ioss', label: '📮 CN→DE: Postal non-IOSS',                desc: 'Postal Designated Op channel — €3 still triggered without IOSS' },
   { id: 'vanilla',        label: '🟢 CN→DE: Vanilla €3',                     desc: 'Baseline scenario — single B2C IOSS tee, simplest €3 path' },
+  {
+    id: 'buyer_agent_break',
+    label: '🚫 CN→DE: Buyer agent breaks IOSS',
+    desc: 'Customer-nominated buyer agent voids the distance-sale construct (VAT Dir Art. 14(4)(2)) — IOSS legally precluded, falls to standard tariff',
+  },
+  {
+    id: 'pre_e3_era',
+    label: '⏪ CN→DE on 2026-06-01: Pre-€3 era',
+    desc: 'Same shipment 1 month before €3 launch — €150 de minimis still active, no duty',
+  },
+  {
+    id: 'post_union_handling',
+    label: '🆕 CN→DE on 2026-12-01: Union handling fee live',
+    desc: 'After 1 Nov 2026 — EU-wide €2 union handling fee applies on top of €3 simplified',
+  },
+  {
+    id: 'mixed_fta_basket',
+    label: '🔀 GB+CN→FR: Mixed FTA basket',
+    desc: 'UK tee with FTA proof + Chinese wallet — per-line regimes: GB line gets FTA exclusion, CN line stays €3 simplified',
+  },
 ];
 
 // ============================================================
@@ -577,7 +602,7 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
+        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
       ],
       "consignment_value_eur": 24.0,
       "declarant": "seller",
@@ -599,7 +624,7 @@ const SCENARIO_DATA = {
           ],
           "line_value_eur": 24.0,
           "notes": [
-            "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
+            "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
           ],
           "qty_total": 2,
           "regime": "standard_tariff_fta"
@@ -618,7 +643,337 @@ const SCENARIO_DATA = {
         "vat_eur": 4.56,
         "vat_rate": 0.19
       }
-    }
+    },
+    "strategies": [
+      {
+        "complexity": 1,
+        "description": "Ship as currently configured.",
+        "name": "status_quo",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 24.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 24.0,
+              "notes": [
+                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+              ],
+              "qty_total": 2,
+              "regime": "standard_tariff_fta"
+            }
+          ],
+          "landed_cost_eur": 28.56,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 24.0,
+            "vat_eur": 4.56,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": []
+      },
+      {
+        "complexity": 2,
+        "description": "Normalize descriptions so items sharing HS6+origin collapse to one grouping line.",
+        "name": "consolidate_descriptions",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 24.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 24.0,
+              "notes": [
+                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+              ],
+              "qty_total": 2,
+              "regime": "standard_tariff_fta"
+            }
+          ],
+          "landed_cost_eur": 28.56,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 24.0,
+            "vat_eur": 4.56,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Description must remain ACCURATE — no over-genericization.",
+          "EU customs may challenge an inadequate description.",
+          "Best applied at catalog/PIM layer pre-shipment."
+        ]
+      },
+      {
+        "complexity": 4,
+        "description": "One parcel per HS6+description+origin group. Almost always worse than consolidation.",
+        "name": "split_parcels",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Split into 1 parcels — totals are summed across parcels."
+          ],
+          "consignment_value_eur": 24.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 24.0,
+              "notes": [
+                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+              ],
+              "qty_total": 2,
+              "regime": "standard_tariff_fta"
+            }
+          ],
+          "landed_cost_eur": 28.56,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 24.0,
+            "vat_eur": 4.56,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Multiplies handling fees and Union handling fee.",
+          "Higher fulfillment cost.",
+          "Included for comparison; rarely optimal."
+        ]
+      },
+      {
+        "complexity": 4,
+        "description": "Postal non-IOSS with FTA preference — €3 bypassed; standard tariff (often 0%).",
+        "name": "drop_ioss_use_fta",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 24.0,
+          "declarant": "postal_operator",
+          "declaration_type": "H6",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 24.0,
+              "notes": [
+                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+              ],
+              "qty_total": 2,
+              "regime": "standard_tariff_fta"
+            }
+          ],
+          "landed_cost_eur": 28.56,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "special_arrangements",
+            "vat_base_eur": 24.0,
+            "vat_eur": 4.56,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires valid proof of preferential origin (REX, EUR.1, etc.).",
+          "Customer pays VAT on delivery — worse UX than IOSS at checkout.",
+          "Special arrangements regime sunsets 1 July 2028."
+        ]
+      },
+      {
+        "complexity": 3,
+        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "name": "push_above_150",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 150.01,
+          "declarant": "carrier",
+          "declaration_type": "H1",
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+            }
+          ],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 24.0,
+              "notes": [
+                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+              ],
+              "qty_total": 2,
+              "regime": "standard_tariff_fta"
+            }
+          ],
+          "landed_cost_eur": 178.51,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "import_clearance",
+            "vat_base_eur": 150.01,
+            "vat_eur": 28.5,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires merchandising change (filler item or upsell).",
+          "Triggers H1 declaration with full data requirements.",
+          "Loses H7 simplification."
+        ]
+      },
+      {
+        "complexity": 5,
+        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "name": "b2b_eu_warehouse",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 1000.0,
+          "declarant": "agent",
+          "declaration_type": "H1",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 24.0,
+              "notes": [
+                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+              ],
+              "qty_total": 2,
+              "regime": "standard_tariff_fta"
+            }
+          ],
+          "landed_cost_eur": 1000.0,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "oss_b2b",
+            "vat_base_eur": 0.0,
+            "vat_eur": 0.0,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires EU warehouse capacity (currently constrained).",
+          "Working capital tied up in inventory.",
+          "Shifts to OSS VAT for intra-EU distance sales.",
+          "EU policy direction explicitly favors this model."
+        ]
+      }
+    ]
   },
   "fr_stack": {
     "payload": {
@@ -678,8 +1033,8 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
-        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
+        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
       ],
       "consignment_value_eur": 72.0,
       "declarant": "seller",
@@ -742,7 +1097,372 @@ const SCENARIO_DATA = {
         "vat_eur": 14.4,
         "vat_rate": 0.2
       }
-    }
+    },
+    "strategies": [
+      {
+        "complexity": 1,
+        "description": "Ship as currently configured.",
+        "name": "status_quo",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+          ],
+          "consignment_value_eur": 72.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 9.0,
+          "fees": {
+            "national_fee_eur": 6.0,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 12.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            },
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "640399",
+                "leather shoe",
+                "CN"
+              ],
+              "line_value_eur": 35.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            },
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "420232",
+                "leather wallet",
+                "CN"
+              ],
+              "line_value_eur": 25.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 101.4,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 72.0,
+            "vat_eur": 14.4,
+            "vat_rate": 0.2
+          }
+        },
+        "risk_notes": []
+      },
+      {
+        "complexity": 2,
+        "description": "Normalize descriptions so items sharing HS6+origin collapse to one grouping line.",
+        "name": "consolidate_descriptions",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+          ],
+          "consignment_value_eur": 72.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 9.0,
+          "fees": {
+            "national_fee_eur": 6.0,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 12.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            },
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "640399",
+                "leather shoe",
+                "CN"
+              ],
+              "line_value_eur": 35.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            },
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "420232",
+                "leather wallet",
+                "CN"
+              ],
+              "line_value_eur": 25.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 101.4,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 72.0,
+            "vat_eur": 14.4,
+            "vat_rate": 0.2
+          }
+        },
+        "risk_notes": [
+          "Description must remain ACCURATE — no over-genericization.",
+          "EU customs may challenge an inadequate description.",
+          "Best applied at catalog/PIM layer pre-shipment."
+        ]
+      },
+      {
+        "complexity": 4,
+        "description": "One parcel per HS6+description+origin group. Almost always worse than consolidation.",
+        "name": "split_parcels",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
+            "Split into 3 parcels — totals are summed across parcels."
+          ],
+          "consignment_value_eur": 12.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 9.0,
+          "fees": {
+            "national_fee_eur": 2.0,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 12.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 101.4,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 12.0,
+            "vat_eur": 2.4,
+            "vat_rate": 0.2
+          }
+        },
+        "risk_notes": [
+          "Multiplies handling fees and Union handling fee.",
+          "Higher fulfillment cost.",
+          "Included for comparison; rarely optimal."
+        ]
+      },
+      {
+        "complexity": 3,
+        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "name": "push_above_150",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 150.01,
+          "declarant": "carrier",
+          "declaration_type": "H1",
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+            }
+          ],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 6.0,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 12.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            },
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "640399",
+                "leather shoe",
+                "CN"
+              ],
+              "line_value_eur": 35.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            },
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "420232",
+                "leather wallet",
+                "CN"
+              ],
+              "line_value_eur": 25.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 186.01,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "import_clearance",
+            "vat_base_eur": 150.01,
+            "vat_eur": 30.0,
+            "vat_rate": 0.2
+          }
+        },
+        "risk_notes": [
+          "Requires merchandising change (filler item or upsell).",
+          "Triggers H1 declaration with full data requirements.",
+          "Loses H7 simplification."
+        ]
+      },
+      {
+        "complexity": 5,
+        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "name": "b2b_eu_warehouse",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 1000.0,
+          "declarant": "agent",
+          "declaration_type": "H1",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 6.0,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 12.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            },
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "640399",
+                "leather shoe",
+                "CN"
+              ],
+              "line_value_eur": 35.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            },
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "420232",
+                "leather wallet",
+                "CN"
+              ],
+              "line_value_eur": 25.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 1006.0,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "oss_b2b",
+            "vat_base_eur": 0.0,
+            "vat_eur": 0.0,
+            "vat_rate": 0.2
+          }
+        },
+        "risk_notes": [
+          "Requires EU warehouse capacity (currently constrained).",
+          "Working capital tied up in inventory.",
+          "Shifts to OSS VAT for intra-EU distance sales.",
+          "EU policy direction explicitly favors this model."
+        ]
+      }
+    ]
   },
   "it_parcel": {
     "payload": {
@@ -792,8 +1512,8 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
-        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
+        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
       ],
       "consignment_value_eur": 45.0,
       "declarant": "seller",
@@ -844,7 +1564,324 @@ const SCENARIO_DATA = {
         "vat_eur": 9.9,
         "vat_rate": 0.22
       }
-    }
+    },
+    "strategies": [
+      {
+        "complexity": 1,
+        "description": "Ship as currently configured.",
+        "name": "status_quo",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+          ],
+          "consignment_value_eur": 45.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 6.0,
+          "fees": {
+            "national_fee_eur": 2.0,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 15.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            },
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "640399",
+                "leather shoe",
+                "CN"
+              ],
+              "line_value_eur": 30.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 62.9,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 45.0,
+            "vat_eur": 9.9,
+            "vat_rate": 0.22
+          }
+        },
+        "risk_notes": []
+      },
+      {
+        "complexity": 2,
+        "description": "Normalize descriptions so items sharing HS6+origin collapse to one grouping line.",
+        "name": "consolidate_descriptions",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+          ],
+          "consignment_value_eur": 45.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 6.0,
+          "fees": {
+            "national_fee_eur": 2.0,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 15.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            },
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "640399",
+                "leather shoe",
+                "CN"
+              ],
+              "line_value_eur": 30.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 62.9,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 45.0,
+            "vat_eur": 9.9,
+            "vat_rate": 0.22
+          }
+        },
+        "risk_notes": [
+          "Description must remain ACCURATE — no over-genericization.",
+          "EU customs may challenge an inadequate description.",
+          "Best applied at catalog/PIM layer pre-shipment."
+        ]
+      },
+      {
+        "complexity": 4,
+        "description": "One parcel per HS6+description+origin group. Almost always worse than consolidation.",
+        "name": "split_parcels",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
+            "Split into 2 parcels — totals are summed across parcels."
+          ],
+          "consignment_value_eur": 15.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 6.0,
+          "fees": {
+            "national_fee_eur": 2.0,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 15.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 64.9,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 15.0,
+            "vat_eur": 3.3,
+            "vat_rate": 0.22
+          }
+        },
+        "risk_notes": [
+          "Multiplies handling fees and Union handling fee.",
+          "Higher fulfillment cost.",
+          "Included for comparison; rarely optimal."
+        ]
+      },
+      {
+        "complexity": 3,
+        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "name": "push_above_150",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 150.01,
+          "declarant": "carrier",
+          "declaration_type": "H1",
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+            }
+          ],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 2.0,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 15.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            },
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "640399",
+                "leather shoe",
+                "CN"
+              ],
+              "line_value_eur": 30.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 185.01,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "import_clearance",
+            "vat_base_eur": 150.01,
+            "vat_eur": 33.0,
+            "vat_rate": 0.22
+          }
+        },
+        "risk_notes": [
+          "Requires merchandising change (filler item or upsell).",
+          "Triggers H1 declaration with full data requirements.",
+          "Loses H7 simplification."
+        ]
+      },
+      {
+        "complexity": 5,
+        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "name": "b2b_eu_warehouse",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 1000.0,
+          "declarant": "agent",
+          "declaration_type": "H1",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 2.0,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 15.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            },
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "640399",
+                "leather shoe",
+                "CN"
+              ],
+              "line_value_eur": 30.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 1002.0,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "oss_b2b",
+            "vat_base_eur": 0.0,
+            "vat_eur": 0.0,
+            "vat_rate": 0.22
+          }
+        },
+        "risk_notes": [
+          "Requires EU warehouse capacity (currently constrained).",
+          "Working capital tied up in inventory.",
+          "Shifts to OSS VAT for intra-EU distance sales.",
+          "EU policy direction explicitly favors this model."
+        ]
+      }
+    ]
   },
   "ro_logistics": {
     "payload": {
@@ -884,8 +1921,8 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
-        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
+        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
       ],
       "consignment_value_eur": 18.0,
       "declarant": "seller",
@@ -924,7 +1961,276 @@ const SCENARIO_DATA = {
         "vat_eur": 3.78,
         "vat_rate": 0.21
       }
-    }
+    },
+    "strategies": [
+      {
+        "complexity": 1,
+        "description": "Ship as currently configured.",
+        "name": "status_quo",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+          ],
+          "consignment_value_eur": 18.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 4.75,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 18.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 29.53,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 18.0,
+            "vat_eur": 3.78,
+            "vat_rate": 0.21
+          }
+        },
+        "risk_notes": []
+      },
+      {
+        "complexity": 2,
+        "description": "Normalize descriptions so items sharing HS6+origin collapse to one grouping line.",
+        "name": "consolidate_descriptions",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+          ],
+          "consignment_value_eur": 18.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 4.75,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 18.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 29.53,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 18.0,
+            "vat_eur": 3.78,
+            "vat_rate": 0.21
+          }
+        },
+        "risk_notes": [
+          "Description must remain ACCURATE — no over-genericization.",
+          "EU customs may challenge an inadequate description.",
+          "Best applied at catalog/PIM layer pre-shipment."
+        ]
+      },
+      {
+        "complexity": 4,
+        "description": "One parcel per HS6+description+origin group. Almost always worse than consolidation.",
+        "name": "split_parcels",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
+            "Split into 1 parcels — totals are summed across parcels."
+          ],
+          "consignment_value_eur": 18.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 4.75,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 18.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 29.53,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 18.0,
+            "vat_eur": 3.78,
+            "vat_rate": 0.21
+          }
+        },
+        "risk_notes": [
+          "Multiplies handling fees and Union handling fee.",
+          "Higher fulfillment cost.",
+          "Included for comparison; rarely optimal."
+        ]
+      },
+      {
+        "complexity": 3,
+        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "name": "push_above_150",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 150.01,
+          "declarant": "carrier",
+          "declaration_type": "H1",
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+            }
+          ],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 4.75,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 18.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 186.26,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "import_clearance",
+            "vat_base_eur": 150.01,
+            "vat_eur": 31.5,
+            "vat_rate": 0.21
+          }
+        },
+        "risk_notes": [
+          "Requires merchandising change (filler item or upsell).",
+          "Triggers H1 declaration with full data requirements.",
+          "Loses H7 simplification."
+        ]
+      },
+      {
+        "complexity": 5,
+        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "name": "b2b_eu_warehouse",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 1000.0,
+          "declarant": "agent",
+          "declaration_type": "H1",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 4.75,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 18.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 1004.75,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "oss_b2b",
+            "vat_base_eur": 0.0,
+            "vat_eur": 0.0,
+            "vat_rate": 0.21
+          }
+        },
+        "risk_notes": [
+          "Requires EU warehouse capacity (currently constrained).",
+          "Working capital tied up in inventory.",
+          "Shifts to OSS VAT for intra-EU distance sales.",
+          "EU policy direction explicitly favors this model."
+        ]
+      }
+    ]
   },
   "b2b_exit": {
     "payload": {
@@ -964,7 +2270,7 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
+        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
       ],
       "consignment_value_eur": 60.0,
       "declarant": "agent",
@@ -1003,7 +2309,267 @@ const SCENARIO_DATA = {
         "vat_eur": 0.0,
         "vat_rate": 0.19
       }
-    }
+    },
+    "strategies": [
+      {
+        "complexity": 1,
+        "description": "Ship as currently configured.",
+        "name": "status_quo",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 60.0,
+          "declarant": "agent",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 60.0,
+              "notes": [],
+              "qty_total": 5,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 60.0,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "oss_b2b",
+            "vat_base_eur": 0.0,
+            "vat_eur": 0.0,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": []
+      },
+      {
+        "complexity": 2,
+        "description": "Normalize descriptions so items sharing HS6+origin collapse to one grouping line.",
+        "name": "consolidate_descriptions",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 60.0,
+          "declarant": "agent",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 60.0,
+              "notes": [],
+              "qty_total": 5,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 60.0,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "oss_b2b",
+            "vat_base_eur": 0.0,
+            "vat_eur": 0.0,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Description must remain ACCURATE — no over-genericization.",
+          "EU customs may challenge an inadequate description.",
+          "Best applied at catalog/PIM layer pre-shipment."
+        ]
+      },
+      {
+        "complexity": 4,
+        "description": "One parcel per HS6+description+origin group. Almost always worse than consolidation.",
+        "name": "split_parcels",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Split into 1 parcels — totals are summed across parcels."
+          ],
+          "consignment_value_eur": 60.0,
+          "declarant": "agent",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 60.0,
+              "notes": [],
+              "qty_total": 5,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 60.0,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "oss_b2b",
+            "vat_base_eur": 0.0,
+            "vat_eur": 0.0,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Multiplies handling fees and Union handling fee.",
+          "Higher fulfillment cost.",
+          "Included for comparison; rarely optimal."
+        ]
+      },
+      {
+        "complexity": 3,
+        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "name": "push_above_150",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 150.01,
+          "declarant": "agent",
+          "declaration_type": "H1",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 60.0,
+              "notes": [],
+              "qty_total": 5,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 150.01,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "oss_b2b",
+            "vat_base_eur": 0.0,
+            "vat_eur": 0.0,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires merchandising change (filler item or upsell).",
+          "Triggers H1 declaration with full data requirements.",
+          "Loses H7 simplification."
+        ]
+      },
+      {
+        "complexity": 5,
+        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "name": "b2b_eu_warehouse",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 1000.0,
+          "declarant": "agent",
+          "declaration_type": "H1",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 60.0,
+              "notes": [],
+              "qty_total": 5,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 1000.0,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "oss_b2b",
+            "vat_base_eur": 0.0,
+            "vat_eur": 0.0,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires EU warehouse capacity (currently constrained).",
+          "Working capital tied up in inventory.",
+          "Shifts to OSS VAT for intra-EU distance sales.",
+          "EU policy direction explicitly favors this model."
+        ]
+      }
+    ]
   },
   "over_150": {
     "payload": {
@@ -1043,7 +2609,7 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
+        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
       ],
       "consignment_value_eur": 200.0,
       "declarant": "carrier",
@@ -1052,7 +2618,7 @@ const SCENARIO_DATA = {
         {
           "default": false,
           "field": "ioss_registered",
-          "rationale": "OVERRIDE: value > \u20ac150 \u2192 IOSS cap exceeded"
+          "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
         }
       ],
       "duty_total_eur": 24.0,
@@ -1088,7 +2654,291 @@ const SCENARIO_DATA = {
         "vat_eur": 42.56,
         "vat_rate": 0.19
       }
-    }
+    },
+    "strategies": [
+      {
+        "complexity": 3,
+        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "name": "push_above_150",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 150.01,
+          "declarant": "carrier",
+          "declaration_type": "H1",
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+            }
+          ],
+          "duty_total_eur": 24.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 24.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 200.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 207.07,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "import_clearance",
+            "vat_base_eur": 174.01,
+            "vat_eur": 33.06,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires merchandising change (filler item or upsell).",
+          "Triggers H1 declaration with full data requirements.",
+          "Loses H7 simplification."
+        ]
+      },
+      {
+        "complexity": 1,
+        "description": "Ship as currently configured.",
+        "name": "status_quo",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 200.0,
+          "declarant": "carrier",
+          "declaration_type": "H1",
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+            }
+          ],
+          "duty_total_eur": 24.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 24.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 200.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 266.56,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "import_clearance",
+            "vat_base_eur": 224.0,
+            "vat_eur": 42.56,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": []
+      },
+      {
+        "complexity": 2,
+        "description": "Normalize descriptions so items sharing HS6+origin collapse to one grouping line.",
+        "name": "consolidate_descriptions",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 200.0,
+          "declarant": "carrier",
+          "declaration_type": "H1",
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+            }
+          ],
+          "duty_total_eur": 24.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 24.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 200.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 266.56,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "import_clearance",
+            "vat_base_eur": 224.0,
+            "vat_eur": 42.56,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Description must remain ACCURATE — no over-genericization.",
+          "EU customs may challenge an inadequate description.",
+          "Best applied at catalog/PIM layer pre-shipment."
+        ]
+      },
+      {
+        "complexity": 4,
+        "description": "One parcel per HS6+description+origin group. Almost always worse than consolidation.",
+        "name": "split_parcels",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Split into 1 parcels — totals are summed across parcels."
+          ],
+          "consignment_value_eur": 200.0,
+          "declarant": "carrier",
+          "declaration_type": "H1",
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+            }
+          ],
+          "duty_total_eur": 24.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 24.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 200.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 266.56,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "import_clearance",
+            "vat_base_eur": 224.0,
+            "vat_eur": 42.56,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Multiplies handling fees and Union handling fee.",
+          "Higher fulfillment cost.",
+          "Included for comparison; rarely optimal."
+        ]
+      },
+      {
+        "complexity": 5,
+        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "name": "b2b_eu_warehouse",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 1000.0,
+          "declarant": "agent",
+          "declaration_type": "H1",
+          "defaults_applied": [],
+          "duty_total_eur": 24.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 24.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 200.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 1024.0,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "oss_b2b",
+            "vat_base_eur": 0.0,
+            "vat_eur": 0.0,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires EU warehouse capacity (currently constrained).",
+          "Working capital tied up in inventory.",
+          "Shifts to OSS VAT for intra-EU distance sales.",
+          "EU policy direction explicitly favors this model."
+        ]
+      }
+    ]
   },
   "postal_no_ioss": {
     "payload": {
@@ -1128,8 +2978,8 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
-        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
+        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
       ],
       "consignment_value_eur": 20.0,
       "declarant": "seller",
@@ -1138,7 +2988,7 @@ const SCENARIO_DATA = {
         {
           "default": true,
           "field": "ioss_registered",
-          "rationale": "93% of B2C \u2264\u20ac150 EU imports are IOSS-registered (Council 2025-12-12)"
+          "rationale": "93% of B2C ≤€150 EU imports are IOSS-registered (Council 2025-12-12)"
         }
       ],
       "duty_total_eur": 3.0,
@@ -1174,7 +3024,288 @@ const SCENARIO_DATA = {
         "vat_eur": 3.8,
         "vat_rate": 0.19
       }
-    }
+    },
+    "strategies": [
+      {
+        "complexity": 1,
+        "description": "Ship as currently configured.",
+        "name": "status_quo",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+          ],
+          "consignment_value_eur": 20.0,
+          "declarant": "seller",
+          "declaration_type": "H6",
+          "defaults_applied": [
+            {
+              "default": true,
+              "field": "ioss_registered",
+              "rationale": "93% of B2C ≤€150 EU imports are IOSS-registered (Council 2025-12-12)"
+            }
+          ],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 26.8,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 20.0,
+            "vat_eur": 3.8,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": []
+      },
+      {
+        "complexity": 2,
+        "description": "Normalize descriptions so items sharing HS6+origin collapse to one grouping line.",
+        "name": "consolidate_descriptions",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+          ],
+          "consignment_value_eur": 20.0,
+          "declarant": "seller",
+          "declaration_type": "H6",
+          "defaults_applied": [
+            {
+              "default": true,
+              "field": "ioss_registered",
+              "rationale": "93% of B2C ≤€150 EU imports are IOSS-registered (Council 2025-12-12)"
+            }
+          ],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 26.8,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 20.0,
+            "vat_eur": 3.8,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Description must remain ACCURATE — no over-genericization.",
+          "EU customs may challenge an inadequate description.",
+          "Best applied at catalog/PIM layer pre-shipment."
+        ]
+      },
+      {
+        "complexity": 4,
+        "description": "One parcel per HS6+description+origin group. Almost always worse than consolidation.",
+        "name": "split_parcels",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
+            "Split into 1 parcels — totals are summed across parcels."
+          ],
+          "consignment_value_eur": 20.0,
+          "declarant": "seller",
+          "declaration_type": "H6",
+          "defaults_applied": [
+            {
+              "default": true,
+              "field": "ioss_registered",
+              "rationale": "93% of B2C ≤€150 EU imports are IOSS-registered (Council 2025-12-12)"
+            }
+          ],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 26.8,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 20.0,
+            "vat_eur": 3.8,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Multiplies handling fees and Union handling fee.",
+          "Higher fulfillment cost.",
+          "Included for comparison; rarely optimal."
+        ]
+      },
+      {
+        "complexity": 3,
+        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "name": "push_above_150",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 150.01,
+          "declarant": "postal_operator",
+          "declaration_type": "H1",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 178.51,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "special_arrangements",
+            "vat_base_eur": 150.01,
+            "vat_eur": 28.5,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires merchandising change (filler item or upsell).",
+          "Triggers H1 declaration with full data requirements.",
+          "Loses H7 simplification."
+        ]
+      },
+      {
+        "complexity": 5,
+        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "name": "b2b_eu_warehouse",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 1000.0,
+          "declarant": "agent",
+          "declaration_type": "H1",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 1000.0,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "oss_b2b",
+            "vat_base_eur": 0.0,
+            "vat_eur": 0.0,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires EU warehouse capacity (currently constrained).",
+          "Working capital tied up in inventory.",
+          "Shifts to OSS VAT for intra-EU distance sales.",
+          "EU policy direction explicitly favors this model."
+        ]
+      }
+    ]
   },
   "vanilla": {
     "payload": {
@@ -1214,8 +3345,8 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
-        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
+        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
       ],
       "consignment_value_eur": 20.0,
       "declarant": "seller",
@@ -1254,7 +3385,1771 @@ const SCENARIO_DATA = {
         "vat_eur": 3.8,
         "vat_rate": 0.19
       }
-    }
+    },
+    "strategies": [
+      {
+        "complexity": 1,
+        "description": "Ship as currently configured.",
+        "name": "status_quo",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+          ],
+          "consignment_value_eur": 20.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 26.8,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 20.0,
+            "vat_eur": 3.8,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": []
+      },
+      {
+        "complexity": 2,
+        "description": "Normalize descriptions so items sharing HS6+origin collapse to one grouping line.",
+        "name": "consolidate_descriptions",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+          ],
+          "consignment_value_eur": 20.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 26.8,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 20.0,
+            "vat_eur": 3.8,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Description must remain ACCURATE — no over-genericization.",
+          "EU customs may challenge an inadequate description.",
+          "Best applied at catalog/PIM layer pre-shipment."
+        ]
+      },
+      {
+        "complexity": 4,
+        "description": "One parcel per HS6+description+origin group. Almost always worse than consolidation.",
+        "name": "split_parcels",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
+            "Split into 1 parcels — totals are summed across parcels."
+          ],
+          "consignment_value_eur": 20.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 26.8,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 20.0,
+            "vat_eur": 3.8,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Multiplies handling fees and Union handling fee.",
+          "Higher fulfillment cost.",
+          "Included for comparison; rarely optimal."
+        ]
+      },
+      {
+        "complexity": 3,
+        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "name": "push_above_150",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 150.01,
+          "declarant": "carrier",
+          "declaration_type": "H1",
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+            }
+          ],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 178.51,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "import_clearance",
+            "vat_base_eur": 150.01,
+            "vat_eur": 28.5,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires merchandising change (filler item or upsell).",
+          "Triggers H1 declaration with full data requirements.",
+          "Loses H7 simplification."
+        ]
+      },
+      {
+        "complexity": 5,
+        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "name": "b2b_eu_warehouse",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 1000.0,
+          "declarant": "agent",
+          "declaration_type": "H1",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 1000.0,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "oss_b2b",
+            "vat_base_eur": 0.0,
+            "vat_eur": 0.0,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires EU warehouse capacity (currently constrained).",
+          "Working capital tied up in inventory.",
+          "Shifts to OSS VAT for intra-EU distance sales.",
+          "EU policy direction explicitly favors this model."
+        ]
+      }
+    ]
+  },
+  "buyer_agent_break": {
+    "payload": {
+      "addresses": {
+        "shipFrom": {
+          "country": "CN"
+        },
+        "shipTo": {
+          "country": "DE"
+        }
+      },
+      "date": "2026-08-01",
+      "currencyCode": "EUR",
+      "euReform2026": {
+        "iossNumber": "IM3720000123",
+        "buyerAgent": true,
+        "postalDesignatedOperator": false,
+        "shipmentChannel": "express"
+      },
+      "customer": {
+        "euReform2026": {
+          "isBusinessBuyer": false
+        }
+      },
+      "lines": [
+        {
+          "hsCode": "610910",
+          "description": "Cotton t-shirt",
+          "countryOfOrigin": "CN",
+          "quantity": 1,
+          "amount": 30,
+          "standard_duty_rate": 0.12,
+          "fta_duty_rate": 0,
+          "euReform2026": {}
+        }
+      ]
+    },
+    "response": {
+      "compliance_warnings": [
+        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+      ],
+      "consignment_value_eur": 30.0,
+      "declarant": "agent",
+      "declaration_type": "H7",
+      "defaults_applied": [
+        {
+          "default": false,
+          "field": "ioss_registered",
+          "rationale": "OVERRIDE: buyer_agent breaks distance-sale construct"
+        }
+      ],
+      "duty_total_eur": 0.0,
+      "fees": {
+        "national_fee_eur": 0.0,
+        "national_fee_source": null,
+        "union_handling_fee_eur": 0.0
+      },
+      "item_breakdown": [
+        {
+          "duty_eur": 0.0,
+          "grouping_key": [
+            "610910",
+            "cotton t-shirt",
+            "CN"
+          ],
+          "line_value_eur": 30.0,
+          "notes": [],
+          "qty_total": 1,
+          "regime": "standard_tariff"
+        }
+      ],
+      "landed_cost_eur": 35.7,
+      "legal_references": [
+        "Council Regulation (EU) 2026/382 of 11 February 2026",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+        "UCC Regulation (EU) 952/2013, Article 77"
+      ],
+      "vat": {
+        "collected_via": "import_clearance",
+        "vat_base_eur": 30.0,
+        "vat_eur": 5.7,
+        "vat_rate": 0.19
+      }
+    },
+    "strategies": [
+      {
+        "complexity": 1,
+        "description": "Ship as currently configured.",
+        "name": "status_quo",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 30.0,
+          "declarant": "agent",
+          "declaration_type": "H7",
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: buyer_agent breaks distance-sale construct"
+            }
+          ],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 30.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 35.7,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "import_clearance",
+            "vat_base_eur": 30.0,
+            "vat_eur": 5.7,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": []
+      },
+      {
+        "complexity": 2,
+        "description": "Normalize descriptions so items sharing HS6+origin collapse to one grouping line.",
+        "name": "consolidate_descriptions",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 30.0,
+          "declarant": "agent",
+          "declaration_type": "H7",
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: buyer_agent breaks distance-sale construct"
+            }
+          ],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 30.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 35.7,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "import_clearance",
+            "vat_base_eur": 30.0,
+            "vat_eur": 5.7,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Description must remain ACCURATE — no over-genericization.",
+          "EU customs may challenge an inadequate description.",
+          "Best applied at catalog/PIM layer pre-shipment."
+        ]
+      },
+      {
+        "complexity": 4,
+        "description": "One parcel per HS6+description+origin group. Almost always worse than consolidation.",
+        "name": "split_parcels",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Split into 1 parcels — totals are summed across parcels."
+          ],
+          "consignment_value_eur": 30.0,
+          "declarant": "agent",
+          "declaration_type": "H7",
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: buyer_agent breaks distance-sale construct"
+            }
+          ],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 30.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 35.7,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "import_clearance",
+            "vat_base_eur": 30.0,
+            "vat_eur": 5.7,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Multiplies handling fees and Union handling fee.",
+          "Higher fulfillment cost.",
+          "Included for comparison; rarely optimal."
+        ]
+      },
+      {
+        "complexity": 3,
+        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "name": "push_above_150",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 150.01,
+          "declarant": "agent",
+          "declaration_type": "H1",
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: buyer_agent breaks distance-sale construct"
+            }
+          ],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 30.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 178.51,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "import_clearance",
+            "vat_base_eur": 150.01,
+            "vat_eur": 28.5,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires merchandising change (filler item or upsell).",
+          "Triggers H1 declaration with full data requirements.",
+          "Loses H7 simplification."
+        ]
+      },
+      {
+        "complexity": 5,
+        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "name": "b2b_eu_warehouse",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 1000.0,
+          "declarant": "agent",
+          "declaration_type": "H1",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 30.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 1000.0,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "oss_b2b",
+            "vat_base_eur": 0.0,
+            "vat_eur": 0.0,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires EU warehouse capacity (currently constrained).",
+          "Working capital tied up in inventory.",
+          "Shifts to OSS VAT for intra-EU distance sales.",
+          "EU policy direction explicitly favors this model."
+        ]
+      }
+    ]
+  },
+  "pre_e3_era": {
+    "payload": {
+      "addresses": {
+        "shipFrom": {
+          "country": "CN"
+        },
+        "shipTo": {
+          "country": "DE"
+        }
+      },
+      "date": "2026-06-01",
+      "currencyCode": "EUR",
+      "euReform2026": {
+        "iossNumber": "IM3720000123",
+        "buyerAgent": false,
+        "postalDesignatedOperator": false,
+        "shipmentChannel": "express"
+      },
+      "customer": {
+        "euReform2026": {
+          "isBusinessBuyer": false
+        }
+      },
+      "lines": [
+        {
+          "hsCode": "610910",
+          "description": "Cotton t-shirt",
+          "countryOfOrigin": "CN",
+          "quantity": 1,
+          "amount": 20,
+          "standard_duty_rate": 0.12,
+          "fta_duty_rate": 0,
+          "euReform2026": {}
+        }
+      ]
+    },
+    "response": {
+      "compliance_warnings": [
+        "Pre-€3 regime: standard tariff with €150 de minimis still applicable. EU 2026 reform fields ignored."
+      ],
+      "consignment_value_eur": 20.0,
+      "declarant": "seller",
+      "declaration_type": "H7",
+      "defaults_applied": [],
+      "duty_total_eur": 0.0,
+      "fees": {
+        "national_fee_eur": 0.0,
+        "national_fee_source": null,
+        "union_handling_fee_eur": 0.0
+      },
+      "item_breakdown": [
+        {
+          "duty_eur": 0.0,
+          "grouping_key": [
+            "610910",
+            "cotton t-shirt",
+            "CN"
+          ],
+          "line_value_eur": 20.0,
+          "notes": [],
+          "qty_total": 1,
+          "regime": "pre_e3_de_minimis"
+        }
+      ],
+      "landed_cost_eur": 23.8,
+      "legal_references": [
+        "Council Regulation (EU) 2026/382 of 11 February 2026",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+        "UCC Regulation (EU) 952/2013, Article 77"
+      ],
+      "vat": {
+        "collected_via": "ioss_at_checkout",
+        "vat_base_eur": 20.0,
+        "vat_eur": 3.8,
+        "vat_rate": 0.19
+      }
+    },
+    "strategies": [
+      {
+        "complexity": 1,
+        "description": "Ship as currently configured.",
+        "name": "status_quo",
+        "result": {
+          "compliance_warnings": [
+            "Pre-€3 regime: standard tariff with €150 de minimis still applicable. EU 2026 reform fields ignored."
+          ],
+          "consignment_value_eur": 20.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "pre_e3_de_minimis"
+            }
+          ],
+          "landed_cost_eur": 23.8,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 20.0,
+            "vat_eur": 3.8,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": []
+      },
+      {
+        "complexity": 2,
+        "description": "Normalize descriptions so items sharing HS6+origin collapse to one grouping line.",
+        "name": "consolidate_descriptions",
+        "result": {
+          "compliance_warnings": [
+            "Pre-€3 regime: standard tariff with €150 de minimis still applicable. EU 2026 reform fields ignored."
+          ],
+          "consignment_value_eur": 20.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "pre_e3_de_minimis"
+            }
+          ],
+          "landed_cost_eur": 23.8,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 20.0,
+            "vat_eur": 3.8,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Description must remain ACCURATE — no over-genericization.",
+          "EU customs may challenge an inadequate description.",
+          "Best applied at catalog/PIM layer pre-shipment."
+        ]
+      },
+      {
+        "complexity": 4,
+        "description": "One parcel per HS6+description+origin group. Almost always worse than consolidation.",
+        "name": "split_parcels",
+        "result": {
+          "compliance_warnings": [
+            "Pre-€3 regime: standard tariff with €150 de minimis still applicable. EU 2026 reform fields ignored.",
+            "Split into 1 parcels — totals are summed across parcels."
+          ],
+          "consignment_value_eur": 20.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "pre_e3_de_minimis"
+            }
+          ],
+          "landed_cost_eur": 23.8,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 20.0,
+            "vat_eur": 3.8,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Multiplies handling fees and Union handling fee.",
+          "Higher fulfillment cost.",
+          "Included for comparison; rarely optimal."
+        ]
+      },
+      {
+        "complexity": 3,
+        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "name": "push_above_150",
+        "result": {
+          "compliance_warnings": [
+            "Pre-€3 regime: standard tariff with €150 de minimis still applicable. EU 2026 reform fields ignored."
+          ],
+          "consignment_value_eur": 150.01,
+          "declarant": "carrier",
+          "declaration_type": "H1",
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+            }
+          ],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 178.51,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "import_clearance",
+            "vat_base_eur": 150.01,
+            "vat_eur": 28.5,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires merchandising change (filler item or upsell).",
+          "Triggers H1 declaration with full data requirements.",
+          "Loses H7 simplification."
+        ]
+      },
+      {
+        "complexity": 5,
+        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "name": "b2b_eu_warehouse",
+        "result": {
+          "compliance_warnings": [
+            "Pre-€3 regime: standard tariff with €150 de minimis still applicable. EU 2026 reform fields ignored."
+          ],
+          "consignment_value_eur": 1000.0,
+          "declarant": "agent",
+          "declaration_type": "H1",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 1000.0,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "oss_b2b",
+            "vat_base_eur": 0.0,
+            "vat_eur": 0.0,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires EU warehouse capacity (currently constrained).",
+          "Working capital tied up in inventory.",
+          "Shifts to OSS VAT for intra-EU distance sales.",
+          "EU policy direction explicitly favors this model."
+        ]
+      }
+    ]
+  },
+  "post_union_handling": {
+    "payload": {
+      "addresses": {
+        "shipFrom": {
+          "country": "CN"
+        },
+        "shipTo": {
+          "country": "DE"
+        }
+      },
+      "date": "2026-12-01",
+      "currencyCode": "EUR",
+      "euReform2026": {
+        "iossNumber": "IM3720000123",
+        "buyerAgent": false,
+        "postalDesignatedOperator": false,
+        "shipmentChannel": "express"
+      },
+      "customer": {
+        "euReform2026": {
+          "isBusinessBuyer": false
+        }
+      },
+      "lines": [
+        {
+          "hsCode": "610910",
+          "description": "Cotton t-shirt",
+          "countryOfOrigin": "CN",
+          "quantity": 1,
+          "amount": 20,
+          "standard_duty_rate": 0.12,
+          "fta_duty_rate": 0,
+          "euReform2026": {}
+        }
+      ]
+    },
+    "response": {
+      "compliance_warnings": [
+        "MISSING_PRODUCT_IDENTIFIERS — DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+      ],
+      "consignment_value_eur": 20.0,
+      "declarant": "seller",
+      "declaration_type": "H7",
+      "defaults_applied": [],
+      "duty_total_eur": 3.0,
+      "fees": {
+        "national_fee_eur": 0.0,
+        "national_fee_source": null,
+        "union_handling_fee_eur": 2.0
+      },
+      "item_breakdown": [
+        {
+          "duty_eur": 3.0,
+          "grouping_key": [
+            "610910",
+            "cotton t-shirt",
+            "CN"
+          ],
+          "line_value_eur": 20.0,
+          "notes": [],
+          "qty_total": 1,
+          "regime": "e3_simplified"
+        }
+      ],
+      "landed_cost_eur": 28.8,
+      "legal_references": [
+        "Council Regulation (EU) 2026/382 of 11 February 2026",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+        "UCC Regulation (EU) 952/2013, Article 77"
+      ],
+      "vat": {
+        "collected_via": "ioss_at_checkout",
+        "vat_base_eur": 20.0,
+        "vat_eur": 3.8,
+        "vat_rate": 0.19
+      }
+    },
+    "strategies": [
+      {
+        "complexity": 1,
+        "description": "Ship as currently configured.",
+        "name": "status_quo",
+        "result": {
+          "compliance_warnings": [
+            "MISSING_PRODUCT_IDENTIFIERS — DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+          ],
+          "consignment_value_eur": 20.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 2.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 28.8,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 20.0,
+            "vat_eur": 3.8,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": []
+      },
+      {
+        "complexity": 2,
+        "description": "Normalize descriptions so items sharing HS6+origin collapse to one grouping line.",
+        "name": "consolidate_descriptions",
+        "result": {
+          "compliance_warnings": [
+            "MISSING_PRODUCT_IDENTIFIERS — DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+          ],
+          "consignment_value_eur": 20.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 2.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 28.8,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 20.0,
+            "vat_eur": 3.8,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Description must remain ACCURATE — no over-genericization.",
+          "EU customs may challenge an inadequate description.",
+          "Best applied at catalog/PIM layer pre-shipment."
+        ]
+      },
+      {
+        "complexity": 4,
+        "description": "One parcel per HS6+description+origin group. Almost always worse than consolidation.",
+        "name": "split_parcels",
+        "result": {
+          "compliance_warnings": [
+            "MISSING_PRODUCT_IDENTIFIERS — DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
+            "Split into 1 parcels — totals are summed across parcels."
+          ],
+          "consignment_value_eur": 20.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 2.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 28.8,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 20.0,
+            "vat_eur": 3.8,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Multiplies handling fees and Union handling fee.",
+          "Higher fulfillment cost.",
+          "Included for comparison; rarely optimal."
+        ]
+      },
+      {
+        "complexity": 3,
+        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "name": "push_above_150",
+        "result": {
+          "compliance_warnings": [
+            "MISSING_PRODUCT_IDENTIFIERS — DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 150.01,
+          "declarant": "carrier",
+          "declaration_type": "H1",
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+            }
+          ],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 2.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 180.51,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "import_clearance",
+            "vat_base_eur": 150.01,
+            "vat_eur": 28.5,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires merchandising change (filler item or upsell).",
+          "Triggers H1 declaration with full data requirements.",
+          "Loses H7 simplification."
+        ]
+      },
+      {
+        "complexity": 5,
+        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "name": "b2b_eu_warehouse",
+        "result": {
+          "compliance_warnings": [
+            "MISSING_PRODUCT_IDENTIFIERS — DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 1000.0,
+          "declarant": "agent",
+          "declaration_type": "H1",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 2.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "CN"
+              ],
+              "line_value_eur": 20.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 1002.0,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "oss_b2b",
+            "vat_base_eur": 0.0,
+            "vat_eur": 0.0,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires EU warehouse capacity (currently constrained).",
+          "Working capital tied up in inventory.",
+          "Shifts to OSS VAT for intra-EU distance sales.",
+          "EU policy direction explicitly favors this model."
+        ]
+      }
+    ]
+  },
+  "mixed_fta_basket": {
+    "payload": {
+      "addresses": {
+        "shipFrom": {
+          "country": "GB"
+        },
+        "shipTo": {
+          "country": "FR"
+        }
+      },
+      "date": "2026-08-01",
+      "currencyCode": "EUR",
+      "euReform2026": {
+        "iossNumber": "IM3720000123",
+        "buyerAgent": false,
+        "postalDesignatedOperator": false,
+        "shipmentChannel": "express"
+      },
+      "customer": {
+        "euReform2026": {
+          "isBusinessBuyer": false
+        }
+      },
+      "lines": [
+        {
+          "hsCode": "610910",
+          "description": "Cotton t-shirt",
+          "countryOfOrigin": "GB",
+          "quantity": 1,
+          "amount": 25,
+          "standard_duty_rate": 0.12,
+          "fta_duty_rate": 0.0,
+          "euReform2026": {
+            "ftaProofType": "REX"
+          }
+        },
+        {
+          "hsCode": "420232",
+          "description": "Leather wallet",
+          "countryOfOrigin": "CN",
+          "quantity": 1,
+          "amount": 30,
+          "standard_duty_rate": 0.03,
+          "fta_duty_rate": 0,
+          "euReform2026": {}
+        }
+      ]
+    },
+    "response": {
+      "compliance_warnings": [
+        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+      ],
+      "consignment_value_eur": 55.0,
+      "declarant": "seller",
+      "declaration_type": "H7",
+      "defaults_applied": [],
+      "duty_total_eur": 3.0,
+      "fees": {
+        "national_fee_eur": 4.0,
+        "national_fee_source": "Customs administrative fee",
+        "union_handling_fee_eur": 0.0
+      },
+      "item_breakdown": [
+        {
+          "duty_eur": 0.0,
+          "grouping_key": [
+            "610910",
+            "cotton t-shirt",
+            "GB"
+          ],
+          "line_value_eur": 25.0,
+          "notes": [
+            "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+          ],
+          "qty_total": 1,
+          "regime": "standard_tariff_fta"
+        },
+        {
+          "duty_eur": 3.0,
+          "grouping_key": [
+            "420232",
+            "leather wallet",
+            "CN"
+          ],
+          "line_value_eur": 30.0,
+          "notes": [],
+          "qty_total": 1,
+          "regime": "e3_simplified"
+        }
+      ],
+      "landed_cost_eur": 73.0,
+      "legal_references": [
+        "Council Regulation (EU) 2026/382 of 11 February 2026",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+        "UCC Regulation (EU) 952/2013, Article 77"
+      ],
+      "vat": {
+        "collected_via": "ioss_at_checkout",
+        "vat_base_eur": 55.0,
+        "vat_eur": 11.0,
+        "vat_rate": 0.2
+      }
+    },
+    "strategies": [
+      {
+        "complexity": 1,
+        "description": "Ship as currently configured.",
+        "name": "status_quo",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+          ],
+          "consignment_value_eur": 55.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 4.0,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 25.0,
+              "notes": [
+                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+              ],
+              "qty_total": 1,
+              "regime": "standard_tariff_fta"
+            },
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "420232",
+                "leather wallet",
+                "CN"
+              ],
+              "line_value_eur": 30.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 73.0,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 55.0,
+            "vat_eur": 11.0,
+            "vat_rate": 0.2
+          }
+        },
+        "risk_notes": []
+      },
+      {
+        "complexity": 2,
+        "description": "Normalize descriptions so items sharing HS6+origin collapse to one grouping line.",
+        "name": "consolidate_descriptions",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+          ],
+          "consignment_value_eur": 55.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 4.0,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 25.0,
+              "notes": [
+                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+              ],
+              "qty_total": 1,
+              "regime": "standard_tariff_fta"
+            },
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "420232",
+                "leather wallet",
+                "CN"
+              ],
+              "line_value_eur": 30.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 73.0,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 55.0,
+            "vat_eur": 11.0,
+            "vat_rate": 0.2
+          }
+        },
+        "risk_notes": [
+          "Description must remain ACCURATE — no over-genericization.",
+          "EU customs may challenge an inadequate description.",
+          "Best applied at catalog/PIM layer pre-shipment."
+        ]
+      },
+      {
+        "complexity": 4,
+        "description": "One parcel per HS6+description+origin group. Almost always worse than consolidation.",
+        "name": "split_parcels",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Split into 2 parcels — totals are summed across parcels."
+          ],
+          "consignment_value_eur": 25.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 2.0,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 25.0,
+              "notes": [
+                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+              ],
+              "qty_total": 1,
+              "regime": "standard_tariff_fta"
+            }
+          ],
+          "landed_cost_eur": 73.0,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 25.0,
+            "vat_eur": 5.0,
+            "vat_rate": 0.2
+          }
+        },
+        "risk_notes": [
+          "Multiplies handling fees and Union handling fee.",
+          "Higher fulfillment cost.",
+          "Included for comparison; rarely optimal."
+        ]
+      },
+      {
+        "complexity": 3,
+        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "name": "push_above_150",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 150.01,
+          "declarant": "carrier",
+          "declaration_type": "H1",
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+            }
+          ],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 4.0,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 25.0,
+              "notes": [
+                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+              ],
+              "qty_total": 1,
+              "regime": "standard_tariff_fta"
+            },
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "420232",
+                "leather wallet",
+                "CN"
+              ],
+              "line_value_eur": 30.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 184.01,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "import_clearance",
+            "vat_base_eur": 150.01,
+            "vat_eur": 30.0,
+            "vat_rate": 0.2
+          }
+        },
+        "risk_notes": [
+          "Requires merchandising change (filler item or upsell).",
+          "Triggers H1 declaration with full data requirements.",
+          "Loses H7 simplification."
+        ]
+      },
+      {
+        "complexity": 5,
+        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "name": "b2b_eu_warehouse",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 1000.0,
+          "declarant": "agent",
+          "declaration_type": "H1",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 4.0,
+            "national_fee_source": "Customs administrative fee",
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 25.0,
+              "notes": [
+                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+              ],
+              "qty_total": 1,
+              "regime": "standard_tariff_fta"
+            },
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "420232",
+                "leather wallet",
+                "CN"
+              ],
+              "line_value_eur": 30.0,
+              "notes": [],
+              "qty_total": 1,
+              "regime": "standard_tariff"
+            }
+          ],
+          "landed_cost_eur": 1004.0,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "vat": {
+            "collected_via": "oss_b2b",
+            "vat_base_eur": 0.0,
+            "vat_eur": 0.0,
+            "vat_rate": 0.2
+          }
+        },
+        "risk_notes": [
+          "Requires EU warehouse capacity (currently constrained).",
+          "Working capital tied up in inventory.",
+          "Shifts to OSS VAT for intra-EU distance sales.",
+          "EU policy direction explicitly favors this model."
+        ]
+      }
+    ]
   }
 };
 
