@@ -9,6 +9,7 @@ from typing import Optional
 from ..models.schemas import CalculationResult, Consignment
 from ..reference.data import FTA_PARTNERS, LOW_VALUE_THRESHOLD_EUR
 from .calculator import calculate, group_items
+from .defaults import apply_all_defaults
 
 
 @dataclass
@@ -60,11 +61,17 @@ def _split_parcels(c: Consignment) -> Strategy:
         total_landed += r.landed_cost_eur
         total_duty += r.duty_total_eur
 
+    n_parcels = len(sub_results)
     head = sub_results[0]
     head.duty_total_eur = total_duty
     head.landed_cost_eur = total_landed
+    # Replace head's per-parcel single-line value with the SUM across all parcels
+    # so the rendered "consignment value" matches the rendered total cost.
+    head.consignment_value_eur = sum(
+        (r.consignment_value_eur for r in sub_results), Decimal("0.00")
+    )
     head.compliance_warnings.append(
-        f"Split into {len(sub_results)} parcels — totals are summed across parcels."
+        f"Split into {n_parcels} parcels — values, duties and totals are summed across parcels."
     )
     return Strategy(
         "split_parcels",
@@ -142,6 +149,10 @@ def _b2b_eu_warehouse(c: Consignment) -> Strategy:
 
 
 def recommend(c: Consignment) -> list[Strategy]:
+    # Apply defaults first so every strategy gate sees a populated
+    # intrinsic_value_eur. Otherwise gates like `_force_above_150` that
+    # check `c.intrinsic_value_eur > 150` silently fail on None.
+    c, _ = apply_all_defaults(c)
     candidates = [
         _status_quo(c),
         _consolidate_descriptions(c),
