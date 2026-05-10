@@ -1044,7 +1044,15 @@ function _normCountry(code) {
   return _COUNTRY_ALIASES[c] || c;
 }
 function prefillFromURL() {
-  const m = _paramMap(new URLSearchParams(window.location.search));
+  // Some parent systems pass params in the fragment (after #) as well as
+  // the query string. Read both; query wins on conflict.
+  const queryParams = new URLSearchParams(window.location.search);
+  const fragRaw = window.location.hash.replace(/^#/, '');
+  const fragParams = fragRaw ? new URLSearchParams(fragRaw) : new URLSearchParams();
+  const merged = new URLSearchParams();
+  for (const [k, v] of fragParams) merged.append(k, v);
+  for (const [k, v] of queryParams) merged.set(k, v);  // overrides fragment
+  const m = _paramMap(merged);
   if (m.size === 0) return false;
   const known = ['shipTo','destination','shipFrom','origin','coo','itemOrigin',
                  'hsCode','hs6','tariff','tariffCode','commodityCode',
@@ -1120,7 +1128,11 @@ function prefillFromURL() {
     }
   }
 
-  return true;
+  // Auto-calculate is only safe when we have enough product detail for
+  // Avalara to either classify (description) or look up (HS code) AND
+  // a non-zero declared value to compute duty/VAT against.
+  const canAutoCalc = (hs6 || desc) && unitValue > 0;
+  return { prefilled: true, canAutoCalc, shipFrom, shipTo };
 }
 
 // ---- Init ----
@@ -1143,9 +1155,19 @@ function initScenarios() {
 }
 
 initScenarios();
-if (prefillFromURL()) {
+const _prefill = prefillFromURL();
+if (_prefill && _prefill.prefilled) {
   updateMutualExclusion();
-  runCalculate();
+  if (_prefill.canAutoCalc) {
+    runCalculate();
+  } else {
+    const route = `${_prefill.shipFrom || '?'} → ${_prefill.shipTo || '?'}`;
+    $('totals').innerHTML = `<div class="empty" style="padding:12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;color:#075985;">
+      <strong>Pre-filled from URL (${route})</strong><br>
+      <span style="font-size:12px;">Add a Tariff Code (HS6) or product description and a Unit Value, then click <strong>Calculate Landed Cost</strong>.</span>
+    </div>`;
+    $('work').innerHTML = '';
+  }
 } else {
   SCENARIOS[0].setup();   // No URL params → pre-load the FTA exclusion demo
   updateMutualExclusion();
