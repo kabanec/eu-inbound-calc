@@ -29,7 +29,12 @@ def _status_quo(c: Consignment) -> Strategy:
 
 
 def _force_above_150(c: Consignment) -> Optional[Strategy]:
-    if c.intrinsic_value_eur and c.intrinsic_value_eur > LOW_VALUE_THRESHOLD_EUR:
+    # Defensive: if intrinsic_value_eur is None (i.e. defaults haven't been
+    # applied), compute it from line items so the gate still works.
+    actual_value = c.intrinsic_value_eur
+    if actual_value is None:
+        actual_value = sum((i.line_value_eur for i in c.items), Decimal("0"))
+    if actual_value > LOW_VALUE_THRESHOLD_EUR:
         return None
     new_c = deepcopy(c)
     new_c.intrinsic_value_eur = LOW_VALUE_THRESHOLD_EUR + Decimal("0.01")
