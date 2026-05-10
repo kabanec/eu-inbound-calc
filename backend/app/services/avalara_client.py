@@ -115,7 +115,7 @@ def _build_payload(c: Consignment) -> dict:
             }
             for i, item in enumerate(c.items)
         ],
-        "type": "QUOTE_MAXIMUM",
+        "type": "QUOTE_ENHANCED10",
         "disableCalculationSummary": False,
         "restrictionsCheck": True,
         "program": "Regular",

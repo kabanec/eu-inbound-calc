@@ -48,7 +48,7 @@ class TestPayloadStructure:
         c = _ready_consignment()
         payload = _build_payload(c)
         assert payload["currency"] == "EUR"
-        assert payload["type"] == "QUOTE_MAXIMUM"
+        assert payload["type"] == "QUOTE_ENHANCED10"
 
 
 class TestResponseParsing:
