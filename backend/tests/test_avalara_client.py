@@ -37,7 +37,7 @@ class TestPayloadStructure:
         assert line["lineNumber"] == 1
         assert line["quantity"] == 1
         item_node = line["item"]
-        assert item_node["classifications"][0]["hscode"] == "610910"
+        assert item_node["classifications"][0]["hscode"] == "61091000"
         price_param = next(p for p in item_node["classificationParameters"] if p["name"] == "price")
         assert price_param["value"] == "20.00"
         coo_param = next(p for p in item_node["classificationParameters"] if p["name"] == "coo")

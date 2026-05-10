@@ -70,6 +70,12 @@ def get_quote(consignment: Consignment) -> AvalaraResponse:
     return _parse_avalara_response(resp.json())
 
 
+def _to_cn8(hs6: str) -> str:
+    """Normalise to 8-digit CN8: Avalara requires ≥8 digits when b2b=True."""
+    code = hs6.replace(".", "").replace(" ", "")
+    return code + "00" if len(code) == 6 else code
+
+
 def _build_payload(c: Consignment) -> dict:
     return {
         "id": f"EU-INBOUND-{uuid4().hex[:8]}",
@@ -94,7 +100,7 @@ def _build_payload(c: Consignment) -> dict:
                     "description": item.description or f"Item {i + 1}",
                     "classifications": [{
                         "country": c.destination_ms.upper(),
-                        "hscode": item.hs6.replace(".", "").replace(" ", ""),
+                        "hscode": _to_cn8(item.hs6),
                     }],
                     "classificationParameters": [
                         {"name": "price", "value": str(item.unit_value_eur), "unit": "EUR"},
