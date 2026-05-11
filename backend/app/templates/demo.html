@@ -193,6 +193,26 @@
     .regime-badge.std { background: #fef3c7; color: #92400e; }
     .regime-badge.no_duty { background: #e5e7eb; color: #4b5563; }
 
+    /* Scenario header — context strip at top of detail pane */
+    .scenario-header {
+      background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%);
+      border: 1px solid #a7f3d0;
+      border-left: 4px solid var(--accent);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+    }
+    .scenario-header .sh-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--accent-dk); margin-bottom: 4px;
+    }
+    .scenario-header .sh-title {
+      font-size: 17px; font-weight: 700; color: var(--slate-900); margin-bottom: 6px;
+    }
+    .scenario-header .sh-desc {
+      font-size: 13px; color: var(--slate-700); line-height: 1.5;
+    }
+
     /* Show your work — accordion */
     details.work {
       background: #fff; border: 1px solid var(--slate-200);
@@ -417,6 +437,7 @@
 
   <!-- RIGHT: detail pane -->
   <main class="detail" id="detail">
+    <div id="scenario-header" class="scenario-header"></div>
     <div id="summary-strip" class="summary-strip"></div>
     <div id="hero" class="hero"></div>
     <div id="cost-grid" class="cost-grid"></div>
@@ -426,13 +447,13 @@
       <table class="lines" id="lines-table"></table>
     </div>
 
-    <!-- Strategy analysis — categorised, explained card -->
-    <div id="strategies" class="strategy-card"></div>
-
     <details class="work" open>
       <summary>Show your work</summary>
       <div class="work-body" id="work"></div>
     </details>
+
+    <!-- Strategy analysis — categorised, explained card -->
+    <div id="strategies" class="strategy-card"></div>
   </main>
 </div>
 
@@ -5684,18 +5705,31 @@ function buildSidebar() {
   });
 }
 
+function renderScenarioHeader(id) {
+  const meta = SCENARIOS.find(s => s.id === id);
+  const host = $('scenario-header');
+  if (!host) return;
+  if (!meta) { host.innerHTML = ''; return; }
+  host.innerHTML = `
+    <div class="sh-label">Scenario</div>
+    <div class="sh-title">${escHtml(meta.label || '')}</div>
+    <div class="sh-desc">${escHtml(meta.desc || '')}</div>
+  `;
+}
+
 function selectScenario(id) {
   const entry = SCENARIO_DATA[id];
   if (!entry) return;
   document.querySelectorAll('.scenario-item').forEach(b => {
     b.classList.toggle('active', b.dataset.id === id);
   });
+  renderScenarioHeader(id);
   renderSummaryStrip(entry.payload);
   renderHero(entry.response);
   renderCostGrid(entry.response);
   renderLinesTable(entry.payload, entry.response);
-  renderStrategies(entry.strategies, entry.payload);
   renderWork(entry.response, entry.payload);
+  renderStrategies(entry.strategies, entry.payload);
   // Scroll detail back to top so screenshot framing stays consistent
   $('detail').scrollTop = 0;
   window.scrollTo({ top: 0, behavior: 'instant' });
