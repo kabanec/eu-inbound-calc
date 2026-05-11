@@ -19,7 +19,7 @@ from decimal import Decimal
 from typing import Optional
 
 from ..models.schemas import Consignment, DefaultApplied, Item
-from ..reference.data import FTA_PARTNERS, LOW_VALUE_THRESHOLD_EUR
+from ..reference.data import FTA_PARTNERS, LOW_VALUE_THRESHOLD_EUR, SHIPPING_COSTS_EUR
 
 
 # ---------------------------------------------------------------------------
@@ -238,6 +238,20 @@ def apply_all_defaults(c: Consignment) -> tuple[Consignment, list[DefaultApplied
         c.intrinsic_value_eur = sum(
             (it.line_value_eur for it in c.items), Decimal("0.00")
         )
+
+    # Shipping cost — derived from channel when not supplied. Models a typical
+    # small-parcel rate for landed-cost comparisons in the strategy advisor.
+    if c.shipping_cost_eur is None:
+        modeled = SHIPPING_COSTS_EUR.get(c.channel, SHIPPING_COSTS_EUR["express"])
+        c.shipping_cost_eur = modeled
+        ledger.append(DefaultApplied(
+            field="shipping_cost_eur",
+            default=str(modeled),
+            rationale=(
+                f"Modeled small-parcel cost for channel '{c.channel}'. "
+                f"Indicative only — not from a live rate API."
+            ),
+        ))
 
     # FTA direct-transport gate — must run after items are resolved
     resolve_ship_from_fta_gate(c, ledger)

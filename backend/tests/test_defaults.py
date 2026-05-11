@@ -270,6 +270,7 @@ def test_no_defaults_applied_when_all_explicit():
         items=[make_item()], destination_ms="DE",
         ioss_registered=True, b2b=False, buyer_agent=False,
         postal_designated_op=False, transaction_date=date(2026, 8, 1),
+        shipping_cost_eur=Decimal("15.00"),
     )
     r = calculate(c)
     # Item-level defaults may still emit (e.g. MISSING_TARIFF_RATE doesn't

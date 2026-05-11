@@ -288,10 +288,11 @@ def calculate(c: Consignment) -> CalculationResult:
 
     vat = _calculate_vat(c, duty_total, fees)
 
+    shipping = c.shipping_cost_eur or Decimal("0.00")
     landed = (
         c.intrinsic_value_eur + duty_total
         + fees.union_handling_fee_eur + fees.national_fee_eur
-        + vat.vat_eur
+        + vat.vat_eur + shipping
     )
 
     return CalculationResult(
@@ -301,6 +302,7 @@ def calculate(c: Consignment) -> CalculationResult:
         fees=fees, vat=vat,
         declaration_type=_resolve_declaration_type(c),
         declarant=_resolve_declarant(c),
+        shipping_cost_eur=_round(shipping),
         landed_cost_eur=_round(landed),
         defaults_applied=ledger,
         compliance_warnings=_compliance_warnings(c, regimes_seen),

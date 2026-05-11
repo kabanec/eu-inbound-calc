@@ -61,6 +61,7 @@ class Consignment:
     intrinsic_value_eur: Optional[Decimal] = None
     ship_from: Optional[str] = None
     non_alteration_confirmed: bool = False
+    shipping_cost_eur: Optional[Decimal] = None
     # Avalara passthrough metadata
     avalara_doc_code: Optional[str] = None
     customer_vat_number: Optional[str] = None
@@ -116,6 +117,7 @@ class CalculationResult:
     vat: VATBreakdown
     declaration_type: DeclarationType
     declarant: Declarant
+    shipping_cost_eur: Decimal
     landed_cost_eur: Decimal
     defaults_applied: list[DefaultApplied] = field(default_factory=list)
     compliance_warnings: list[str] = field(default_factory=list)

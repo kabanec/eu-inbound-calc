@@ -7,7 +7,9 @@ from decimal import Decimal
 from typing import Optional
 
 from ..models.schemas import CalculationResult, Consignment
-from ..reference.data import FTA_PARTNERS, LOW_VALUE_THRESHOLD_EUR
+from ..reference.data import (
+    FTA_PARTNERS, LOW_VALUE_THRESHOLD_EUR, SHIPPING_COSTS_EUR,
+)
 from .calculator import calculate, group_items
 from .defaults import apply_all_defaults
 
@@ -55,28 +57,33 @@ def _split_parcels(c: Consignment) -> Strategy:
     sub_results = []
     total_landed = Decimal("0.00")
     total_duty = Decimal("0.00")
+    total_shipping = Decimal("0.00")
     for _, items in groups.items():
         sub = deepcopy(c)
         sub.items = deepcopy(items)
         sub.intrinsic_value_eur = sum(
             (i.line_value_eur for i in items), Decimal("0.00")
         )
+        # Force per-parcel modeled shipping (don't carry parent's bundled cost).
+        sub.shipping_cost_eur = None
         r = calculate(sub)
         sub_results.append(r)
         total_landed += r.landed_cost_eur
         total_duty += r.duty_total_eur
+        total_shipping += r.shipping_cost_eur
 
     n_parcels = len(sub_results)
     head = sub_results[0]
     head.duty_total_eur = total_duty
     head.landed_cost_eur = total_landed
+    head.shipping_cost_eur = total_shipping
     # Replace head's per-parcel single-line value with the SUM across all parcels
     # so the rendered "consignment value" matches the rendered total cost.
     head.consignment_value_eur = sum(
         (r.consignment_value_eur for r in sub_results), Decimal("0.00")
     )
     head.compliance_warnings.append(
-        f"Split into {n_parcels} parcels — values, duties and totals are summed across parcels."
+        f"Split into {n_parcels} parcels — values, duties, shipping and totals are summed across parcels."
     )
     return Strategy(
         "split_parcels",
@@ -121,6 +128,8 @@ def _drop_ioss_use_fta(c: Consignment) -> Optional[Strategy]:
     new_c.ioss_registered = False
     new_c.postal_designated_op = True
     new_c.channel = "postal"
+    # Postal lane → re-derive shipping from postal table (cheaper than express).
+    new_c.shipping_cost_eur = SHIPPING_COSTS_EUR["postal"]
     return Strategy(
         "drop_ioss_use_fta",
         "Postal non-IOSS with FTA preference — €3 bypassed; standard tariff (often 0%).",
@@ -137,9 +146,12 @@ def _b2b_eu_warehouse(c: Consignment) -> Strategy:
     new_c = deepcopy(c)
     new_c.b2b = True
     new_c.ioss_registered = False
+    new_c.channel = "general_cargo"
     new_c.intrinsic_value_eur = max(
         new_c.intrinsic_value_eur or Decimal("0.00"), Decimal("1000.00")
     )
+    # Bulk import → consolidated freight rate, not per-parcel express.
+    new_c.shipping_cost_eur = SHIPPING_COSTS_EUR["general_cargo"]
     return Strategy(
         "b2b_eu_warehouse",
         "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",

@@ -69,6 +69,16 @@ NATIONAL_FEES = {
 
 UNION_HANDLING_FEE_EUR = Decimal("2.00")  # Effective 1 Nov 2026 (DATE_UNION_HANDLING_FEE); working assumption pending implementing act (Reg. (EU) 2026/382)
 
+# Modeled shipping costs per parcel (EUR) -----------------------------------
+# Indicative typical small-parcel costs from major Asia/UK origins to EU door,
+# used by the strategy advisor for landed-cost comparisons. Not authoritative
+# rates — orders of magnitude only.
+SHIPPING_COSTS_EUR = {
+    "express": Decimal("15.00"),       # express small parcel (DHL/UPS/FedEx)
+    "postal": Decimal("5.00"),         # postal Designated Operator small parcel
+    "general_cargo": Decimal("50.00"), # consolidated freight / bulk lane
+}
+
 # Standard EU VAT rates (destination-MS), May 2026 --------------------------
 VAT_RATES = {
     "AT": Decimal("0.20"), "BE": Decimal("0.21"), "BG": Decimal("0.20"),

@@ -19,6 +19,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from app.models.schemas import Consignment, Item
+from app.reference.data import SHIPPING_COSTS_EUR
 from app.services.strategy import (
     _b2b_eu_warehouse,
     _consolidate_descriptions,
@@ -245,3 +246,50 @@ class TestRecommend:
         result = recommend(_under_150_consignment())
         names = [s.name for s in result]
         assert "drop_ioss_use_fta" not in names
+
+
+# -- shipping cost modeling ------------------------------------------------
+
+class TestShippingCost:
+    def test_status_quo_uses_modeled_express_shipping(self, mock_avalara):
+        """status_quo on a default-channel ('express') consignment carries
+        the express shipping rate from SHIPPING_COSTS_EUR."""
+        s = _status_quo(_under_150_consignment())
+        assert s.result.shipping_cost_eur == SHIPPING_COSTS_EUR["express"]
+
+    def test_drop_ioss_use_fta_switches_to_postal_shipping(self, mock_avalara):
+        """drop_ioss_use_fta switches channel to postal → cheaper shipping."""
+        s = _drop_ioss_use_fta(_all_fta_consignment())
+        assert s is not None
+        assert s.result.shipping_cost_eur == SHIPPING_COSTS_EUR["postal"]
+        # Sanity: postal must be cheaper than express, otherwise the strategy
+        # makes no sense vs. status_quo.
+        assert SHIPPING_COSTS_EUR["postal"] < SHIPPING_COSTS_EUR["express"]
+
+    def test_b2b_warehouse_uses_general_cargo_shipping(self, mock_avalara):
+        """B2B EU warehouse uses bulk freight rate, not per-parcel express."""
+        s = _b2b_eu_warehouse(_under_150_consignment())
+        assert s.result.shipping_cost_eur == SHIPPING_COSTS_EUR["general_cargo"]
+
+    def test_split_parcels_multiplies_shipping(self, mock_avalara):
+        """N parcels → shipping summed across all sub-parcels."""
+        c = _fr_with_duplicate_hs_groups()
+        # 3 distinct (hs6, description, origin) groups → 3 parcels
+        s = _split_parcels(c)
+        assert s is not None
+        # Each sub-parcel ships at express rate; total should be 3 × express.
+        expected_min = SHIPPING_COSTS_EUR["express"] * Decimal("3")
+        assert s.result.shipping_cost_eur >= expected_min
+
+    def test_landed_cost_includes_shipping(self, mock_avalara):
+        """landed_cost_eur must include shipping — otherwise strategy
+        comparisons that change shipping (postal, freight) would be wrong."""
+        s = _status_quo(_under_150_consignment())
+        # landed = value + duty + fees + vat + shipping
+        # status_quo has €40 value, 0 duty (mock), default IOSS VAT.
+        # Shipping must be > 0 and reflected.
+        assert s.result.shipping_cost_eur > Decimal("0.00")
+        # crude check — landed cost is at least value + shipping
+        assert s.result.landed_cost_eur >= (
+            s.result.consignment_value_eur + s.result.shipping_cost_eur
+        )
