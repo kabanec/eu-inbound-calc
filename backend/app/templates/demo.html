@@ -608,6 +608,7 @@ const SCENARIO_DATA = {
       "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
+        "iossRegistered": true,
         "buyerAgent": false,
         "postalDesignatedOperator": false,
         "shipmentChannel": "express"
@@ -1053,6 +1054,7 @@ const SCENARIO_DATA = {
       "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
+        "iossRegistered": true,
         "buyerAgent": false,
         "postalDesignatedOperator": false,
         "shipmentChannel": "express"
@@ -1567,6 +1569,7 @@ const SCENARIO_DATA = {
       "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
+        "iossRegistered": true,
         "buyerAgent": false,
         "postalDesignatedOperator": false,
         "shipmentChannel": "express"
@@ -2011,6 +2014,7 @@ const SCENARIO_DATA = {
       "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
+        "iossRegistered": true,
         "buyerAgent": false,
         "postalDesignatedOperator": false,
         "shipmentChannel": "express"
@@ -2385,6 +2389,7 @@ const SCENARIO_DATA = {
       "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": null,
+        "iossRegistered": false,
         "buyerAgent": false,
         "postalDesignatedOperator": false,
         "shipmentChannel": "express"
@@ -2749,6 +2754,7 @@ const SCENARIO_DATA = {
       "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
+        "iossRegistered": true,
         "buyerAgent": false,
         "postalDesignatedOperator": false,
         "shipmentChannel": "express"
@@ -3065,6 +3071,7 @@ const SCENARIO_DATA = {
       "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": null,
+        "iossRegistered": false,
         "buyerAgent": false,
         "postalDesignatedOperator": true,
         "shipmentChannel": "postal"
@@ -3093,18 +3100,13 @@ const SCENARIO_DATA = {
         "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
       ],
       "consignment_value_eur": 20.0,
-      "declarant": "seller",
+      "declarant": "postal_operator",
       "declaration_type": "H6",
       "defaults_applied": [
         {
           "default": "10.00",
           "field": "shipping_cost_eur",
           "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac20.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
-        },
-        {
-          "default": true,
-          "field": "ioss_registered",
-          "rationale": "93% of B2C \u2264\u20ac150 EU imports are IOSS-registered (Council 2025-12-12)"
         }
       ],
       "duty_total_eur": 3.0,
@@ -3127,7 +3129,7 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 36.8,
+      "landed_cost_eur": 37.37,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
@@ -3136,9 +3138,9 @@ const SCENARIO_DATA = {
       ],
       "shipping_cost_eur": 10.0,
       "vat": {
-        "collected_via": "ioss_at_checkout",
-        "vat_base_eur": 20.0,
-        "vat_eur": 3.8,
+        "collected_via": "special_arrangements",
+        "vat_base_eur": 23.0,
+        "vat_eur": 4.37,
         "vat_rate": 0.19
       }
     },
@@ -3153,7 +3155,7 @@ const SCENARIO_DATA = {
             "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 20.0,
-          "declarant": "seller",
+          "declarant": "postal_operator",
           "declaration_type": "H6",
           "defaults_applied": [],
           "duty_total_eur": 3.0,
@@ -3176,7 +3178,7 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 36.8,
+          "landed_cost_eur": 37.37,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
@@ -3185,9 +3187,9 @@ const SCENARIO_DATA = {
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
-            "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 20.0,
-            "vat_eur": 3.8,
+            "collected_via": "special_arrangements",
+            "vat_base_eur": 23.0,
+            "vat_eur": 4.37,
             "vat_rate": 0.19
           }
         },
@@ -3203,7 +3205,7 @@ const SCENARIO_DATA = {
             "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 20.0,
-          "declarant": "seller",
+          "declarant": "postal_operator",
           "declaration_type": "H6",
           "defaults_applied": [],
           "duty_total_eur": 3.0,
@@ -3226,7 +3228,7 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 36.8,
+          "landed_cost_eur": 37.37,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
@@ -3235,9 +3237,9 @@ const SCENARIO_DATA = {
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
-            "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 20.0,
-            "vat_eur": 3.8,
+            "collected_via": "special_arrangements",
+            "vat_base_eur": 23.0,
+            "vat_eur": 4.37,
             "vat_rate": 0.19
           }
         },
@@ -3258,7 +3260,7 @@ const SCENARIO_DATA = {
             "Split into 1 parcels \u2014 values, duties, shipping and totals are summed across parcels."
           ],
           "consignment_value_eur": 20.0,
-          "declarant": "seller",
+          "declarant": "postal_operator",
           "declaration_type": "H6",
           "defaults_applied": [
             {
@@ -3287,7 +3289,7 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 36.8,
+          "landed_cost_eur": 37.37,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
@@ -3296,9 +3298,9 @@ const SCENARIO_DATA = {
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
-            "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 20.0,
-            "vat_eur": 3.8,
+            "collected_via": "special_arrangements",
+            "vat_base_eur": 23.0,
+            "vat_eur": 4.37,
             "vat_rate": 0.19
           }
         },
@@ -3319,13 +3321,7 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 150.01,
           "declarant": "postal_operator",
           "declaration_type": "H1",
-          "defaults_applied": [
-            {
-              "default": false,
-              "field": "ioss_registered",
-              "rationale": "OVERRIDE: value > \u20ac150 \u2192 IOSS cap exceeded"
-            }
-          ],
+          "defaults_applied": [],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -3444,6 +3440,7 @@ const SCENARIO_DATA = {
       "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
+        "iossRegistered": true,
         "buyerAgent": false,
         "postalDesignatedOperator": false,
         "shipmentChannel": "express"
@@ -3818,6 +3815,7 @@ const SCENARIO_DATA = {
       "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
+        "iossRegistered": true,
         "buyerAgent": true,
         "postalDesignatedOperator": false,
         "shipmentChannel": "express"
@@ -4187,6 +4185,7 @@ const SCENARIO_DATA = {
       "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
+        "iossRegistered": true,
         "buyerAgent": false,
         "postalDesignatedOperator": false,
         "shipmentChannel": "express"
@@ -4557,6 +4556,7 @@ const SCENARIO_DATA = {
       "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
+        "iossRegistered": true,
         "buyerAgent": false,
         "postalDesignatedOperator": false,
         "shipmentChannel": "express"
@@ -4931,6 +4931,7 @@ const SCENARIO_DATA = {
       "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
+        "iossRegistered": true,
         "buyerAgent": false,
         "postalDesignatedOperator": false,
         "shipmentChannel": "express"
