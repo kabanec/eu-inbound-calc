@@ -6,379 +6,130 @@
   <title>EU Inbound Calculator — Live Demo</title>
   <style>
     * { box-sizing: border-box; }
-    :root {
-      --slate-900: #0f172a;
-      --slate-800: #1e293b;
-      --slate-700: #334155;
-      --slate-300: #cbd5e1;
-      --slate-200: #e2e8f0;
-      --slate-100: #f1f5f9;
-      --slate-50:  #f8fafc;
-      --accent:    #10b981; /* emerald-500 */
-      --accent-dk: #059669; /* emerald-600 */
-      --ink:       #0f172a;
-      --muted:     #6b7280;
-    }
-    html, body { height: 100%; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      margin: 0; background: var(--slate-100); color: var(--ink); font-size: 14px;
+      margin: 0; padding: 16px; background: #f5f6f8; color: #1f2937; font-size: 14px;
     }
+    .layout { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; max-width: 1600px; margin: 0 auto; }
+    @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
 
     /* Header */
-    .topbar {
-      background: var(--slate-900); color: #fff;
-      padding: 14px 22px;
-      display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid #000;
-    }
-    .topbar-left { display: flex; align-items: center; gap: 14px; }
-    .topbar h1 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
-    .topbar .sub { font-size: 11px; color: var(--slate-300); margin-top: 2px; }
-    .demo-pill {
-      background: var(--accent); color: #052e1c;
-      padding: 4px 10px; border-radius: 999px;
-      font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-    }
-    .topbar-right { display: flex; gap: 10px; align-items: center; }
-    .header-btn {
-      background: rgba(255,255,255,0.08); color: #fff;
-      border: 1px solid rgba(255,255,255,0.15);
-      padding: 7px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
-    }
-    .header-btn:hover { background: rgba(255,255,255,0.16); }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .header h1 { font-size: 18px; margin: 0 0 2px; color: #111827; }
+    .header .subtitle { font-size: 12px; color: #6b7280; }
+    .badge { background: #d1fae5; color: #065f46; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .demo-pill { background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; margin-right: 6px; }
 
-    /* App layout */
-    .app {
-      display: grid;
-      grid-template-columns: 260px 1fr;
-      min-height: calc(100vh - 56px);
-    }
-    @media (max-width: 900px) {
-      .app { grid-template-columns: 1fr; }
-      .sidebar { border-right: none; border-bottom: 1px solid #000; }
-    }
+    /* Cards */
+    .card { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; }
+    .card h2 { font-size: 14px; color: #2563eb; margin: 0 0 12px; font-weight: 600; }
 
-    /* Sidebar */
-    .sidebar {
-      background: var(--slate-800); color: var(--slate-300);
-      border-right: 1px solid #000;
-      padding: 14px 0;
-    }
-    .sidebar-title {
-      font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
-      text-transform: uppercase; color: #94a3b8;
-      padding: 6px 18px 10px;
-    }
-    .scenario-item {
-      display: block; width: 100%;
-      background: transparent; color: var(--slate-300);
-      border: none; border-left: 3px solid transparent;
-      padding: 10px 16px 10px 15px;
-      text-align: left; cursor: pointer;
-      font-family: inherit; font-size: 13px; line-height: 1.35;
-      transition: background 0.12s, border-color 0.12s, color 0.12s;
-    }
-    .scenario-item:hover { background: rgba(255,255,255,0.04); color: #fff; }
-    .scenario-item.active {
-      background: var(--slate-900);
-      border-left-color: var(--accent);
-      color: #fff;
-    }
-    .scenario-item .label { font-weight: 600; display: block; }
-    .scenario-item .desc { font-size: 11px; color: #94a3b8; margin-top: 3px; }
-    .scenario-item.active .desc { color: var(--slate-300); }
+    /* Demo scenario buttons */
+    .scenarios { display: flex; flex-wrap: wrap; gap: 6px; }
+    .scenario-btn { background: #fff; border: 1px solid #d1d5db; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; color: #374151; transition: all 0.15s; }
+    .scenario-btn:hover { background: #eff6ff; border-color: #3b82f6; color: #1e40af; }
+    .scenario-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
 
-    /* Detail pane */
-    .detail {
-      padding: 26px 32px 60px;
-      overflow-y: auto;
+    /* Form — read-only mode visuals */
+    label { display: block; font-size: 11px; font-weight: 600; color: #2563eb; margin-bottom: 4px; }
+    label.required::after { content: " *"; color: #dc2626; }
+    input, select { width: 100%; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; background: #fff; }
+    input:focus, select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
+    /* Read-only form treatment — fields stay readable but inert */
+    input[disabled], select[disabled], input[readonly] {
+      background: #f9fafb; color: #1f2937; cursor: default;
     }
-    @media (max-width: 700px) { .detail { padding: 18px 14px 40px; } }
+    input[disabled], select[disabled] { opacity: 1; }
 
-    .summary-strip {
-      display: flex; flex-wrap: wrap; gap: 8px;
-      margin-bottom: 18px;
-    }
-    .tag {
-      background: #fff; border: 1px solid var(--slate-200);
-      padding: 4px 10px; border-radius: 999px;
-      font-size: 11px; color: var(--slate-700);
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    }
-    .tag strong { color: var(--ink); font-weight: 700; }
-    .tag.ioss-yes { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
-    .tag.ioss-no  { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
-    .tag.b2b-yes  { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-    /* Hero card */
-    .hero {
-      background: #fff; border: 1px solid var(--slate-200);
-      border-radius: 12px;
-      padding: 26px 28px;
-      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
-      margin-bottom: 16px;
-    }
-    .hero-label {
-      font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
-      color: var(--muted); font-weight: 600;
-    }
-    .hero-amount {
-      font-size: 48px; font-weight: 700;
-      color: var(--accent); line-height: 1.0;
-      margin: 6px 0 4px;
-      letter-spacing: -0.02em;
-    }
-    .hero-sub { font-size: 13px; color: var(--slate-700); }
-    .hero-sub .pill {
-      display: inline-block;
-      background: var(--slate-100); color: var(--slate-700);
-      padding: 2px 8px; border-radius: 6px;
-      font-size: 11px; font-weight: 600;
-      margin-left: 6px;
-    }
+    /* Method toggle */
+    .method-toggle { display: inline-flex; border: 1px solid #d1d5db; border-radius: 4px; overflow: hidden; }
+    .method-toggle button { padding: 6px 14px; border: none; background: #fff; cursor: default; font-size: 12px; }
+    .method-toggle button.active { background: #fb923c; color: white; }
+    .method-toggle button:disabled { opacity: 1; }
 
-    /* Cost breakdown grid */
-    .cost-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-      margin-bottom: 18px;
-    }
-    @media (max-width: 800px) { .cost-grid { grid-template-columns: repeat(2, 1fr); } }
-    .cost-card {
-      background: #fff; border: 1px solid var(--slate-200);
-      border-radius: 10px; padding: 14px 16px;
-    }
-    .cost-card .lbl {
-      font-size: 11px; color: var(--muted); font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.05em;
-    }
-    .cost-card .val {
-      font-size: 22px; color: var(--ink); font-weight: 700; margin-top: 4px;
-    }
-    .cost-card .note { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    /* B2B/IOSS toggles */
+    .toggle-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; padding-top: 4px; }
+    .toggle-row label { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; color: #374151; font-size: 12px; cursor: default; }
+    .toggle-row input[type=checkbox] { width: auto; margin: 0; cursor: default; }
 
-    /* Section card */
-    .section {
-      background: #fff; border: 1px solid var(--slate-200);
-      border-radius: 12px; padding: 18px 20px;
-      margin-bottom: 16px;
-    }
-    .section h2 {
-      font-size: 13px; margin: 0 0 12px;
-      color: var(--slate-900); font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.06em;
-    }
+    /* Items */
+    .item { padding: 12px; background: #f9fafb; border-radius: 6px; margin-bottom: 10px; border: 1px solid #e5e7eb; position: relative; }
+    .item-header { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .line-tag { background: #dbeafe; color: #1e40af; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+    .fta-tag { background: #d1fae5; color: #065f46; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
 
-    /* Line items table */
-    table.lines { width: 100%; border-collapse: collapse; font-size: 12px; }
-    table.lines th {
-      text-align: left; font-weight: 600; color: var(--slate-700);
-      background: var(--slate-50);
-      padding: 8px 10px; border-bottom: 1px solid var(--slate-200);
-      font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
-    }
-    table.lines td {
-      padding: 10px; border-bottom: 1px solid var(--slate-100);
-      color: var(--slate-700); vertical-align: top;
-    }
-    table.lines tr:last-child td { border-bottom: none; }
-    table.lines td.num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-align: right; }
-    table.lines th.num { text-align: right; }
-    .regime-badge {
-      display: inline-block; font-size: 10px; font-weight: 700;
-      padding: 2px 8px; border-radius: 999px;
-    }
-    .regime-badge.e3 { background: #fee2e2; color: #991b1b; }
-    .regime-badge.fta { background: #d1fae5; color: #065f46; }
-    .regime-badge.std { background: #fef3c7; color: #92400e; }
-    .regime-badge.no_duty { background: #e5e7eb; color: #4b5563; }
+    /* Totals */
+    .totals { background: #fff; }
+    .total-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+    .total-row.grand { border-top: 2px solid #1f2937; margin-top: 6px; padding-top: 10px; font-size: 16px; font-weight: 700; color: #dc2626; }
 
-    /* Scenario header — context strip at top of detail pane */
-    .scenario-header {
-      background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%);
-      border: 1px solid #a7f3d0;
-      border-left: 4px solid var(--accent);
-      border-radius: 12px;
-      padding: 14px 18px;
-      margin-bottom: 16px;
-    }
-    .scenario-header .sh-label {
-      font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
-      text-transform: uppercase; color: var(--accent-dk); margin-bottom: 4px;
-    }
-    .scenario-header .sh-title {
-      font-size: 17px; font-weight: 700; color: var(--slate-900); margin-bottom: 6px;
-    }
-    .scenario-header .sh-desc {
-      font-size: 13px; color: var(--slate-700); line-height: 1.5;
-    }
+    /* Right panel: Show your work */
+    .work-panel { background: #fff; border-radius: 8px; padding: 16px; border: 1px solid #e5e7eb; }
+    .work-panel h2 { font-size: 14px; color: #2563eb; margin: 0 0 12px; }
+    .work-panel h3 { font-size: 12px; color: #374151; margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+    .empty { color: #9ca3af; font-style: italic; font-size: 13px; padding: 20px; text-align: center; }
 
-    /* Show your work — accordion */
-    details.work {
-      background: #fff; border: 1px solid var(--slate-200);
-      border-radius: 12px; padding: 0; margin-bottom: 16px; overflow: hidden;
-    }
-    details.work > summary {
-      list-style: none; cursor: pointer;
-      padding: 14px 20px;
-      font-weight: 700; font-size: 13px;
-      color: var(--slate-900);
-      text-transform: uppercase; letter-spacing: 0.06em;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    details.work > summary::-webkit-details-marker { display: none; }
-    details.work > summary::after {
-      content: "▼"; font-size: 10px; color: var(--muted);
-      transition: transform 0.15s;
-    }
-    details.work[open] > summary::after { transform: rotate(180deg); }
-    details.work[open] > summary { border-bottom: 1px solid var(--slate-200); }
-    details.work .work-body { padding: 14px 20px 18px; }
-
-    /* Strategy analysis — categorised */
-    .strategy-card {
-      background: #fff; border: 1px solid var(--slate-200);
-      border-radius: 8px; padding: 16px 20px; margin-bottom: 16px;
-    }
-    .strategy-card h2 {
-      font-size: 13px; font-weight: 700; color: var(--slate-900);
-      margin: 0 0 4px; letter-spacing: 0.01em;
-    }
-    .strategy-card-summary {
-      display: flex; flex-wrap: wrap; gap: 8px;
-      font-size: 11px; color: var(--slate-700);
-      margin-bottom: 12px;
-    }
-    .strategy-summary-chip {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 2px 8px; border-radius: 999px;
-      background: var(--slate-100); color: var(--slate-700);
-      font-weight: 600; font-size: 10px;
-      text-transform: uppercase; letter-spacing: 0.04em;
-    }
-    .strategy-summary-chip.saves { background: #d1fae5; color: #065f46; }
-    .strategy-summary-chip.worse { background: #fee2e2; color: #991b1b; }
-    .strategy-summary-chip.na    { background: var(--slate-100); color: var(--slate-700); }
-    .strategy-baseline {
-      background: var(--slate-50); border: 1px solid var(--slate-200);
-      border-radius: 6px; padding: 10px 14px; margin-bottom: 14px;
-      display: flex; justify-content: space-between; align-items: baseline;
-      gap: 12px;
-    }
-    .strategy-baseline-label {
-      font-size: 11px; color: var(--slate-700); font-weight: 600;
-    }
-    .strategy-baseline-value {
-      font-size: 16px; font-weight: 700; color: var(--slate-900);
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    }
-    .strategy-bucket { margin-top: 14px; }
-    .strategy-bucket:first-of-type { margin-top: 0; }
-    .strategy-bucket h3 {
-      font-size: 11px; font-weight: 700; color: var(--slate-900);
-      margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.06em;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .strategy-bucket-meta {
-      font-size: 10px; font-weight: 600; color: var(--muted);
-      letter-spacing: 0.02em; text-transform: none;
-    }
-    .strategy-bucket-empty {
-      font-size: 11px; color: var(--muted); font-style: italic;
-      padding: 6px 0;
-    }
-    .strategy-row {
-      display: grid;
-      grid-template-columns: 24px 1fr auto;
-      column-gap: 12px; row-gap: 4px;
-      align-items: start;
-      padding: 10px 12px; margin-bottom: 6px;
-      background: var(--slate-50); border: 1px solid var(--slate-200);
-      border-left: 3px solid var(--slate-200);
-      border-radius: 6px;
-    }
-    .strategy-row.saves { border-left-color: var(--accent); background: #ecfdf5; border-color: #a7f3d0; }
-    .strategy-row.worse { border-left-color: #ef4444; background: #fef2f2; border-color: #fecaca; }
-    .strategy-row.noop  { border-left-color: var(--slate-300); }
-    .strategy-row.na    { border-left-color: var(--slate-300); opacity: 0.85; }
-    .strategy-icon {
-      grid-row: 1 / span 2;
-      font-size: 16px; line-height: 1.2; padding-top: 1px;
-      text-align: center;
-    }
-    .strategy-label {
-      font-size: 13px; font-weight: 700; color: var(--slate-900);
-      grid-column: 2;
-    }
-    .strategy-result {
-      grid-column: 3; grid-row: 1;
-      text-align: right;
-      font-size: 13px; font-weight: 700;
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      white-space: nowrap;
-      color: var(--slate-900);
-    }
-    .strategy-result.na { color: var(--muted); font-style: italic; font-weight: 600; }
-    .strategy-delta {
-      font-size: 11px; font-weight: 600; margin-left: 6px;
-    }
-    .strategy-delta.saves { color: #047857; }
-    .strategy-delta.worse { color: #b91c1c; }
-    .strategy-delta.noop  { color: var(--muted); }
-    .strategy-modified {
-      grid-column: 2 / span 2;
-      font-size: 11px; color: var(--slate-700); line-height: 1.4;
-    }
-    .strategy-modified .lbl { color: var(--muted); font-weight: 600; }
-    .strategy-explain {
-      grid-column: 2 / span 2;
-      font-size: 11px; color: var(--slate-700); line-height: 1.45;
-      margin-top: 2px;
-    }
-    .strategy-explain .lbl { color: var(--muted); font-weight: 600; }
-    .strategy-explain.na .lbl { color: #92400e; }
-
-    .step { padding: 8px 10px; margin-bottom: 6px; border-radius: 4px; font-size: 12px; line-height: 1.55; }
+    .step { padding: 8px 10px; margin-bottom: 6px; border-radius: 4px; font-size: 12px; line-height: 1.5; }
     .step.input { background: #eff6ff; border-left: 3px solid #3b82f6; }
-    .step.calc  { background: #f3f4f6; border-left: 3px solid #6b7280; }
-    .step.result{ background: #d1fae5; border-left: 3px solid #10b981; }
-    .step .label { font-weight: 700; color: var(--slate-900); }
+    .step.decision { background: #fef3c7; border-left: 3px solid #f59e0b; }
+    .step.calc { background: #f3f4f6; border-left: 3px solid #6b7280; }
+    .step.result { background: #d1fae5; border-left: 3px solid #10b981; }
+    .step .label { font-weight: 700; color: #1f2937; }
     .step code { background: #e5e7eb; padding: 1px 5px; border-radius: 3px; font-family: ui-monospace, monospace; font-size: 11px; }
 
-    .work-body h3 {
-      font-size: 11px; color: var(--slate-700);
-      margin: 14px 0 6px; text-transform: uppercase;
-      letter-spacing: 0.06em; font-weight: 700;
-    }
-    .item-breakdown {
-      background: var(--slate-50); padding: 10px 12px;
-      border-radius: 6px; margin-bottom: 8px; font-size: 12px;
-      border: 1px solid var(--slate-200);
-    }
-    .item-breakdown .line-key { font-family: ui-monospace, monospace; font-size: 11px; color: var(--muted); }
-    .default-item {
-      background: #fffbeb; padding: 6px 8px; margin-bottom: 4px;
-      border-left: 2px solid #f59e0b; font-size: 11px; border-radius: 2px;
-    }
+    .default-item { background: #fffbeb; padding: 6px 8px; margin-bottom: 4px; border-left: 2px solid #f59e0b; font-size: 11px; border-radius: 2px; }
     .default-item .field { font-family: ui-monospace, monospace; color: #92400e; font-weight: 600; }
-    .warning {
-      background: #fef2f2; border-left: 3px solid #ef4444;
-      padding: 7px 10px; font-size: 11px; margin-bottom: 6px;
-      border-radius: 2px; color: #991b1b;
-    }
-    .ref-list { font-size: 11px; color: var(--slate-700); line-height: 1.55; padding-left: 18px; margin: 4px 0 0; }
-    .ref-list li { margin-bottom: 3px; }
-    .fee-status {
-      background: #fff7ed; padding: 8px 10px;
-      border-radius: 4px; margin-top: 8px; font-size: 11px;
-      border-left: 3px solid #ea580c;
-    }
+    .warning { background: #fef2f2; border-left: 3px solid #ef4444; padding: 6px 8px; font-size: 11px; margin-bottom: 4px; border-radius: 2px; color: #991b1b; }
+
+    .ref-list { font-size: 10px; color: #6b7280; line-height: 1.5; }
+    .ref-list li { margin-bottom: 2px; }
+
+    /* Item breakdown */
+    .item-breakdown { background: #f9fafb; padding: 8px 10px; border-radius: 4px; margin-bottom: 6px; font-size: 12px; }
+    .item-breakdown .line-key { font-family: ui-monospace, monospace; font-size: 11px; color: #6b7280; }
+    .item-breakdown .regime { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 10px; font-weight: 600; margin-top: 4px; }
+    .regime.e3 { background: #fee2e2; color: #991b1b; }
+    .regime.fta { background: #d1fae5; color: #065f46; }
+    .regime.std { background: #fef3c7; color: #92400e; }
+    .regime.no_duty { background: #e5e7eb; color: #4b5563; }
+
+    .meta-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .meta-tag { background: #f3f4f6; padding: 2px 6px; border-radius: 3px; font-size: 10px; color: #4b5563; font-family: ui-monospace, monospace; }
+
+    .suggested { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+    .fee-status { background: #fff7ed; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 11px; }
     .fee-status .indicator { font-weight: 700; color: #ea580c; }
 
+    /* IOSS mutual-exclusion rule */
+    .toggle-row label.disabled-by-rule {
+      opacity: 0.5;
+      position: relative;
+      cursor: not-allowed;
+    }
+    .toggle-row label.disabled-by-rule::after {
+      content: "🔒";
+      margin-left: 4px;
+      font-size: 10px;
+    }
+    .toggle-row label.disabled-by-rule input {
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* Cite links */
     .cite-link { color: #2563eb; text-decoration: none; border-bottom: 1px dotted #2563eb; font-size: 0.9em; }
     .cite-link:hover { border-bottom-style: solid; }
 
-    /* Modal — reused from index */
+    /* How-does-this-work button */
+    .link-btn { background: none; border: none; color: #2563eb; cursor: pointer; font-size: 12px; padding: 0; text-decoration: underline; }
+    .link-btn:hover { color: #1e40af; }
+
+    /* Modal */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9000; display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 24px 16px; }
     .modal-content { background: #fff; border-radius: 10px; width: 100%; max-width: 860px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); margin: auto; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px 16px; border-bottom: 1px solid #e5e7eb; }
@@ -388,6 +139,8 @@
     .modal-body { padding: 20px 24px 28px; overflow-y: auto; max-height: calc(100vh - 130px); }
     .modal-section { margin-bottom: 28px; }
     .modal-section h3 { font-size: 14px; font-weight: 700; color: #1f2937; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1px solid #f3f4f6; }
+
+    /* Regime cards */
     .regime-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
     .regime-card { padding: 12px; border-radius: 6px; border: 1px solid; }
     .regime-card.e3  { background: #fff1f2; border-color: #fecdd3; }
@@ -398,80 +151,236 @@
     .regime-card .regime-name { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
     .regime-card .regime-desc { font-size: 11px; color: #4b5563; line-height: 1.4; }
     .regime-citation { font-size: 10px; color: #6b7280; margin-top: 6px; }
+
+    /* National fees table */
     .fees-table { width: 100%; border-collapse: collapse; font-size: 12px; }
     .fees-table th { background: #f3f4f6; padding: 8px 10px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
     .fees-table td { padding: 7px 10px; border-bottom: 1px solid #f3f4f6; color: #374151; vertical-align: top; }
     .fees-table tr:last-child td { border-bottom: none; }
     .suspended-badge { background: #fef3c7; color: #92400e; padding: 1px 6px; border-radius: 8px; font-size: 10px; font-weight: 600; }
     .active-badge { background: #d1fae5; color: #065f46; padding: 1px 6px; border-radius: 8px; font-size: 10px; font-weight: 600; }
+
+    /* Reference grid */
     .reference-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
     .reference-card { padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #f9fafb; }
     .reference-card .ref-short { font-size: 12px; font-weight: 600; color: #1e40af; margin-bottom: 3px; }
     .reference-card .ref-full { font-size: 10px; color: #4b5563; line-height: 1.4; margin-bottom: 6px; }
     .reference-card a { font-size: 10px; color: #2563eb; text-decoration: none; }
     .reference-card a:hover { text-decoration: underline; }
+
+    /* Strategy analysis — categorised */
+    .strategy-card-summary {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      font-size: 11px; color: #374151;
+      margin-bottom: 12px;
+    }
+    .strategy-summary-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 999px;
+      background: #f3f4f6; color: #374151;
+      font-weight: 600; font-size: 10px;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .strategy-summary-chip.saves { background: #d1fae5; color: #065f46; }
+    .strategy-summary-chip.worse { background: #fee2e2; color: #991b1b; }
+    .strategy-summary-chip.na    { background: #f3f4f6; color: #374151; }
+    .strategy-baseline {
+      background: #f9fafb; border: 1px solid #e5e7eb;
+      border-radius: 6px; padding: 10px 14px; margin-bottom: 14px;
+      display: flex; justify-content: space-between; align-items: baseline;
+      gap: 12px;
+    }
+    .strategy-baseline-label { font-size: 11px; color: #4b5563; font-weight: 600; }
+    .strategy-baseline-value {
+      font-size: 16px; font-weight: 700; color: #111827;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .strategy-bucket { margin-top: 14px; }
+    .strategy-bucket:first-of-type { margin-top: 0; }
+    .strategy-bucket h3 {
+      font-size: 11px; font-weight: 700; color: #1f2937;
+      margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.06em;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .strategy-bucket-meta { font-size: 10px; font-weight: 600; color: #6b7280; letter-spacing: 0.02em; text-transform: none; }
+    .strategy-bucket-empty { font-size: 11px; color: #9ca3af; font-style: italic; padding: 6px 0; }
+    .strategy-row {
+      display: grid;
+      grid-template-columns: 24px 1fr auto;
+      column-gap: 12px; row-gap: 4px;
+      align-items: start;
+      padding: 10px 12px; margin-bottom: 6px;
+      background: #f9fafb; border: 1px solid #e5e7eb;
+      border-left: 3px solid #d1d5db;
+      border-radius: 6px;
+    }
+    .strategy-row.saves { border-left-color: #10b981; background: #ecfdf5; border-color: #a7f3d0; }
+    .strategy-row.worse { border-left-color: #ef4444; background: #fef2f2; border-color: #fecaca; }
+    .strategy-row.noop  { border-left-color: #d1d5db; }
+    .strategy-row.na    { border-left-color: #d1d5db; opacity: 0.85; }
+    .strategy-icon {
+      grid-row: 1 / span 2;
+      font-size: 16px; line-height: 1.2; padding-top: 1px;
+      text-align: center;
+    }
+    .strategy-label { font-size: 13px; font-weight: 700; color: #1f2937; grid-column: 2; }
+    .strategy-result {
+      grid-column: 3; grid-row: 1;
+      text-align: right;
+      font-size: 13px; font-weight: 700;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      white-space: nowrap;
+      color: #1f2937;
+    }
+    .strategy-result.na { color: #6b7280; font-style: italic; font-weight: 600; }
+    .strategy-delta { font-size: 11px; font-weight: 600; margin-left: 6px; }
+    .strategy-delta.saves { color: #047857; }
+    .strategy-delta.worse { color: #b91c1c; }
+    .strategy-delta.noop  { color: #6b7280; }
+    .strategy-modified {
+      grid-column: 2 / span 2;
+      font-size: 11px; color: #4b5563; line-height: 1.4;
+    }
+    .strategy-modified .lbl { color: #6b7280; font-weight: 600; }
+    .strategy-explain {
+      grid-column: 2 / span 2;
+      font-size: 11px; color: #4b5563; line-height: 1.45;
+      margin-top: 2px;
+    }
+    .strategy-explain .lbl { color: #6b7280; font-weight: 600; }
+    .strategy-explain.na .lbl { color: #92400e; }
   </style>
 </head>
 <body>
 
-<header class="topbar">
-  <div class="topbar-left">
-    <div>
-      <h1>EU Inbound Calculator — Live Demo</h1>
-      <div class="sub">Council Reg. (EU) 2026/382 · Delegated Reg. C(2026)2760</div>
-    </div>
-    <span class="demo-pill">Demo</span>
-  </div>
-  <div class="topbar-right">
-    <button class="header-btn" onclick="openExplainer()">How does this work?</button>
-  </div>
-</header>
+<div class="layout">
 
-<div class="app">
+  <!-- LEFT: Calculator (read-only) -->
+  <div class="left-pane">
 
-  <!-- LEFT: scenario list -->
-  <aside class="sidebar">
-    <div class="sidebar-title">Scenarios</div>
-    <div id="scenario-list"></div>
-  </aside>
-
-  <!-- RIGHT: detail pane -->
-  <main class="detail" id="detail">
-    <div id="scenario-header" class="scenario-header"></div>
-    <div id="summary-strip" class="summary-strip"></div>
-    <div id="hero" class="hero"></div>
-    <div id="cost-grid" class="cost-grid"></div>
-
-    <div class="section">
-      <h2>Line items</h2>
-      <table class="lines" id="lines-table"></table>
+    <div class="header">
+      <div>
+        <h1>EU Inbound Calculator — Live Demo</h1>
+        <div class="subtitle">Council Reg. (EU) 2026/382 · Delegated Reg. C(2026)2760 · <button class="link-btn" onclick="openExplainer()">How does this work?</button></div>
+      </div>
+      <div>
+        <span class="demo-pill">🔒 Read-only demo</span>
+        <span class="badge">EUR</span>
+      </div>
     </div>
 
-    <details class="work" open>
-      <summary>Show your work</summary>
-      <div class="work-body" id="work"></div>
-    </details>
+    <!-- Demo scenarios -->
+    <div class="card">
+      <h2>📋 Demo Scenarios</h2>
+      <div class="scenarios" id="scenarios">
+        <!-- populated by JS -->
+      </div>
+    </div>
 
-    <!-- Strategy analysis — categorised, explained card -->
-    <div id="strategies" class="strategy-card"></div>
-  </main>
+    <!-- Header form -->
+    <div class="card">
+      <div class="grid-4">
+        <div>
+          <label class="required">Ship To</label>
+          <select id="destination_ms" disabled>
+            <option value="DE">DE Germany</option>
+            <option value="FR">FR France 🇫🇷</option>
+            <option value="IT">IT Italy 🇮🇹</option>
+            <option value="RO">RO Romania 🇷🇴</option>
+            <option value="ES">ES Spain</option>
+            <option value="NL">NL Netherlands</option>
+            <option value="BE">BE Belgium</option>
+            <option value="PL">PL Poland</option>
+            <option value="SE">SE Sweden</option>
+            <option value="IE">IE Ireland</option>
+            <option value="AT">AT Austria</option>
+            <option value="CZ">CZ Czechia</option>
+            <option value="DK">DK Denmark</option>
+            <option value="FI">FI Finland</option>
+          </select>
+        </div>
+        <div>
+          <label>Ship From</label>
+          <select id="ship_from" disabled>
+            <option value="CN">CN China</option>
+            <option value="GB">GB United Kingdom 🤝</option>
+            <option value="CH">CH Switzerland 🤝</option>
+            <option value="JP">JP Japan 🤝</option>
+            <option value="KR">KR South Korea 🤝</option>
+            <option value="VN">VN Vietnam 🤝</option>
+            <option value="US">US United States</option>
+            <option value="IN">IN India</option>
+            <option value="TR">TR Turkey 🤝</option>
+          </select>
+        </div>
+        <div>
+          <label class="required">Ship Date</label>
+          <input type="date" id="transaction_date" value="2026-08-01" disabled>
+        </div>
+        <div>
+          <label>Method</label>
+          <div class="method-toggle">
+            <button id="btn-non-postal" class="active" disabled>Non-Postal</button>
+            <button id="btn-postal" disabled>Postal</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="toggle-row" style="margin-top: 12px;">
+        <label><input type="checkbox" id="b2b" disabled> B2B (Business buyer)</label>
+        <label><input type="checkbox" id="ioss_registered" checked disabled> IOSS-registered seller</label>
+        <label><input type="checkbox" id="buyer_agent" disabled> Buyer agent / forwarder</label>
+      </div>
+    </div>
+
+    <!-- Items -->
+    <div class="card">
+      <h2>📦 Shipment Details</h2>
+      <div id="items"></div>
+      <div style="clear: both;"></div>
+    </div>
+
+    <!-- Totals -->
+    <div class="card totals" id="totals-card" style="margin-top: 12px;">
+      <h2>💰 Landed Cost Summary</h2>
+      <div id="totals">
+        <div class="empty">Select a scenario above to see totals.</div>
+      </div>
+    </div>
+
+    <!-- Strategy analysis — categorised, explained -->
+    <div class="card" id="strategies-card" style="margin-top: 12px;">
+      <h2>🧠 Strategy Analysis</h2>
+      <div id="strategies">
+        <div class="empty">Select a scenario above to evaluate alternatives.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Show your work -->
+  <div class="work-panel">
+    <h2>🔍 Show Your Work</h2>
+    <div id="work">
+      <div class="empty">Select a scenario to see the decision tree, defaults applied, and legal references.</div>
+    </div>
+  </div>
+
 </div>
 
 <!-- EU Fees 101 Modal -->
 <div id="explainer-overlay" class="modal-overlay" onclick="if(event.target===this)closeExplainer()" style="display:none">
   <div class="modal-content">
     <div class="modal-header">
-      <h2>EU Customs Fees 101</h2>
-      <button class="modal-close" onclick="closeExplainer()">×</button>
+      <h2>📖 EU Customs Fees 101</h2>
+      <button class="modal-close" onclick="closeExplainer()">✕</button>
     </div>
     <div class="modal-body" id="explainer-body"></div>
   </div>
 </div>
 
 <script>
-// ============================================================
-// Citation registry — same as index.html
-// ============================================================
+// ---- Citation registry ----
 const CITATIONS = {
   reg_2026_382: {
     short: 'Reg. (EU) 2026/382',
@@ -540,9 +449,7 @@ const LEGAL_REF_MAP = {
   '952/2013': 'ucc_952_2013',
 };
 
-// ============================================================
-// Modal: EU Fees 101 — same content/structure as index.html
-// ============================================================
+// ---- EU Fees 101 modal ----
 function openExplainer() {
   document.getElementById('explainer-body').innerHTML = buildExplainerHTML();
   populateReferenceGrid();
@@ -568,27 +475,27 @@ function buildExplainerHTML() {
     <h3>Which regime applies to each item?</h3>
     <div class="regime-cards">
       <div class="regime-card e3">
-        <div class="regime-name">€3 / item</div>
+        <div class="regime-name">🔴 €3 / item</div>
         <div class="regime-desc">B2C · ≤ €150 · non-FTA origin. Flat simplified duty per line item.</div>
         <div class="regime-citation">${cite('da_c_2026_2760', 'DA C(2026)2760')}</div>
       </div>
       <div class="regime-card fta">
-        <div class="regime-name">FTA €0</div>
+        <div class="regime-name">🟢 FTA €0</div>
         <div class="regime-desc">Origin country has EU FTA + valid proof (REX, EUR.1, etc.) → zero duty.</div>
         <div class="regime-citation">${cite('da_c_2026_2760', 'DA Art. 1(1)(a)')}</div>
       </div>
       <div class="regime-card std">
-        <div class="regime-name">Standard tariff</div>
+        <div class="regime-name">🟡 Standard tariff</div>
         <div class="regime-desc">Value > €150, or €3 overridden. Full MFN or FTA ad-valorem rate applies.</div>
         <div class="regime-citation">${cite('ucc_952_2013', 'UCC 952/2013')}</div>
       </div>
       <div class="regime-card b2b">
-        <div class="regime-name">B2B / CP42</div>
+        <div class="regime-name">🔵 B2B / CP42</div>
         <div class="regime-desc">Business buyer → full customs procedures, no IOSS, standard tariff.</div>
         <div class="regime-citation">${cite('cp42_da', 'DA Art. 143(1)(d)')}</div>
       </div>
       <div class="regime-card postal">
-        <div class="regime-name">H6 postal</div>
+        <div class="regime-name">🟣 H6 postal</div>
         <div class="regime-desc">Non-IOSS postal consignment ≤ €1 000: simplified H6 declaration.</div>
         <div class="regime-citation">${cite('da_2015_2446', 'DA 2015/2446')}</div>
       </div>
@@ -600,17 +507,17 @@ function buildExplainerHTML() {
       <thead><tr><th>Country</th><th>Amount</th><th>Basis</th><th>Status</th><th>Legal source</th></tr></thead>
       <tbody>
         <tr>
-          <td>France</td><td><strong>€2.00</strong></td><td>per HS6 line</td>
+          <td>🇫🇷 France</td><td><strong>€2.00</strong></td><td>per HS6 line</td>
           <td><span class="active-badge">Active from Mar 2026</span></td>
           <td>${cite('fr_ldf_2026', 'LdF 2026, Art. 82')}</td>
         </tr>
         <tr>
-          <td>Italy</td><td><strong>€2.00</strong></td><td>per parcel</td>
+          <td>🇮🇹 Italy</td><td><strong>€2.00</strong></td><td>per parcel</td>
           <td><span class="suspended-badge">Suspended → 1 Jul 2026</span></td>
           <td>${cite('it_budget_2026', 'Budget Law 2026 §126')}</td>
         </tr>
         <tr>
-          <td>Romania</td><td><strong>€4.90</strong></td><td>per parcel</td>
+          <td>🇷🇴 Romania</td><td><strong>€4.90</strong></td><td>per parcel</td>
           <td><span class="active-badge">Active from Jan 2026</span></td>
           <td>${cite('ro_og_2025', 'RO Fiscal Pkg Nov 2025')}</td>
         </tr>
@@ -630,7 +537,7 @@ function buildExplainerHTML() {
     </p>
   </div>`;
   h += `<div class="modal-section">
-    <h3>Primary sources</h3>
+    <h3>📚 Primary sources</h3>
     <div class="reference-grid" id="ref-grid"></div>
   </div>`;
   return h;
@@ -646,38 +553,22 @@ function populateReferenceGrid() {
     </div>`).join('');
 }
 
-// ============================================================
-// Sidebar scenario list metadata (id, label, desc) — display only
-// ============================================================
+const FTA_PARTNERS = ['GB', 'CH', 'JP', 'KR', 'VN', 'NO', 'IS', 'LI', 'TR', 'AD', 'SM', 'CA', 'SG', 'MX', 'CL', 'ZA', 'UA', 'MD', 'GE'];
+
+// ---- Demo scenario catalog (12 scenarios) ----
 const SCENARIOS = [
-  { id: 'gb_fta',         label: '🇬🇧 GB→DE: FTA exclusion demo',           desc: 'UK origin with FTA proof — €3 bypassed, standard tariff (0%) applies' },
-  { id: 'fr_stack',       label: '🇫🇷 CN→FR: French €2/HS6 stack',          desc: 'Multi-HS basket to France — national €2/line (TPC) on top of EU €3' },
-  { id: 'it_parcel',      label: '🇮🇹 CN→IT: Italian €2/parcel (Jul 2026)', desc: 'Italy flat €2/parcel — suspended until 1 Jul 2026, then active' },
-  { id: 'ro_logistics',   label: '🇷🇴 CN→RO: Romanian €4.90 logistics tax', desc: '25 RON per-parcel logistics tax (≈ €4.90) on top of EU regime' },
-  { id: 'b2b_exit',       label: '🏢 CN→DE: B2B hard exit',                  desc: 'B2B import → CP42 exclusion → standard tariff, no €3, no IOSS' },
-  { id: 'over_150',       label: '💸 CN→DE: >€150 forces standard',          desc: 'Value exceeds €150 cap — €3 simplified regime no longer applies' },
-  { id: 'postal_no_ioss', label: '📮 CN→DE: Postal non-IOSS',                desc: 'Postal Designated Op channel — €3 still triggered without IOSS' },
-  { id: 'vanilla',        label: '🟢 CN→DE: Vanilla €3',                     desc: 'Baseline scenario — single B2C IOSS tee, simplest €3 path' },
-  {
-    id: 'buyer_agent_break',
-    label: '🚫 CN→DE: Buyer agent breaks IOSS',
-    desc: 'Customer-nominated buyer agent voids the distance-sale construct (VAT Dir Art. 14(4)(2)) — IOSS legally precluded, falls to standard tariff',
-  },
-  {
-    id: 'pre_e3_era',
-    label: '⏪ CN→DE on 2026-06-01: Pre-€3 era',
-    desc: 'Same shipment 1 month before €3 launch — €150 de minimis still active, no duty',
-  },
-  {
-    id: 'post_union_handling',
-    label: '🆕 CN→DE on 2026-12-01: Union handling fee live',
-    desc: 'After 1 Nov 2026 — EU-wide €2 union handling fee applies on top of €3 simplified',
-  },
-  {
-    id: 'mixed_fta_basket',
-    label: '🔀 GB+CN→FR: Mixed FTA basket',
-    desc: 'UK tee with FTA proof + Chinese wallet — per-line regimes: GB line gets FTA exclusion, CN line stays €3 simplified',
-  },
+  { id: 'gb_fta',             label: '🇬🇧 GB→DE: FTA exclusion demo',           desc: 'UK origin with FTA proof — €3 bypassed, standard tariff (0%) applies' },
+  { id: 'fr_stack',           label: '🇫🇷 CN→FR: French €2/HS6 stack',          desc: 'Multi-HS basket to France — national €2/line (TPC) on top of EU €3' },
+  { id: 'it_parcel',          label: '🇮🇹 CN→IT: Italian €2/parcel (Jul 2026)', desc: 'Italy flat €2/parcel — suspended until 1 Jul 2026, then active' },
+  { id: 'ro_logistics',       label: '🇷🇴 CN→RO: Romanian €4.90 logistics tax', desc: '25 RON per-parcel logistics tax (≈ €4.90) on top of EU regime' },
+  { id: 'b2b_exit',           label: '🏢 CN→DE: B2B hard exit',                  desc: 'B2B import → CP42 exclusion → standard tariff, no €3, no IOSS' },
+  { id: 'over_150',           label: '💸 CN→DE: >€150 forces standard',          desc: 'Value exceeds €150 cap — €3 simplified regime no longer applies' },
+  { id: 'postal_no_ioss',     label: '📮 CN→DE: Postal non-IOSS',                desc: 'Postal Designated Op channel — €3 still triggered without IOSS' },
+  { id: 'vanilla',            label: '🟢 CN→DE: Vanilla €3',                     desc: 'Baseline scenario — single B2C IOSS tee, simplest €3 path' },
+  { id: 'buyer_agent_break',  label: '🚫 CN→DE: Buyer agent breaks IOSS',        desc: 'Customer-nominated buyer agent voids the distance-sale construct — IOSS legally precluded' },
+  { id: 'pre_e3_era',         label: '⏪ CN→DE on 2026-06-01: Pre-€3 era',       desc: 'Same shipment 1 month before €3 launch — €150 de minimis still active' },
+  { id: 'post_union_handling',label: '🆕 CN→DE on 2026-12-01: Union handling',   desc: 'After 1 Nov 2026 — EU-wide €2 union handling fee applies on top of €3' },
+  { id: 'mixed_fta_basket',   label: '🔀 GB+CN→FR: Mixed FTA basket',            desc: 'UK tee with FTA proof + Chinese wallet — per-line regimes diverge' },
 ];
 
 // ============================================================
@@ -5377,9 +5268,8 @@ const SCENARIO_DATA = {
   }
 };
 
-// ============================================================
-// Helpers
-// ============================================================
+
+// ---- Helpers ----
 const $ = id => document.getElementById(id);
 const fmt = n => '€' + Number(n || 0).toFixed(2);
 function escHtml(s) {
@@ -5387,139 +5277,296 @@ function escHtml(s) {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
-function regimeClass(regime) {
-  if (!regime) return 'std';
-  if (regime.startsWith('e3')) return 'e3';
-  if (regime.includes('fta')) return 'fta';
-  if (regime === 'no_duty') return 'no_duty';
-  return 'std';
-}
-function regimeBadgeText(regime) {
-  return ({
-    'e3_simplified':         '€3 simplified',
-    'standard_tariff':       'Standard tariff',
-    'standard_tariff_fta':   'Standard tariff (FTA)',
-    'no_duty':               'No duty',
-  })[regime] || regime;
-}
-function heroSubtitle(d) {
-  // Pick a representative regime for the subtitle pill from item_breakdown.
-  const regimes = (d.item_breakdown || []).map(i => i.regime);
-  const uniq = [...new Set(regimes)];
-  if (uniq.length === 1) return regimeBadgeText(uniq[0]);
-  return regimes.length + ' lines · mixed regimes';
+function setSelect(id, val) {
+  const el = $(id);
+  if (!el) return;
+  // Add the option if missing (for ship-from countries like 'GB+CN' bases not in the static list)
+  const exists = Array.from(el.options).some(o => o.value === val);
+  if (!exists && val) {
+    const opt = document.createElement('option');
+    opt.value = val; opt.textContent = val;
+    el.appendChild(opt);
+  }
+  el.value = val;
 }
 
-// ============================================================
-// Renderers
-// ============================================================
-function renderSummaryStrip(payload) {
-  const from = payload.addresses.shipFrom.country;
-  const to   = payload.addresses.shipTo.country;
-  const date = payload.date;
-  const channel = payload.euReform2026.shipmentChannel;
-  const ioss = !!payload.euReform2026.iossNumber;
-  const b2b  = !!payload.customer.euReform2026.isBusinessBuyer;
-  const buyerAgent = !!payload.euReform2026.buyerAgent;
-
-  const tags = [
-    `<span class="tag"><strong>${from} → ${to}</strong></span>`,
-    `<span class="tag">${date}</span>`,
-    `<span class="tag">channel: ${channel}</span>`,
-    `<span class="tag ${ioss ? 'ioss-yes' : 'ioss-no'}">IOSS: ${ioss ? 'yes' : 'no'}</span>`,
-    `<span class="tag ${b2b ? 'b2b-yes' : ''}">B2B: ${b2b ? 'yes' : 'no'}</span>`,
-  ];
-  if (buyerAgent) tags.push(`<span class="tag">buyer agent</span>`);
-  $('summary-strip').innerHTML = tags.join('');
+let method = 'express';
+function setMethod(m) {
+  method = m;
+  $('btn-non-postal').classList.toggle('active', m === 'express');
+  $('btn-postal').classList.toggle('active', m === 'postal');
 }
 
-function renderHero(d) {
-  $('hero').innerHTML = `
-    <div class="hero-label">Total landed cost (EUR)</div>
-    <div class="hero-amount">${fmt(d.landed_cost_eur)}</div>
-    <div class="hero-sub">
-      Regime applied <span class="pill">${heroSubtitle(d)}</span>
-      <span class="pill">Decl: ${d.declaration_type}</span>
-      <span class="pill">Declarant: ${d.declarant}</span>
+// ---- Read-only items renderer ----
+let lineCounter = 0;
+function renderItem(it) {
+  lineCounter += 1;
+  const lineNum = lineCounter;
+  const div = document.createElement('div');
+  div.className = 'item';
+  div.dataset.line = lineNum;
+
+  const isFta = FTA_PARTNERS.includes(it.origin);
+  const lineValue = (Number(it.qty) || 0) * (Number(it.unit_value) || 0);
+  const originOptions = ['CN','GB','CH','JP','KR','VN','TR','US','IN'];
+  if (!originOptions.includes(it.origin) && it.origin) originOptions.push(it.origin);
+  const ftaIcon = c => FTA_PARTNERS.includes(c) ? ' 🤝' : '';
+
+  div.innerHTML = `
+    <div class="item-header">
+      <span class="line-tag">LINE ${lineNum}</span>
+      ${isFta ? '<span class="fta-tag">FTA partner</span>' : ''}
+    </div>
+    <div class="grid-2">
+      <div>
+        <label>Commercial Description</label>
+        <input class="desc" value="${escHtml(it.desc)}" readonly>
+      </div>
+      <div>
+        <label>Tariff Code (HS6)</label>
+        <input class="hs6" value="${escHtml(it.hs6)}" maxlength="6" readonly>
+      </div>
+    </div>
+    <div class="grid-4" style="margin-top: 8px;">
+      <div>
+        <label>Country of Origin</label>
+        <select class="origin" disabled>
+          ${originOptions.map(c => `<option value="${c}" ${it.origin === c ? 'selected' : ''}>${c}${ftaIcon(c)}</option>`).join('')}
+        </select>
+        <div class="suggested">🤝 = FTA partner (proof needed per item)</div>
+      </div>
+      <div>
+        <label>Qty</label>
+        <input type="number" class="qty" value="${Number(it.qty) || 0}" readonly>
+      </div>
+      <div>
+        <label>Unit Value (€)</label>
+        <input type="number" class="unit-value" value="${Number(it.unit_value) || 0}" readonly>
+      </div>
+      <div>
+        <label>Line Value</label>
+        <input type="text" class="line-value" value="€${lineValue.toFixed(2)}" readonly>
+      </div>
+    </div>
+    <div class="grid-3" style="margin-top: 8px;">
+      <div>
+        <label>MFN Rate</label>
+        <input type="number" class="std-rate" value="${Number(it.std_rate) || 0}" readonly>
+        <div class="suggested">e.g. 0.12 for 12%</div>
+      </div>
+      <div>
+        <label>FTA Rate</label>
+        <input type="number" class="fta-rate" value="${Number(it.fta_rate) || 0}" readonly>
+        <div class="suggested">If FTA-eligible (often 0)</div>
+      </div>
+      <div style="display: flex; align-items: center;">
+        <label style="display: flex; align-items: center; gap: 6px; font-weight: 400; color: #374151; font-size: 12px;">
+          <input type="checkbox" class="fta-proof" ${it.fta_proof ? 'checked' : ''} style="width:auto;margin:0;" disabled>
+          Holds FTA proof (REX/EUR.1)
+        </label>
+      </div>
     </div>
   `;
+  $('items').appendChild(div);
 }
 
-function renderCostGrid(d) {
-  const fees = d.fees || {};
-  const feesTotal = Number(fees.union_handling_fee_eur || 0) + Number(fees.national_fee_eur || 0);
-  const feeNote = [];
-  if (Number(fees.union_handling_fee_eur || 0) > 0) feeNote.push('union handling');
-  if (Number(fees.national_fee_eur || 0) > 0) feeNote.push('national');
-  $('cost-grid').innerHTML = `
-    <div class="cost-card">
-      <div class="lbl">Goods value</div>
-      <div class="val">${fmt(d.consignment_value_eur)}</div>
-    </div>
-    <div class="cost-card">
-      <div class="lbl">Customs duty</div>
-      <div class="val">${fmt(d.duty_total_eur)}</div>
-    </div>
-    <div class="cost-card">
-      <div class="lbl">VAT</div>
-      <div class="val">${fmt(d.vat.vat_eur)}</div>
-      <div class="note">${(d.vat.vat_rate*100).toFixed(1)}% on ${fmt(d.vat.vat_base_eur)} · ${escHtml(d.vat.collected_via)}</div>
-    </div>
-    <div class="cost-card">
-      <div class="lbl">Fees</div>
-      <div class="val">${fmt(feesTotal)}</div>
-      <div class="note">${feeNote.length ? feeNote.join(' + ') : 'none'}</div>
-    </div>
-    <div class="cost-card">
-      <div class="lbl">Shipping</div>
-      <div class="val">${fmt(d.shipping_cost_eur)}</div>
-      <div class="note">modeled small-parcel rate</div>
-    </div>
-  `;
+// ---- IOSS mutual-exclusion visual lock ----
+function updateMutualExclusion() {
+  const b2b = $('b2b').checked;
+  const buyerAgent = $('buyer_agent').checked;
+  const iossCheckbox = $('ioss_registered');
+  const iossLabel = iossCheckbox.closest('label');
+
+  if (b2b || buyerAgent) {
+    iossLabel.classList.add('disabled-by-rule');
+    iossLabel.title = b2b
+      ? 'IOSS is B2C-only per VAT Dir Art. 369l — disabled because B2B is set'
+      : 'Buyer agent breaks the distance-sale construct (Art. 14(4)(2)) — IOSS not applicable';
+  } else {
+    iossLabel.classList.remove('disabled-by-rule');
+    iossLabel.title = '';
+  }
 }
 
-function renderLinesTable(payload, d) {
-  // Map payload lines to per-line rows; pair with item_breakdown by index when possible.
-  const lines = payload.lines || [];
-  const breakdowns = d.item_breakdown || [];
-  let rows = '<thead><tr>' +
-    '<th>HS6</th>' +
-    '<th>Description</th>' +
-    '<th>Origin</th>' +
-    '<th class="num">Qty</th>' +
-    '<th class="num">Unit value</th>' +
-    '<th class="num">Line value</th>' +
-    '<th>Regime</th>' +
-    '<th class="num">Duty</th>' +
-    '</tr></thead><tbody>';
+// ---- Scenario loader (offline; reads from SCENARIO_DATA) ----
+function loadScenario(id) {
+  const entry = SCENARIO_DATA[id];
+  if (!entry) {
+    $('totals').innerHTML = `<div class="warning">No cached data for scenario "${escHtml(id)}".</div>`;
+    return;
+  }
+  const payload = entry.payload;
+  const response = entry.response;
+  const strategies = entry.strategies || [];
 
-  lines.forEach((ln, i) => {
-    const qty = Number(ln.quantity || 0);
-    const lineValue = Number(ln.amount || 0);
-    const unit = qty > 0 ? lineValue / qty : 0;
-    // Find a matching breakdown by HS6 + origin (grouping_key = [hs6, desc-lower, origin])
-    const bd = breakdowns.find(b => b.grouping_key && b.grouping_key[0] === ln.hsCode && b.grouping_key[2] === ln.countryOfOrigin)
-            || breakdowns[i] || null;
-    const regime = bd ? bd.regime : '';
-    const duty   = bd ? bd.duty_eur : 0;
-    rows += `<tr>
-      <td><code>${escHtml(ln.hsCode || '')}</code></td>
-      <td>${escHtml(ln.description || '')}</td>
-      <td>${escHtml(ln.countryOfOrigin || '')}</td>
-      <td class="num">${qty}</td>
-      <td class="num">${fmt(unit)}</td>
-      <td class="num">${fmt(lineValue)}</td>
-      <td><span class="regime-badge ${regimeClass(regime)}">${escHtml(regimeBadgeText(regime))}</span></td>
-      <td class="num">${fmt(duty)}</td>
-    </tr>`;
+  // Reset form
+  lineCounter = 0;
+  $('items').innerHTML = '';
+
+  // Populate header
+  setSelect('destination_ms', payload.addresses.shipTo.country);
+  setSelect('ship_from', payload.addresses.shipFrom.country);
+  $('transaction_date').value = payload.date || '';
+
+  const eu = payload.euReform2026 || {};
+  const cust = (payload.customer && payload.customer.euReform2026) || {};
+  $('b2b').checked = !!cust.isBusinessBuyer;
+  $('ioss_registered').checked = !!eu.iossNumber;
+  $('buyer_agent').checked = !!eu.buyerAgent;
+  setMethod(eu.shipmentChannel === 'postal' || eu.postalDesignatedOperator ? 'postal' : 'express');
+  updateMutualExclusion();
+
+  // Render line items
+  (payload.lines || []).forEach(line => {
+    const qty = Number(line.quantity) || 0;
+    const unitValue = qty > 0 ? Number(line.amount) / qty : Number(line.amount) || 0;
+    renderItem({
+      hs6: line.hsCode,
+      desc: line.description || '',
+      origin: line.countryOfOrigin,
+      qty,
+      unit_value: unitValue,
+      std_rate: line.standard_duty_rate || 0,
+      fta_rate: line.fta_duty_rate || 0,
+      fta_proof: !!(line.euReform2026 && line.euReform2026.ftaProofType),
+    });
   });
-  rows += '</tbody>';
-  $('lines-table').innerHTML = rows;
+
+  renderTotals(response, payload);
+  renderWork(response, payload);
+  renderStrategies(strategies, payload);
 }
 
-// ============================================================
-// Strategy analysis — categorised, explained card
-// ============================================================
+// ---- Renderers ----
+function renderTotals(d, payload) {
+  const ms = payload.addresses.shipTo.country;
+  const nationalFeeNotes = {
+    'FR': '🇫🇷 France: €2 × distinct HS6 lines (TPC)',
+    'IT': '🇮🇹 Italy: €2 per parcel (flat, from 1 Jul 2026)',
+    'RO': '🇷🇴 Romania: €4.90 (25 RON) per parcel',
+  };
+  let html = `
+    <div class="total-row"><span>Goods value</span><span>${fmt(d.consignment_value_eur)}</span></div>
+    <div class="total-row"><span>Customs duty</span><span><strong>${fmt(d.duty_total_eur)}</strong></span></div>
+    <div class="total-row"><span>VAT (${d.vat.collected_via})</span><span>${fmt(d.vat.vat_eur)}</span></div>
+    <div class="total-row"><span>Union handling fee — from 1 Nov 2026</span><span>${fmt(d.fees.union_handling_fee_eur)}</span></div>
+    <div class="total-row"><span>National fee${nationalFeeNotes[ms] ? ` — ${nationalFeeNotes[ms]}` : ''}</span><span>${fmt(d.fees.national_fee_eur)}</span></div>
+    <div class="total-row"><span>Shipping (modeled)</span><span>${fmt(d.shipping_cost_eur)}</span></div>
+    <div class="total-row grand"><span>Total landed cost</span><span>${fmt(d.landed_cost_eur)}</span></div>
+    <div class="meta-tags" style="margin-top:8px">
+      <span class="meta-tag">Decl: ${d.declaration_type}</span>
+      <span class="meta-tag">Declarant: ${d.declarant}</span>
+      <span class="meta-tag">VAT base: ${fmt(d.vat.vat_base_eur)} @ ${(d.vat.vat_rate*100).toFixed(1)}%</span>
+    </div>
+  `;
+  if (d.fees.national_fee_eur > 0) {
+    const feeKey = FEE_REF_MAP[ms];
+    const feeSrcHtml = feeKey ? cite(feeKey, d.fees.national_fee_source) : d.fees.national_fee_source;
+    html += `<div class="fee-status"><span class="indicator">⚠ National fee active:</span> ${feeSrcHtml}</div>`;
+  }
+  $('totals').innerHTML = html;
+}
+
+function renderWork(d, payload) {
+  let html = '';
+
+  // Inputs
+  html += '<h3>1. Inputs received</h3>';
+  html += `<div class="step input">
+    <span class="label">Route:</span> ${payload.addresses.shipFrom.country} → ${payload.addresses.shipTo.country} ·
+    <span class="label">Date:</span> ${payload.date} ·
+    <span class="label">Channel:</span> ${payload.euReform2026.shipmentChannel}<br>
+    <span class="label">B2B:</span> ${payload.customer.euReform2026.isBusinessBuyer} ·
+    <span class="label">IOSS:</span> ${payload.euReform2026.iossNumber ? 'yes' : 'no'} ·
+    <span class="label">Buyer agent:</span> ${payload.euReform2026.buyerAgent}
+  </div>`;
+
+  // Defaults applied
+  if (d.defaults_applied && d.defaults_applied.length > 0) {
+    html += '<h3>2. Defaults applied (caller omitted)</h3>';
+    d.defaults_applied.forEach(def => {
+      html += `<div class="default-item"><span class="field">${def.field}</span> = <code>${JSON.stringify(def.default)}</code><br>${def.rationale}</div>`;
+    });
+  } else {
+    html += '<h3>2. Defaults applied</h3><div class="step calc">None — caller supplied all fields.</div>';
+  }
+
+  // Decision tree
+  html += '<h3>3. Decision tree per item</h3>';
+  d.item_breakdown.forEach((item) => {
+    const regimeClass = item.regime.startsWith('e3') ? 'e3' :
+                        item.regime.includes('fta') ? 'fta' :
+                        item.regime === 'no_duty' ? 'no_duty' : 'std';
+    html += `<div class="item-breakdown">
+      <div class="line-key">${item.grouping_key.join(' / ')}</div>
+      <div>Qty ${item.qty_total} · Line value ${fmt(item.line_value_eur)}</div>
+      <span class="regime ${regimeClass}">${item.regime}</span>
+      <strong style="float:right">${fmt(item.duty_eur)}</strong>
+      ${item.notes && item.notes.length ? '<div style="font-size:11px;color:#6b7280;margin-top:4px">' + item.notes.join('<br>') + '</div>' : ''}
+    </div>`;
+  });
+
+  // VAT calc
+  html += '<h3>4. VAT routing</h3>';
+  html += `<div class="step calc">
+    <span class="label">Base:</span> ${fmt(d.vat.vat_base_eur)} ×
+    <span class="label">Rate:</span> ${(d.vat.vat_rate*100).toFixed(1)}% =
+    <span class="label">${fmt(d.vat.vat_eur)}</span><br>
+    <span class="label">Collected via:</span> <code>${d.vat.collected_via}</code>
+  </div>`;
+
+  // Fees
+  if (d.fees.national_fee_eur > 0 || d.fees.union_handling_fee_eur > 0) {
+    html += '<h3>5. Fees</h3>';
+    if (d.fees.union_handling_fee_eur > 0) {
+      html += `<div class="step calc"><span class="label">Union handling:</span> ${fmt(d.fees.union_handling_fee_eur)}<br><small>EU-wide flat fee, effective 1 Nov 2026 (Reg. 2026/382, working assumption pending implementing act)</small></div>`;
+    }
+    if (d.fees.national_fee_eur > 0) {
+      const feeKey2 = FEE_REF_MAP[payload.addresses.shipTo.country];
+      const feeSrcHtml2 = feeKey2 ? cite(feeKey2, d.fees.national_fee_source) : d.fees.national_fee_source;
+      html += `<div class="step calc"><span class="label">National (${payload.addresses.shipTo.country}):</span> ${fmt(d.fees.national_fee_eur)}<br><small>${feeSrcHtml2}</small></div>`;
+    }
+  }
+
+  // Shipping (modeled)
+  if (d.shipping_cost_eur > 0) {
+    html += '<h3>6. Shipping (modeled)</h3>';
+    html += `<div class="step calc">
+      <span class="label">Per-parcel shipping:</span> ${fmt(d.shipping_cost_eur)}<br>
+      <small>Indicative small-parcel rate by channel (express €15 · postal €5 · general cargo €50). Not a live rate quote — used so landed-cost comparisons across strategies reflect the channel change.</small>
+    </div>`;
+  }
+
+  // Result
+  html += '<h3>7. Final result</h3>';
+  html += `<div class="step result">
+    <span class="label">Duty:</span> ${fmt(d.duty_total_eur)} ·
+    <span class="label">VAT:</span> ${fmt(d.vat.vat_eur)} ·
+    <span class="label">Fees:</span> ${fmt(parseFloat(d.fees.union_handling_fee_eur) + parseFloat(d.fees.national_fee_eur))} ·
+    <span class="label">Shipping:</span> ${fmt(d.shipping_cost_eur)}<br>
+    <span class="label">Landed:</span> ${fmt(d.landed_cost_eur)}
+  </div>`;
+
+  // Warnings
+  if (d.compliance_warnings && d.compliance_warnings.length) {
+    html += '<h3>⚠ Compliance warnings</h3>';
+    d.compliance_warnings.forEach(w => { html += `<div class="warning">${w}</div>`; });
+  }
+
+  // Legal refs
+  if (d.legal_references && d.legal_references.length) {
+    html += '<h3>📚 Legal references</h3><ul class="ref-list">';
+    d.legal_references.forEach(r => {
+      const citKey = Object.keys(LEGAL_REF_MAP).find(k => r.includes(k));
+      html += `<li>${citKey ? cite(LEGAL_REF_MAP[citKey], r) : r}</li>`;
+    });
+    html += '</ul>';
+  }
+
+  $('work').innerHTML = html;
+}
+
+// ---- Strategy analysis (categorised, explained) ----
 const STRATEGY_LABELS = {
   status_quo:               'Status quo',
   consolidate_descriptions: 'Consolidate descriptions',
@@ -5530,12 +5577,9 @@ const STRATEGY_LABELS = {
 };
 function strategyLabel(name) {
   if (STRATEGY_LABELS[name]) return STRATEGY_LABELS[name];
-  return String(name || '')
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, c => c.toUpperCase());
+  return String(name || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
-// Bucket assignments — which category each strategy belongs to.
 const STRATEGY_BUCKETS = {
   consolidate_descriptions: 'operational',
   drop_ioss_use_fta:        'operational',
@@ -5549,7 +5593,6 @@ const BUCKET_META = {
   pivot:       { icon: '🏗', title: 'Strategic pivots' },
 };
 
-// Plain-language explanations per strategy.
 const STRATEGY_EXPLANATIONS = {
   consolidate_descriptions: {
     what: 'Normalise descriptions of items sharing HS6+origin so they collapse to one grouping.',
@@ -5578,7 +5621,6 @@ const STRATEGY_EXPLANATIONS = {
   },
 };
 
-// Build the "modified input" line for each strategy from the payload.
 function modifiedInputFor(name, payload) {
   const lines = (payload && payload.lines) || [];
   const totalValue = lines.reduce((a, l) => a + Number(l.amount || 0), 0);
@@ -5603,14 +5645,11 @@ function modifiedInputFor(name, payload) {
   }
 }
 
-// Detect applicability based on the payload context, independent of cost.
 function strategyApplicability(name, payload) {
   const lines = (payload && payload.lines) || [];
   const totalValue = lines.reduce((a, l) => a + Number(l.amount || 0), 0);
   switch (name) {
     case 'consolidate_descriptions': {
-      // Applicable iff the (HS6, desc, origin) key set has more entries than (HS6, origin).
-      // i.e. at least two items share HS6+origin but differ on description.
       const fullKeys  = new Set(lines.map(l => `${l.hsCode}|${(l.description||'').trim().toLowerCase()}|${l.countryOfOrigin}`));
       const groupKeys = new Set(lines.map(l => `${l.hsCode}|${l.countryOfOrigin}`));
       return fullKeys.size > groupKeys.size;
@@ -5622,17 +5661,14 @@ function strategyApplicability(name, payload) {
     case 'push_above_150':
       return totalValue < 150;
     case 'b2b_eu_warehouse':
-      // Strategic pivot — never per-shipment applicable.
       return false;
     case 'drop_ioss_use_fta':
-      // Only resolvable from presence in strategies array (see classifyStrategy).
       return true;
     default:
       return true;
   }
 }
 
-// Classify a strategy result into one of: saves | worse | noop | na_inapplicable.
 function classifyStrategy(s, statusQuoCost, payload) {
   if (!s) return 'na_inapplicable';
   if (s.name === 'b2b_eu_warehouse') return 'na_inapplicable';
@@ -5640,7 +5676,7 @@ function classifyStrategy(s, statusQuoCost, payload) {
   if (!applicable) return 'na_inapplicable';
   const cost = Number(s.result && s.result.landed_cost_eur || 0);
   const sq   = Number(statusQuoCost || 0);
-  const delta = cost - sq;          // positive = worse
+  const delta = cost - sq;
   if (-delta >= 0.50) return 'saves';
   if ( delta >= 1.00) return 'worse';
   return 'noop';
@@ -5661,21 +5697,13 @@ function renderStrategies(strategies, payload) {
   const statusQuo = strategies.find(s => s.name === 'status_quo');
   const sqCost = statusQuo ? Number(statusQuo.result.landed_cost_eur || 0) : 0;
 
-  // Build a working list of strategy-name → { entry, classification }.
-  // For drop_ioss_use_fta: if it's in the strategies array, classify by cost.
-  // If missing from the array (backend filtered it out), synthesize a "filtered" N/A row.
   const ALL_NAMES = ['consolidate_descriptions','drop_ioss_use_fta','split_parcels','push_above_150','b2b_eu_warehouse'];
   const byName = Object.fromEntries(strategies.map(s => [s.name, s]));
 
   const rows = ALL_NAMES.map(name => {
     const entry = byName[name];
     let state, cost = null, delta = null, filteredByBackend = false;
-
     if (!entry) {
-      // Strategy is missing from the backend response.
-      // For drop_ioss_use_fta this means the FTA filter excluded it → render as N/A.
-      // For push_above_150 this means the value was already above €150 → also N/A.
-      // For others it shouldn't normally happen, but treat as N/A.
       state = 'na_inapplicable';
       filteredByBackend = true;
     } else {
@@ -5686,7 +5714,6 @@ function renderStrategies(strategies, payload) {
     return { name, entry, state, cost, delta, filteredByBackend };
   });
 
-  // Tally summary chips.
   const counts = { saves: 0, worse: 0, noop: 0, na: 0 };
   rows.forEach(r => {
     if (r.state === 'saves') counts.saves++;
@@ -5696,7 +5723,6 @@ function renderStrategies(strategies, payload) {
   });
   const totalEvaluated = rows.length;
 
-  // Group rows by bucket.
   const buckets = { operational: [], counter: [], pivot: [] };
   rows.forEach(r => {
     const b = STRATEGY_BUCKETS[r.name] || 'operational';
@@ -5732,7 +5758,6 @@ function renderStrategies(strategies, payload) {
     const stateClass = r.state === 'na_inapplicable' ? 'na' : r.state;
     const icon = STATE_ICONS[r.state] || '·';
     const label = strategyLabel(r.name);
-
     let resultHtml;
     if (r.state === 'na_inapplicable') {
       resultHtml = `<div class="strategy-result na">N/A</div>`;
@@ -5742,14 +5767,10 @@ function renderStrategies(strategies, payload) {
       const deltaCls  = r.state;
       resultHtml = `<div class="strategy-result">${fmt(r.cost)}<span class="strategy-delta ${deltaCls}"> (${deltaSign}${deltaAbs.replace('€','')}€)</span></div>`;
     }
-
-    // Modified-input line — show only for applicable rows (state !== na) OR for push_above_150 N/A
-    // because the user wants to see what the modification would be even when not applicable.
     const showModified = r.state !== 'na_inapplicable' || (r.name === 'push_above_150' && !r.filteredByBackend);
     const modifiedHtml = showModified
       ? `<div class="strategy-modified"><span class="lbl">Modified:</span> ${escHtml(modifiedInputFor(r.name, payload))}</div>`
       : '';
-
     return `<div class="strategy-row ${stateClass}">
       <div class="strategy-icon">${icon}</div>
       <div class="strategy-label">${escHtml(label)}</div>
@@ -5795,7 +5816,6 @@ function renderStrategies(strategies, payload) {
   }
 
   host.innerHTML = `
-    <h2>🧠 Strategy analysis</h2>
     <div class="strategy-card-summary">${summaryChips.join('')}</div>
     <div class="strategy-baseline">
       <span class="strategy-baseline-label">Status quo (current configuration)</span>
@@ -5807,167 +5827,32 @@ function renderStrategies(strategies, payload) {
   `;
 }
 
-// renderWork — adapted from index.html, with section 7 (Avalara baseline) removed.
-function renderWork(d, payload) {
-  let html = '';
-
-  // 1. Inputs
-  html += '<h3>1. Inputs received</h3>';
-  html += `<div class="step input">
-    <span class="label">Route:</span> ${escHtml(payload.addresses.shipFrom.country)} → ${escHtml(payload.addresses.shipTo.country)} ·
-    <span class="label">Date:</span> ${escHtml(payload.date)} ·
-    <span class="label">Channel:</span> ${escHtml(payload.euReform2026.shipmentChannel)}<br>
-    <span class="label">B2B:</span> ${payload.customer.euReform2026.isBusinessBuyer} ·
-    <span class="label">IOSS:</span> ${payload.euReform2026.iossNumber ? 'yes' : 'no'} ·
-    <span class="label">Buyer agent:</span> ${payload.euReform2026.buyerAgent}
-  </div>`;
-
-  // 2. Defaults applied
-  if (d.defaults_applied && d.defaults_applied.length > 0) {
-    html += '<h3>2. Defaults applied (caller omitted)</h3>';
-    d.defaults_applied.forEach(def => {
-      html += `<div class="default-item"><span class="field">${escHtml(def.field)}</span> = <code>${escHtml(JSON.stringify(def.default))}</code><br>${escHtml(def.rationale)}</div>`;
-    });
-  } else {
-    html += '<h3>2. Defaults applied</h3><div class="step calc">None — caller supplied all fields.</div>';
-  }
-
-  // 3. Decision tree per item
-  html += '<h3>3. Regime decision per item</h3>';
-  (d.item_breakdown || []).forEach(item => {
-    html += `<div class="item-breakdown">
-      <div class="line-key">${item.grouping_key.map(escHtml).join(' / ')}</div>
-      <div>Qty ${item.qty_total} · Line value ${fmt(item.line_value_eur)}</div>
-      <span class="regime-badge ${regimeClass(item.regime)}">${escHtml(regimeBadgeText(item.regime))}</span>
-      <strong style="float:right">${fmt(item.duty_eur)}</strong>
-      ${item.notes && item.notes.length ? '<div style="font-size:11px;color:#6b7280;margin-top:4px">' + item.notes.map(escHtml).join('<br>') + '</div>' : ''}
-    </div>`;
-  });
-
-  // 4. VAT routing
-  html += '<h3>4. VAT routing</h3>';
-  html += `<div class="step calc">
-    <span class="label">Base:</span> ${fmt(d.vat.vat_base_eur)} ×
-    <span class="label">Rate:</span> ${(d.vat.vat_rate*100).toFixed(1)}% =
-    <span class="label">${fmt(d.vat.vat_eur)}</span><br>
-    <span class="label">Collected via:</span> <code>${escHtml(d.vat.collected_via)}</code>
-  </div>`;
-
-  // 5. Fees
-  if (Number(d.fees.national_fee_eur) > 0 || Number(d.fees.union_handling_fee_eur) > 0) {
-    html += '<h3>5. Fees</h3>';
-    if (Number(d.fees.union_handling_fee_eur) > 0) {
-      html += `<div class="step calc"><span class="label">Union handling:</span> ${fmt(d.fees.union_handling_fee_eur)}<br><small>EU-wide flat fee, effective 1 Nov 2026 (Reg. 2026/382, working assumption pending implementing act)</small></div>`;
-    }
-    if (Number(d.fees.national_fee_eur) > 0) {
-      const feeKey = FEE_REF_MAP[payload.addresses.shipTo.country];
-      const feeSrcText = d.fees.national_fee_source || 'national fee';
-      const feeSrcHtml = feeKey ? cite(feeKey, feeSrcText) : escHtml(feeSrcText);
-      html += `<div class="step calc"><span class="label">National (${escHtml(payload.addresses.shipTo.country)}):</span> ${fmt(d.fees.national_fee_eur)}<br><small>${feeSrcHtml}</small></div>`;
-    }
-  }
-
-  // 6. Shipping (modeled)
-  if (Number(d.shipping_cost_eur) > 0) {
-    html += '<h3>6. Shipping (modeled)</h3>';
-    html += `<div class="step calc">
-      <span class="label">Per-parcel shipping:</span> ${fmt(d.shipping_cost_eur)}<br>
-      <small>Indicative small-parcel rate by channel (express €15 · postal €5 · general cargo €50). Not a live rate quote — used so landed-cost comparisons across strategies reflect the channel change.</small>
-    </div>`;
-  }
-
-  // 7. Final result
-  html += '<h3>7. Final result</h3>';
-  const feesTotal = Number(d.fees.union_handling_fee_eur || 0) + Number(d.fees.national_fee_eur || 0);
-  html += `<div class="step result">
-    <span class="label">Duty:</span> ${fmt(d.duty_total_eur)} ·
-    <span class="label">VAT:</span> ${fmt(d.vat.vat_eur)} ·
-    <span class="label">Fees:</span> ${fmt(feesTotal)} ·
-    <span class="label">Shipping:</span> ${fmt(d.shipping_cost_eur)}<br>
-    <span class="label">Landed:</span> ${fmt(d.landed_cost_eur)}
-  </div>`;
-
-  // (Section 7 — engine-vs-baseline comparison — intentionally omitted in demo.)
-
-  // National-fee status line if applicable (mirrors index renderTotals)
-  if (Number(d.fees.national_fee_eur) > 0) {
-    const ms = payload.addresses.shipTo.country;
-    const feeKey = FEE_REF_MAP[ms];
-    const feeSrcText = d.fees.national_fee_source || 'national fee';
-    const feeSrcHtml = feeKey ? cite(feeKey, feeSrcText) : escHtml(feeSrcText);
-    html += `<div class="fee-status"><span class="indicator">⚠ National fee active:</span> ${feeSrcHtml}</div>`;
-  }
-
-  // Compliance warnings
-  if (d.compliance_warnings && d.compliance_warnings.length) {
-    html += '<h3>Compliance warnings</h3>';
-    d.compliance_warnings.forEach(w => { html += `<div class="warning">${escHtml(w)}</div>`; });
-  }
-
-  // Legal references — wired to citation registry (LEGAL_REF_MAP keys are substrings).
-  if (d.legal_references && d.legal_references.length) {
-    html += '<h3>Legal references</h3><ul class="ref-list">';
-    d.legal_references.forEach(r => {
-      const citKey = Object.keys(LEGAL_REF_MAP).find(k => r.includes(k));
-      html += `<li>${citKey ? cite(LEGAL_REF_MAP[citKey], r) : escHtml(r)}</li>`;
-    });
-    html += '</ul>';
-  }
-
-  $('work').innerHTML = html;
-}
-
-// ============================================================
-// Sidebar wiring + scenario selection
-// ============================================================
-function buildSidebar() {
-  const wrap = $('scenario-list');
-  wrap.innerHTML = SCENARIOS.map(s => `
-    <button type="button" class="scenario-item" data-id="${s.id}">
-      <span class="label">${s.label}</span>
-      <span class="desc">${escHtml(s.desc)}</span>
-    </button>
-  `).join('');
-  wrap.querySelectorAll('.scenario-item').forEach(btn => {
-    btn.addEventListener('click', () => selectScenario(btn.dataset.id));
+// ---- Init ----
+function initScenarios() {
+  const wrap = $('scenarios');
+  SCENARIOS.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'scenario-btn';
+    btn.textContent = s.label;
+    btn.title = s.desc;
+    btn.dataset.scenarioId = s.id;
+    btn.onclick = () => {
+      document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      loadScenario(s.id);
+    };
+    wrap.appendChild(btn);
   });
 }
 
-function renderScenarioHeader(id) {
-  const meta = SCENARIOS.find(s => s.id === id);
-  const host = $('scenario-header');
-  if (!host) return;
-  if (!meta) { host.innerHTML = ''; return; }
-  host.innerHTML = `
-    <div class="sh-label">Scenario</div>
-    <div class="sh-title">${escHtml(meta.label || '')}</div>
-    <div class="sh-desc">${escHtml(meta.desc || '')}</div>
-  `;
+initScenarios();
+// Auto-select first scenario on load
+const _first = SCENARIOS[0];
+if (_first && SCENARIO_DATA[_first.id]) {
+  const btn = document.querySelector(`.scenario-btn[data-scenario-id="${_first.id}"]`);
+  if (btn) btn.classList.add('active');
+  loadScenario(_first.id);
 }
-
-function selectScenario(id) {
-  const entry = SCENARIO_DATA[id];
-  if (!entry) return;
-  document.querySelectorAll('.scenario-item').forEach(b => {
-    b.classList.toggle('active', b.dataset.id === id);
-  });
-  renderScenarioHeader(id);
-  renderSummaryStrip(entry.payload);
-  renderHero(entry.response);
-  renderCostGrid(entry.response);
-  renderLinesTable(entry.payload, entry.response);
-  renderWork(entry.response, entry.payload);
-  renderStrategies(entry.strategies, entry.payload);
-  // Scroll detail back to top so screenshot framing stays consistent
-  $('detail').scrollTop = 0;
-  window.scrollTo({ top: 0, behavior: 'instant' });
-}
-
-// ============================================================
-// Init: render the FIRST scenario (gb_fta) on page load.
-// ============================================================
-buildSidebar();
-selectScenario(SCENARIOS[0].id);
 </script>
 
 </body>
