@@ -941,6 +941,28 @@ async function runStrategy() {
 }
 
 // ---- Renderers ----
+function _dutyLabel(d) {
+  // Build a contextual "Customs duty" label so users see what the number
+  // actually represents (€3 simplified fee vs MFN tariff vs FTA preferential
+  // vs pre-€3 de minimis). Falls back to plain "Customs duty" on mixed/empty.
+  const items = Array.isArray(d.item_breakdown) ? d.item_breakdown : [];
+  if (items.length === 0) return 'Customs duty';
+  const regimes = new Set(items.map(i => i.regime));
+  if (regimes.size === 1) {
+    const r = items[0].regime;
+    if (r === 'e3_simplified') {
+      const n = items.length;
+      return `Customs duty — EU €3 simplified (€3 × ${n} item-group${n === 1 ? '' : 's'})`;
+    }
+    if (r === 'standard_tariff_fta') return 'Customs duty — FTA preference (0% tariff)';
+    if (r === 'standard_tariff')     return 'Customs duty — standard MFN tariff';
+    if (r === 'no_duty')             return 'Customs duty — 0% MFN';
+    if (r === 'pre_e3_de_minimis')   return 'Customs duty — pre-€3 era €150 de minimis';
+  }
+  // Mixed regimes: name the dominant one + flag mix
+  return 'Customs duty — mixed regimes (see per-item breakdown)';
+}
+
 function renderTotals(d, payload) {
   const ms = payload.addresses.shipTo.country;
   const nationalFeeNotes = {
@@ -948,11 +970,13 @@ function renderTotals(d, payload) {
     'IT': '🇮🇹 Italy: €2 per parcel (flat, from 1 Jul 2026)',
     'RO': '🇷🇴 Romania: €4.90 (25 RON) per parcel',
   };
+  const dutyLabel = _dutyLabel(d);
+  const unionFeeActive = parseFloat(d.fees.union_handling_fee_eur) > 0;
   let html = `
     <div class="total-row"><span>Goods value</span><span>${fmt(d.consignment_value_eur)}</span></div>
-    <div class="total-row"><span>Customs duty</span><span><strong>${fmt(d.duty_total_eur)}</strong></span></div>
+    <div class="total-row"><span>${dutyLabel}</span><span><strong>${fmt(d.duty_total_eur)}</strong></span></div>
     <div class="total-row"><span>VAT (${d.vat.collected_via})</span><span>${fmt(d.vat.vat_eur)}</span></div>
-    <div class="total-row"><span>Union handling fee — from 1 Nov 2026</span><span>${fmt(d.fees.union_handling_fee_eur)}</span></div>
+    ${unionFeeActive ? `<div class="total-row"><span>Union handling fee</span><span>${fmt(d.fees.union_handling_fee_eur)}</span></div>` : ''}
     <div class="total-row"><span>National fee${nationalFeeNotes[ms] ? ` — ${nationalFeeNotes[ms]}` : ''}</span><span>${fmt(d.fees.national_fee_eur)}</span></div>
     <div class="total-row"><span>Shipping (modeled)</span><span>${fmt(d.shipping_cost_eur)}</span></div>
     <div class="total-row grand"><span>Total landed cost</span><span>${fmt(d.landed_cost_eur)}</span></div>
