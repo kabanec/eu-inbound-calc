@@ -342,6 +342,23 @@
       <div style="clear: both;"></div>
     </div>
 
+    <!-- Shipping cost card (feature-flagged: hidden unless ENABLE_PCT_SHIPPING_MODEL=true) -->
+    <div class="card pct-shipping-feature" id="shipping-card" style="display:none; margin-top: 12px;">
+      <h2>🚚 Shipping Cost <span style="font-weight:400;color:#92400e;font-size:11px;background:#fef3c7;padding:2px 8px;border-radius:10px;margin-left:6px;">Demo · 10% of value, €10 floor</span></h2>
+      <div class="grid-2">
+        <div>
+          <label>Per-parcel shipping (€) — editable</label>
+          <input type="number" id="shipping_cost_override" step="0.01" min="0" placeholder="auto" oninput="onShippingOverride()">
+          <div class="suggested">Default = max(€10 floor, 10% × goods value). Leave blank to auto-compute; type a number to override.</div>
+        </div>
+        <div>
+          <label>Formula breakdown</label>
+          <input type="text" id="shipping_formula" value="" readonly>
+          <div class="suggested">Illustrative — not a live carrier quote</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Actions -->
     <div class="actions">
       <button class="btn btn-primary" onclick="runCalculate()">Calculate Landed Cost</button>
@@ -562,6 +579,15 @@ function populateReferenceGrid() {
 }
 
 const INTERNAL_MODE = new URLSearchParams(window.location.search).has('internal');
+
+// ---- Feature flag: percentage-of-value shipping model -------------------
+// When false (current production state for the prospect demo), index.html is
+// behaviorally identical to v0.2.x: flat-per-channel shipping, no override
+// field. When true: the Shipping Cost card is shown, every API call sends
+// shipping_model='percentage_demo', and the user can override the modeled
+// shipping cost via the editable input. /demo always uses the percentage
+// model via pre-captured SCENARIO_DATA.
+const ENABLE_PCT_SHIPPING_MODEL = false;
 
 const SAMPLE_RATES = {
   // Common HS6 → MFN rate snippet for demo
@@ -829,7 +855,7 @@ function buildPayload() {
     euReform2026: row.querySelector('.fta-proof').checked
       ? { ftaProofType: 'REX' } : {}
   }));
-  return {
+  const p = {
     addresses: { shipFrom: { country: $('ship_from').value }, shipTo: { country: $('destination_ms').value } },
     date: $('transaction_date').value,
     currencyCode: 'EUR',
@@ -842,6 +868,43 @@ function buildPayload() {
     customer: { euReform2026: { isBusinessBuyer: $('b2b').checked } },
     lines: items,
   };
+  if (ENABLE_PCT_SHIPPING_MODEL) {
+    p.shipping_model = 'percentage_demo';
+    const override = parseFloat(($('shipping_cost_override') || {}).value);
+    if (!isNaN(override) && override >= 0) {
+      p.shipping_cost_eur = override;
+    }
+  }
+  return p;
+}
+
+// ---- Shipping override (only used when ENABLE_PCT_SHIPPING_MODEL) -------
+function _totalGoodsValue() {
+  return Array.from(document.querySelectorAll('.item')).reduce((sum, row) => {
+    const qty = parseFloat(row.querySelector('.qty').value) || 0;
+    const uv  = parseFloat(row.querySelector('.unit-value').value) || 0;
+    return sum + qty * uv;
+  }, 0);
+}
+function _updateShippingFormula() {
+  const formulaEl = $('shipping_formula');
+  if (!formulaEl) return;
+  const value = _totalGoodsValue();
+  const pctRaw = value * 0.10;
+  const auto = Math.max(10, pctRaw);
+  const overrideRaw = ($('shipping_cost_override') || {}).value;
+  const override = parseFloat(overrideRaw);
+  if (overrideRaw !== '' && !isNaN(override)) {
+    formulaEl.value = `Override: €${override.toFixed(2)} (auto would be €${auto.toFixed(2)})`;
+  } else if (pctRaw < 10) {
+    formulaEl.value = `max(€10, 10% × €${value.toFixed(2)} = €${pctRaw.toFixed(2)}) → €10 (floor)`;
+  } else {
+    formulaEl.value = `10% × €${value.toFixed(2)} = €${pctRaw.toFixed(2)} (above €10 floor)`;
+  }
+}
+function onShippingOverride() {
+  _updateShippingFormula();
+  // No auto-recalculate — user clicks Calculate to apply.
 }
 
 // ---- Calculate ----
@@ -1505,6 +1568,16 @@ function initScenarios() {
     };
     wrap.appendChild(btn);
   });
+}
+
+// Surface the shipping card + wire formula refresh hooks only when the flag is on.
+if (ENABLE_PCT_SHIPPING_MODEL) {
+  document.querySelectorAll('.pct-shipping-feature').forEach(el => el.style.display = '');
+  // Refresh formula whenever an item's qty or unit-value changes.
+  document.getElementById('items').addEventListener('input', e => {
+    if (e.target.matches('.qty, .unit-value')) _updateShippingFormula();
+  });
+  _updateShippingFormula();
 }
 
 initScenarios();
