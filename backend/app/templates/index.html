@@ -917,6 +917,10 @@ function buildPayload() {
     currencyCode: 'EUR',
     euReform2026: {
       iossNumber: $('ioss_registered').checked ? 'IM3720000123' : null,
+      // Explicit boolean so unchecking the box survives the backend's 93% heuristic.
+      // Without this, iossNumber:null is ambiguous ("unknown" vs "explicit no")
+      // and the defaults engine flips it back to true for B2C ≤€150 shipments.
+      iossRegistered: $('ioss_registered').checked,
       buyerAgent: $('buyer_agent').checked,
       postalDesignatedOperator: postalDesignatedOp,
       shipmentChannel: method,

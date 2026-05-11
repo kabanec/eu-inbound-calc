@@ -125,6 +125,68 @@ def test_explicit_ioss_true_overridden_when_value_exceeds_150():
     assert any("> €150" in d.rationale for d in ledger)
 
 
+def test_explicit_ioss_false_not_overridden_by_93pct_heuristic():
+    """REGRESSION: when the caller explicitly says ioss_registered=False, the
+    93% B2C-≤€150 heuristic must NOT flip it back to True.
+
+    Without this, the 'Royal Mail GB→DE postal, no IOSS' scenario silently
+    reports VAT (ioss_at_checkout) even though the seller is not IOSS-registered,
+    which yields a wrong VAT base (value vs value+duty) and wrong declarant
+    (seller vs postal_operator) on the H6 declaration.
+    """
+    c = Consignment(
+        items=[make_item(unit_value_eur=Decimal("35"))],
+        destination_ms="DE", ioss_registered=False, b2b=False,
+    )
+    c, ledger = apply_all_defaults(c)
+    assert c.ioss_registered is False
+    # The 93% heuristic must NOT have fired (no ledger entry for it).
+    assert not any(
+        d.field == "ioss_registered" and "93%" in d.rationale for d in ledger
+    ), "93% heuristic must not override an explicit False"
+
+
+def test_adapter_explicit_iossRegistered_false_round_trips():
+    """REGRESSION: the avalara_adapter must carry an explicit
+    `iossRegistered: false` from the payload through to the Consignment so the
+    defaults engine sees `given=False` (not None).
+    """
+    from app.services.avalara_adapter import from_avalara_getquote
+    payload = {
+        "addresses": {"shipFrom": {"country": "GB"}, "shipTo": {"country": "DE"}},
+        "date": "2026-08-01",
+        "euReform2026": {
+            "iossNumber": None,
+            "iossRegistered": False,   # explicit no
+            "shipmentChannel": "postal",
+            "postalDesignatedOperator": True,
+        },
+        "customer": {"euReform2026": {"isBusinessBuyer": False}},
+        "lines": [{"hsCode": "610910", "description": "tee", "countryOfOrigin": "GB",
+                   "quantity": 1, "amount": 35}],
+    }
+    c = from_avalara_getquote(payload)
+    assert c.ioss_registered is False, (
+        "Adapter dropped the explicit iossRegistered=false signal — "
+        "defaults engine would now run the 93% heuristic and flip it to True."
+    )
+
+
+def test_adapter_iossNumber_present_still_implies_true():
+    """Legacy callers that only send `iossNumber` (no iossRegistered) must
+    continue to be interpreted as IOSS-registered."""
+    from app.services.avalara_adapter import from_avalara_getquote
+    payload = {
+        "addresses": {"shipFrom": {"country": "CN"}, "shipTo": {"country": "DE"}},
+        "date": "2026-08-01",
+        "euReform2026": {"iossNumber": "IM3720000123"},
+        "lines": [{"hsCode": "610910", "description": "tee", "countryOfOrigin": "CN",
+                   "quantity": 1, "amount": 20}],
+    }
+    c = from_avalara_getquote(payload)
+    assert c.ioss_registered is True
+
+
 # ---------------------------------------------------------------------------
 # §3.2 row: buyer_agent
 # ---------------------------------------------------------------------------

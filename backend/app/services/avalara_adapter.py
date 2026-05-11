@@ -46,9 +46,18 @@ def from_avalara_getquote(payload: dict[str, Any]) -> Consignment:
     if is_business is None and vat_number:
         is_business = True
 
-    # IOSS inference: explicit iossNumber presence implies IOSS-registered
+    # IOSS resolution:
+    #   1. Explicit `iossRegistered` boolean wins (lets the caller say "no IOSS"
+    #      without the 93% B2C-low-value heuristic overriding it).
+    #   2. Otherwise fall back to inferring from iossNumber presence (legacy
+    #      Avalara callers that only carry the number, not a flag).
+    #   3. If neither is present, leave as None so the defaults engine applies
+    #      the heuristic — that path is for partial payloads, not explicit nos.
     ioss_number = eu_ext.get("iossNumber") or eu_ext.get("platformIossNumber")
-    ioss_registered = True if ioss_number else None  # None lets defaults engine decide
+    if "iossRegistered" in eu_ext and eu_ext["iossRegistered"] is not None:
+        ioss_registered = bool(eu_ext["iossRegistered"])
+    else:
+        ioss_registered = True if ioss_number else None
 
     default_origin = ship_from_raw.upper() if ship_from_raw else None
     items = [_item_from_line(line, default_origin=default_origin)
