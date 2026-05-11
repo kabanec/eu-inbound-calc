@@ -575,7 +575,7 @@ const FTA_PARTNERS = ['GB', 'CH', 'JP', 'KR', 'VN', 'NO', 'IS', 'LI', 'TR', 'AD'
 // ---- Demo scenario catalog (12 scenarios) ----
 const SCENARIOS = [
   { id: 'gb_fta',             label: '🇬🇧 GB→DE: FTA exclusion demo',           desc: 'UK origin with FTA proof — €3 bypassed, standard tariff (0%) applies' },
-  { id: 'fr_stack',           label: '🇫🇷 CN→FR: French €2/HS6 stack',          desc: 'Multi-HS basket to France — national €2/line (TPC) on top of EU €3' },
+  { id: 'fr_stack',           label: '🇫🇷 GB→FR: French €2/HS6 stack',          desc: 'Multi-HS basket from UK to France — national €2/line (TPC) on top of EU €3' },
   { id: 'it_parcel',          label: '🇮🇹 CN→IT: Italian €2/parcel (Jul 2026)', desc: 'Italy flat €2/parcel — suspended until 1 Jul 2026, then active' },
   { id: 'ro_logistics',       label: '🇷🇴 CN→RO: Romanian €4.90 logistics tax', desc: '25 RON per-parcel logistics tax (≈ €4.90) on top of EU regime' },
   { id: 'b2b_exit',           label: '🏢 CN→DE: B2B hard exit',                  desc: 'B2B import → CP42 exclusion → standard tariff, no €3, no IOSS' },
@@ -1043,7 +1043,7 @@ const SCENARIO_DATA = {
     "payload": {
       "addresses": {
         "shipFrom": {
-          "country": "CN"
+          "country": "GB"
         },
         "shipTo": {
           "country": "FR"
@@ -1068,7 +1068,7 @@ const SCENARIO_DATA = {
         {
           "hsCode": "610910",
           "description": "Cotton t-shirt",
-          "countryOfOrigin": "CN",
+          "countryOfOrigin": "GB",
           "quantity": 1,
           "amount": 12,
           "standard_duty_rate": 0.12,
@@ -1078,7 +1078,7 @@ const SCENARIO_DATA = {
         {
           "hsCode": "640399",
           "description": "Leather shoe",
-          "countryOfOrigin": "CN",
+          "countryOfOrigin": "GB",
           "quantity": 1,
           "amount": 35,
           "standard_duty_rate": 0.08,
@@ -1088,7 +1088,7 @@ const SCENARIO_DATA = {
         {
           "hsCode": "420232",
           "description": "Leather wallet",
-          "countryOfOrigin": "CN",
+          "countryOfOrigin": "GB",
           "quantity": 1,
           "amount": 25,
           "standard_duty_rate": 0.03,
@@ -1124,7 +1124,7 @@ const SCENARIO_DATA = {
           "grouping_key": [
             "610910",
             "cotton t-shirt",
-            "CN"
+            "GB"
           ],
           "line_value_eur": 12.0,
           "notes": [],
@@ -1136,7 +1136,7 @@ const SCENARIO_DATA = {
           "grouping_key": [
             "640399",
             "leather shoe",
-            "CN"
+            "GB"
           ],
           "line_value_eur": 35.0,
           "notes": [],
@@ -1148,7 +1148,7 @@ const SCENARIO_DATA = {
           "grouping_key": [
             "420232",
             "leather wallet",
-            "CN"
+            "GB"
           ],
           "line_value_eur": 25.0,
           "notes": [],
@@ -1197,7 +1197,7 @@ const SCENARIO_DATA = {
               "grouping_key": [
                 "610910",
                 "cotton t-shirt",
-                "CN"
+                "GB"
               ],
               "line_value_eur": 12.0,
               "notes": [],
@@ -1209,7 +1209,7 @@ const SCENARIO_DATA = {
               "grouping_key": [
                 "640399",
                 "leather shoe",
-                "CN"
+                "GB"
               ],
               "line_value_eur": 35.0,
               "notes": [],
@@ -1221,7 +1221,7 @@ const SCENARIO_DATA = {
               "grouping_key": [
                 "420232",
                 "leather wallet",
-                "CN"
+                "GB"
               ],
               "line_value_eur": 25.0,
               "notes": [],
@@ -1271,7 +1271,7 @@ const SCENARIO_DATA = {
               "grouping_key": [
                 "610910",
                 "cotton t-shirt",
-                "CN"
+                "GB"
               ],
               "line_value_eur": 12.0,
               "notes": [],
@@ -1283,7 +1283,7 @@ const SCENARIO_DATA = {
               "grouping_key": [
                 "640399",
                 "leather shoe",
-                "CN"
+                "GB"
               ],
               "line_value_eur": 35.0,
               "notes": [],
@@ -1295,7 +1295,7 @@ const SCENARIO_DATA = {
               "grouping_key": [
                 "420232",
                 "leather wallet",
-                "CN"
+                "GB"
               ],
               "line_value_eur": 25.0,
               "notes": [],
@@ -1356,7 +1356,7 @@ const SCENARIO_DATA = {
               "grouping_key": [
                 "610910",
                 "cotton t-shirt",
-                "CN"
+                "GB"
               ],
               "line_value_eur": 12.0,
               "notes": [],
@@ -1415,7 +1415,7 @@ const SCENARIO_DATA = {
               "grouping_key": [
                 "610910",
                 "cotton t-shirt",
-                "CN"
+                "GB"
               ],
               "line_value_eur": 12.0,
               "notes": [],
@@ -1427,7 +1427,7 @@ const SCENARIO_DATA = {
               "grouping_key": [
                 "640399",
                 "leather shoe",
-                "CN"
+                "GB"
               ],
               "line_value_eur": 35.0,
               "notes": [],
@@ -1439,7 +1439,7 @@ const SCENARIO_DATA = {
               "grouping_key": [
                 "420232",
                 "leather wallet",
-                "CN"
+                "GB"
               ],
               "line_value_eur": 25.0,
               "notes": [],
@@ -1447,7 +1447,7 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 196.01,
+          "landed_cost_eur": 198.01,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
@@ -1457,8 +1457,8 @@ const SCENARIO_DATA = {
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
-            "vat_base_eur": 150.01,
-            "vat_eur": 30.0,
+            "vat_base_eur": 160.01,
+            "vat_eur": 32.0,
             "vat_rate": 0.2
           }
         },
@@ -1498,7 +1498,7 @@ const SCENARIO_DATA = {
               "grouping_key": [
                 "610910",
                 "cotton t-shirt",
-                "CN"
+                "GB"
               ],
               "line_value_eur": 12.0,
               "notes": [],
@@ -1510,7 +1510,7 @@ const SCENARIO_DATA = {
               "grouping_key": [
                 "640399",
                 "leather shoe",
-                "CN"
+                "GB"
               ],
               "line_value_eur": 35.0,
               "notes": [],
@@ -1522,7 +1522,7 @@ const SCENARIO_DATA = {
               "grouping_key": [
                 "420232",
                 "leather wallet",
-                "CN"
+                "GB"
               ],
               "line_value_eur": 25.0,
               "notes": [],

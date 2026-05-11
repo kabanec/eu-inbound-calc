@@ -674,16 +674,16 @@ const SCENARIOS = [
   // ---------- CN-origin and other reference scenarios ----------
   {
     id: 'fr_stack',
-    label: '🇫🇷 CN→FR: French €2/HS6 stack',
-    desc: 'Multi-HS basket to France — national €2/line (TPC) on top of EU €3',
+    label: '🇫🇷 GB→FR: French €2/HS6 stack',
+    desc: 'Multi-HS basket from UK to France — national €2/line (TPC) on top of EU €3',
     setup: () => {
       reset();
       setSelect('destination_ms', 'FR');
-      setSelect('ship_from', 'CN');
+      setSelect('ship_from', 'GB');
       document.getElementById('ioss_registered').checked = true;
-      addItem({ hs6: '610910', desc: 'Cotton t-shirt', origin: 'CN', qty: 1, unit_value: 12, std_rate: 0.12 });
-      addItem({ hs6: '640399', desc: 'Leather shoe', origin: 'CN', qty: 1, unit_value: 35, std_rate: 0.08 });
-      addItem({ hs6: '420232', desc: 'Leather wallet', origin: 'CN', qty: 1, unit_value: 25, std_rate: 0.03 });
+      addItem({ hs6: '610910', desc: 'Cotton t-shirt', origin: 'GB', qty: 1, unit_value: 12, std_rate: 0.12 });
+      addItem({ hs6: '640399', desc: 'Leather shoe', origin: 'GB', qty: 1, unit_value: 35, std_rate: 0.08 });
+      addItem({ hs6: '420232', desc: 'Leather wallet', origin: 'GB', qty: 1, unit_value: 25, std_rate: 0.03 });
     }
   },
   {
