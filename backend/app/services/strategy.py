@@ -14,6 +14,20 @@ from .calculator import calculate, group_items
 from .defaults import apply_all_defaults
 
 
+def _override_channel_shipping(new_c: Consignment, channel: str) -> None:
+    """Apply a per-channel shipping override that respects shipping_model.
+
+    Under 'flat_per_channel', uses SHIPPING_COSTS_EUR[channel].
+    Under 'percentage_demo', leaves shipping_cost_eur=None so the defaults
+    engine recomputes it from the (possibly modified) consignment value —
+    channel selection no longer affects shipping in that model.
+    """
+    if new_c.shipping_model == "percentage_demo":
+        new_c.shipping_cost_eur = None
+    else:
+        new_c.shipping_cost_eur = SHIPPING_COSTS_EUR[channel]
+
+
 @dataclass
 class Strategy:
     name: str
@@ -128,8 +142,10 @@ def _drop_ioss_use_fta(c: Consignment) -> Optional[Strategy]:
     new_c.ioss_registered = False
     new_c.postal_designated_op = True
     new_c.channel = "postal"
-    # Postal lane → re-derive shipping from postal table (cheaper than express).
-    new_c.shipping_cost_eur = SHIPPING_COSTS_EUR["postal"]
+    # Postal lane → defer to shipping_model:
+    #   flat_per_channel → SHIPPING_COSTS_EUR['postal'] (cheaper than express)
+    #   percentage_demo  → recomputed from value, channel-agnostic
+    _override_channel_shipping(new_c, "postal")
     return Strategy(
         "drop_ioss_use_fta",
         "Postal non-IOSS with FTA preference — €3 bypassed; standard tariff (often 0%).",
@@ -150,8 +166,9 @@ def _b2b_eu_warehouse(c: Consignment) -> Strategy:
     new_c.intrinsic_value_eur = max(
         new_c.intrinsic_value_eur or Decimal("0.00"), Decimal("1000.00")
     )
-    # Bulk import → consolidated freight rate, not per-parcel express.
-    new_c.shipping_cost_eur = SHIPPING_COSTS_EUR["general_cargo"]
+    # Bulk import → consolidated freight rate (flat model) or value-based
+    # demo cost. Under percentage_demo, the floored €1000 drives shipping.
+    _override_channel_shipping(new_c, "general_cargo")
     return Strategy(
         "b2b_eu_warehouse",
         "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",

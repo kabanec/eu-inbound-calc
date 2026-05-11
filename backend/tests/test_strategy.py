@@ -293,3 +293,118 @@ class TestShippingCost:
         assert s.result.landed_cost_eur >= (
             s.result.consignment_value_eur + s.result.shipping_cost_eur
         )
+
+
+# -- shipping_model: percentage_demo --------------------------------------
+
+class TestPercentageDemoShippingModel:
+    """The 'percentage_demo' shipping_model replaces channel-flat shipping
+    with max(€10, 10% × value), uniform across channels. Legacy callers
+    that don't set the field must continue to see flat-per-channel."""
+
+    def _pct_consignment(self, **kw) -> Consignment:
+        defaults = dict(
+            items=[Item(hs6="610910", description="cotton tee", origin="CN",
+                        qty=1, unit_value_eur=Decimal("40.00"))],
+            destination_ms="DE",
+            ioss_registered=True,
+            shipping_model="percentage_demo",
+        )
+        defaults.update(kw)
+        return Consignment(**defaults)
+
+    def test_floor_kicks_in_for_low_value(self, mock_avalara):
+        """€40 goods × 10% = €4, below floor → €10 applies."""
+        c = self._pct_consignment()  # €40 single line
+        s = _status_quo(c)
+        assert s.result.shipping_cost_eur == Decimal("10.00")
+
+    def test_percentage_applies_above_floor(self, mock_avalara):
+        """€500 goods × 10% = €50, above €10 floor → €50."""
+        c = self._pct_consignment(items=[
+            Item(hs6="610910", description="tee", origin="CN",
+                 qty=1, unit_value_eur=Decimal("500.00")),
+        ])
+        s = _status_quo(c)
+        assert s.result.shipping_cost_eur == Decimal("50.00")
+
+    def test_legacy_default_unchanged_when_field_omitted(self, mock_avalara):
+        """Callers that don't send shipping_model must still see flat
+        per-channel behavior so the production / page isn't affected."""
+        c = Consignment(
+            items=[Item(hs6="610910", description="tee", origin="CN",
+                        qty=1, unit_value_eur=Decimal("40.00"))],
+            destination_ms="DE",
+            ioss_registered=True,
+        )
+        s = _status_quo(c)
+        # Legacy: express channel = €15 flat
+        assert s.result.shipping_cost_eur == SHIPPING_COSTS_EUR["express"]
+
+    def test_drop_ioss_use_fta_channel_agnostic_under_demo_model(self, mock_avalara):
+        """Under percentage_demo, the channel switch to postal no longer
+        produces a shipping discount — both routes pay the same value-based
+        cost. drop_ioss_use_fta's case rests on the €3 bypass, not shipping."""
+        c = Consignment(
+            items=[Item(hs6="610910", description="cotton tee", origin="GB",
+                        qty=1, unit_value_eur=Decimal("60.00"),
+                        fta_proof_held=True)],
+            destination_ms="DE",
+            ioss_registered=True,
+            shipping_model="percentage_demo",
+        )
+        sq = _status_quo(c)
+        ds = _drop_ioss_use_fta(c)
+        assert ds is not None
+        # Both legs use max(€10, 10% × €60) = €10 — shipping unchanged.
+        assert sq.result.shipping_cost_eur == Decimal("10.00")
+        assert ds.result.shipping_cost_eur == Decimal("10.00")
+
+    def test_b2b_warehouse_floors_shipping_at_100_under_demo_model(self, mock_avalara):
+        """b2b_eu_warehouse floors value at €1000 → shipping = 10% × €1000 = €100
+        under percentage_demo, replacing the €50 flat freight rate."""
+        c = self._pct_consignment()  # €40 actual value
+        s = _b2b_eu_warehouse(c)
+        # Value floored at €1000 → 10% = €100, well above €10 floor
+        assert s.result.shipping_cost_eur == Decimal("100.00")
+        assert s.result.consignment_value_eur >= Decimal("1000.00")
+
+    def test_split_parcels_uses_per_sub_parcel_percentage(self, mock_avalara):
+        """Splitting €12 + €12 + €35 = €72 across 3 parcels:
+        each sub-parcel × 10% is below €10 floor → 3 × €10 = €30 total."""
+        c = Consignment(
+            items=[
+                Item(hs6="610910", description="cotton tee", origin="CN",
+                     qty=1, unit_value_eur=Decimal("12.00")),
+                Item(hs6="640399", description="leather shoe", origin="CN",
+                     qty=1, unit_value_eur=Decimal("35.00")),
+                Item(hs6="420232", description="leather wallet", origin="CN",
+                     qty=1, unit_value_eur=Decimal("25.00")),
+            ],
+            destination_ms="FR",
+            ioss_registered=True,
+            shipping_model="percentage_demo",
+        )
+        s = _split_parcels(c)
+        assert s is not None
+        # 3 parcels × €10 floor each (all values × 10% < €10)
+        assert s.result.shipping_cost_eur == Decimal("30.00")
+
+    def test_split_parcels_floor_vs_percentage_per_sub_parcel(self, mock_avalara):
+        """One small parcel (floor applies) + one large parcel (% applies):
+        €40 × 10% = €4 → floor €10. €500 × 10% = €50 → no floor.
+        Total split shipping = €10 + €50 = €60."""
+        c = Consignment(
+            items=[
+                Item(hs6="610910", description="tee", origin="CN",
+                     qty=1, unit_value_eur=Decimal("40.00")),
+                Item(hs6="640399", description="shoe", origin="CN",
+                     qty=1, unit_value_eur=Decimal("500.00")),
+            ],
+            destination_ms="DE",
+            ioss_registered=True,
+            shipping_model="percentage_demo",
+        )
+        s = _split_parcels(c)
+        assert s is not None
+        assert s.result.shipping_cost_eur == Decimal("60.00")

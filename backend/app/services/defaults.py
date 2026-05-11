@@ -19,7 +19,33 @@ from decimal import Decimal
 from typing import Optional
 
 from ..models.schemas import Consignment, DefaultApplied, Item
-from ..reference.data import FTA_PARTNERS, LOW_VALUE_THRESHOLD_EUR, SHIPPING_COSTS_EUR
+from ..reference.data import (
+    DEMO_SHIPPING_FLOOR_EUR, DEMO_SHIPPING_PCT_OF_VALUE,
+    FTA_PARTNERS, LOW_VALUE_THRESHOLD_EUR, SHIPPING_COSTS_EUR,
+)
+
+
+def _modeled_shipping_for(c: Consignment) -> tuple[Decimal, str]:
+    """Return (cost, rationale) for the consignment's shipping_model.
+
+    Reads c.intrinsic_value_eur — caller must ensure it's been resolved first.
+    """
+    if c.shipping_model == "percentage_demo":
+        value = c.intrinsic_value_eur or Decimal("0.00")
+        pct_cost = (value * DEMO_SHIPPING_PCT_OF_VALUE).quantize(Decimal("0.01"))
+        cost = max(DEMO_SHIPPING_FLOOR_EUR, pct_cost)
+        rationale = (
+            f"Demo model: max(€{DEMO_SHIPPING_FLOOR_EUR}, "
+            f"{DEMO_SHIPPING_PCT_OF_VALUE * 100:.0f}% × €{value}) = €{cost}. "
+            f"Illustrative only — not from a live rate API."
+        )
+        return cost, rationale
+    cost = SHIPPING_COSTS_EUR.get(c.channel, SHIPPING_COSTS_EUR["express"])
+    rationale = (
+        f"Modeled small-parcel cost for channel '{c.channel}'. "
+        f"Indicative only — not from a live rate API."
+    )
+    return cost, rationale
 
 
 # ---------------------------------------------------------------------------
@@ -239,18 +265,16 @@ def apply_all_defaults(c: Consignment) -> tuple[Consignment, list[DefaultApplied
             (it.line_value_eur for it in c.items), Decimal("0.00")
         )
 
-    # Shipping cost — derived from channel when not supplied. Models a typical
-    # small-parcel rate for landed-cost comparisons in the strategy advisor.
+    # Shipping cost — derived from the consignment's shipping_model when not
+    # supplied explicitly. Used by the strategy advisor for landed-cost
+    # comparisons across alternatives.
     if c.shipping_cost_eur is None:
-        modeled = SHIPPING_COSTS_EUR.get(c.channel, SHIPPING_COSTS_EUR["express"])
+        modeled, rationale = _modeled_shipping_for(c)
         c.shipping_cost_eur = modeled
         ledger.append(DefaultApplied(
             field="shipping_cost_eur",
             default=str(modeled),
-            rationale=(
-                f"Modeled small-parcel cost for channel '{c.channel}'. "
-                f"Indicative only — not from a live rate API."
-            ),
+            rationale=rationale,
         ))
 
     # FTA direct-transport gate — must run after items are resolved

@@ -79,6 +79,15 @@ SHIPPING_COSTS_EUR = {
     "general_cargo": Decimal("50.00"), # consolidated freight / bulk lane
 }
 
+# Percentage-of-value shipping model (demo only) ----------------------------
+# Used when shipping_model='percentage_demo'. Single-parcel cost is
+# max(DEMO_SHIPPING_FLOOR_EUR, DEMO_SHIPPING_PCT_OF_VALUE × goods_value).
+# Under split_parcels, each sub-parcel pays the same formula on its own value
+# (so splitting can never beat consolidating on shipping, because the floor
+# kicks in for low-value sub-parcels).
+DEMO_SHIPPING_PCT_OF_VALUE = Decimal("0.10")
+DEMO_SHIPPING_FLOOR_EUR = Decimal("10.00")
+
 # Standard EU VAT rates (destination-MS), May 2026 --------------------------
 VAT_RATES = {
     "AT": Decimal("0.20"), "BE": Decimal("0.21"), "BG": Decimal("0.20"),

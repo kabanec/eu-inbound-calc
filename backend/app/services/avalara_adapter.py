@@ -56,6 +56,16 @@ def from_avalara_getquote(payload: dict[str, Any]) -> Consignment:
     if not items:
         raise ValueError("lines[] must contain at least one line item")
 
+    # shipping_model: opt-in switch. Unknown values fall back to default to keep
+    # legacy callers unchanged. The percentage_demo branch uses a value-based
+    # rate, not a live shipping API.
+    shipping_model_raw = payload.get("shipping_model")
+    shipping_model = (
+        shipping_model_raw
+        if shipping_model_raw in ("flat_per_channel", "percentage_demo")
+        else "flat_per_channel"
+    )
+
     # Pass None for omitted boolean flags so the defaults engine can log them.
     # Only assign explicit True/False if the payload actually contained the field.
     return Consignment(
@@ -73,6 +83,7 @@ def from_avalara_getquote(payload: dict[str, Any]) -> Consignment:
         ship_from=ship_from_raw.upper() if ship_from_raw else None,
         non_alteration_confirmed=bool(eu_ext.get("nonAlterationConfirmed", False)),
         transaction_date=txn_date if txn_date_raw else None,
+        shipping_model=shipping_model,
         avalara_doc_code=payload.get("code"),
         customer_vat_number=vat_number,
     )

@@ -7,6 +7,7 @@ from decimal import Decimal
 from typing import Literal, Optional
 
 Channel = Literal["postal", "express", "general_cargo"]
+ShippingModel = Literal["flat_per_channel", "percentage_demo"]
 Regime = Literal[
     "e3_simplified", "standard_tariff", "standard_tariff_fta",
     "no_duty", "pre_e3_de_minimis",
@@ -62,6 +63,11 @@ class Consignment:
     ship_from: Optional[str] = None
     non_alteration_confirmed: bool = False
     shipping_cost_eur: Optional[Decimal] = None
+    # Shipping cost model — controls how shipping_cost_eur is derived when not
+    # supplied explicitly. 'flat_per_channel' (default, production) uses the
+    # SHIPPING_COSTS_EUR table. 'percentage_demo' uses max(floor, pct × value)
+    # uniformly across channels — illustrative only, not from a live rate API.
+    shipping_model: ShippingModel = "flat_per_channel"
     # Avalara passthrough metadata
     avalara_doc_code: Optional[str] = None
     customer_vat_number: Optional[str] = None
