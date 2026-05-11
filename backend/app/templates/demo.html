@@ -340,6 +340,23 @@
       <div style="clear: both;"></div>
     </div>
 
+    <!-- Shipping (demo model) -->
+    <div class="card" style="margin-top: 12px;">
+      <h2>🚚 Shipping Cost <span style="font-weight:400;color:#92400e;font-size:11px;background:#fef3c7;padding:2px 8px;border-radius:10px;margin-left:6px;">Demo · 10% of value, €10 floor</span></h2>
+      <div class="grid-2">
+        <div>
+          <label>Per-parcel shipping (€)</label>
+          <input type="text" id="shipping_cost_display" value="" readonly>
+          <div class="suggested">max(€10 floor, 10% × goods value) — uniform across channels</div>
+        </div>
+        <div>
+          <label>Formula breakdown</label>
+          <input type="text" id="shipping_formula" value="" readonly>
+          <div class="suggested">This rate is illustrative for the demo, not a live carrier quote</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Totals -->
     <div class="card totals" id="totals-card" style="margin-top: 12px;">
       <h2>💰 Landed Cost Summary</h2>
@@ -588,6 +605,7 @@ const SCENARIO_DATA = {
       },
       "date": "2026-08-01",
       "currencyCode": "EUR",
+      "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
         "buyerAgent": false,
@@ -623,9 +641,9 @@ const SCENARIO_DATA = {
       "declaration_type": "H7",
       "defaults_applied": [
         {
-          "default": "15.00",
+          "default": "10.00",
           "field": "shipping_cost_eur",
-          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+          "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac24.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
         }
       ],
       "duty_total_eur": 0.0,
@@ -650,14 +668,14 @@ const SCENARIO_DATA = {
           "regime": "standard_tariff_fta"
         }
       ],
-      "landed_cost_eur": 43.56,
+      "landed_cost_eur": 38.56,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
-      "shipping_cost_eur": 15.0,
+      "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 24.0,
@@ -666,61 +684,6 @@ const SCENARIO_DATA = {
       }
     },
     "strategies": [
-      {
-        "complexity": 4,
-        "description": "Postal non-IOSS with FTA preference \u2014 \u20ac3 bypassed; standard tariff (often 0%).",
-        "name": "drop_ioss_use_fta",
-        "result": {
-          "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
-          ],
-          "consignment_value_eur": 24.0,
-          "declarant": "postal_operator",
-          "declaration_type": "H6",
-          "defaults_applied": [],
-          "duty_total_eur": 0.0,
-          "fees": {
-            "national_fee_eur": 0.0,
-            "national_fee_source": null,
-            "union_handling_fee_eur": 0.0
-          },
-          "item_breakdown": [
-            {
-              "duty_eur": 0.0,
-              "grouping_key": [
-                "610910",
-                "cotton t-shirt",
-                "GB"
-              ],
-              "line_value_eur": 24.0,
-              "notes": [
-                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
-              ],
-              "qty_total": 2,
-              "regime": "standard_tariff_fta"
-            }
-          ],
-          "landed_cost_eur": 33.56,
-          "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
-          ],
-          "shipping_cost_eur": 5.0,
-          "vat": {
-            "collected_via": "special_arrangements",
-            "vat_base_eur": 24.0,
-            "vat_eur": 4.56,
-            "vat_rate": 0.19
-          }
-        },
-        "risk_notes": [
-          "Requires valid proof of preferential origin (REX, EUR.1, etc.).",
-          "Customer pays VAT on delivery \u2014 worse UX than IOSS at checkout.",
-          "Special arrangements regime sunsets 1 July 2028."
-        ]
-      },
       {
         "complexity": 1,
         "description": "Ship as currently configured.",
@@ -755,14 +718,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff_fta"
             }
           ],
-          "landed_cost_eur": 43.56,
+          "landed_cost_eur": 38.56,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 24.0,
@@ -806,14 +769,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff_fta"
             }
           ],
-          "landed_cost_eur": 43.56,
+          "landed_cost_eur": 38.56,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 24.0,
@@ -841,9 +804,9 @@ const SCENARIO_DATA = {
           "declaration_type": "H7",
           "defaults_applied": [
             {
-              "default": "15.00",
+              "default": "10.00",
               "field": "shipping_cost_eur",
-              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac24.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
             }
           ],
           "duty_total_eur": 0.0,
@@ -868,14 +831,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff_fta"
             }
           ],
-          "landed_cost_eur": 43.56,
+          "landed_cost_eur": 38.56,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 24.0,
@@ -887,6 +850,67 @@ const SCENARIO_DATA = {
           "Multiplies handling fees and Union handling fee.",
           "Higher fulfillment cost.",
           "Included for comparison; rarely optimal."
+        ]
+      },
+      {
+        "complexity": 4,
+        "description": "Postal non-IOSS with FTA preference \u2014 \u20ac3 bypassed; standard tariff (often 0%).",
+        "name": "drop_ioss_use_fta",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 24.0,
+          "declarant": "postal_operator",
+          "declaration_type": "H6",
+          "defaults_applied": [
+            {
+              "default": "10.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac24.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
+            }
+          ],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 24.0,
+              "notes": [
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
+              ],
+              "qty_total": 2,
+              "regime": "standard_tariff_fta"
+            }
+          ],
+          "landed_cost_eur": 38.56,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "shipping_cost_eur": 10.0,
+          "vat": {
+            "collected_via": "special_arrangements",
+            "vat_base_eur": 24.0,
+            "vat_eur": 4.56,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires valid proof of preferential origin (REX, EUR.1, etc.).",
+          "Customer pays VAT on delivery \u2014 worse UX than IOSS at checkout.",
+          "Special arrangements regime sunsets 1 July 2028."
         ]
       },
       {
@@ -929,14 +953,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff_fta"
             }
           ],
-          "landed_cost_eur": 193.51,
+          "landed_cost_eur": 188.51,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -961,7 +985,13 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
           "declaration_type": "H1",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "100.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac1000.00) = \u20ac100.00. Illustrative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -984,14 +1014,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff_fta"
             }
           ],
-          "landed_cost_eur": 1050.0,
+          "landed_cost_eur": 1100.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 50.0,
+          "shipping_cost_eur": 100.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -1020,6 +1050,7 @@ const SCENARIO_DATA = {
       },
       "date": "2026-08-01",
       "currencyCode": "EUR",
+      "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
         "buyerAgent": false,
@@ -1074,9 +1105,9 @@ const SCENARIO_DATA = {
       "declaration_type": "H7",
       "defaults_applied": [
         {
-          "default": "15.00",
+          "default": "10.00",
           "field": "shipping_cost_eur",
-          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+          "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac72.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
         }
       ],
       "duty_total_eur": 9.0,
@@ -1123,14 +1154,14 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 116.4,
+      "landed_cost_eur": 111.4,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
-      "shipping_cost_eur": 15.0,
+      "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 72.0,
@@ -1196,14 +1227,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 116.4,
+          "landed_cost_eur": 111.4,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 72.0,
@@ -1270,14 +1301,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 116.4,
+          "landed_cost_eur": 111.4,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 72.0,
@@ -1306,9 +1337,9 @@ const SCENARIO_DATA = {
           "declaration_type": "H7",
           "defaults_applied": [
             {
-              "default": "15.00",
+              "default": "10.00",
               "field": "shipping_cost_eur",
-              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac12.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
             }
           ],
           "duty_total_eur": 9.0,
@@ -1331,14 +1362,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 146.4,
+          "landed_cost_eur": 131.4,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 45.0,
+          "shipping_cost_eur": 30.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 12.0,
@@ -1414,14 +1445,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 201.01,
+          "landed_cost_eur": 196.01,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -1446,7 +1477,13 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
           "declaration_type": "H1",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "100.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac1000.00) = \u20ac100.00. Illustrative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 6.0,
@@ -1491,14 +1528,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1056.0,
+          "landed_cost_eur": 1106.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 50.0,
+          "shipping_cost_eur": 100.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -1527,6 +1564,7 @@ const SCENARIO_DATA = {
       },
       "date": "2026-08-01",
       "currencyCode": "EUR",
+      "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
         "buyerAgent": false,
@@ -1571,9 +1609,9 @@ const SCENARIO_DATA = {
       "declaration_type": "H7",
       "defaults_applied": [
         {
-          "default": "15.00",
+          "default": "10.00",
           "field": "shipping_cost_eur",
-          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+          "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac45.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
         }
       ],
       "duty_total_eur": 6.0,
@@ -1608,14 +1646,14 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 77.9,
+      "landed_cost_eur": 72.9,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
-      "shipping_cost_eur": 15.0,
+      "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 45.0,
@@ -1669,14 +1707,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 77.9,
+          "landed_cost_eur": 72.9,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 45.0,
@@ -1731,14 +1769,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 77.9,
+          "landed_cost_eur": 72.9,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 45.0,
@@ -1767,9 +1805,9 @@ const SCENARIO_DATA = {
           "declaration_type": "H7",
           "defaults_applied": [
             {
-              "default": "15.00",
+              "default": "10.00",
               "field": "shipping_cost_eur",
-              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac15.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
             }
           ],
           "duty_total_eur": 6.0,
@@ -1792,14 +1830,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 94.9,
+          "landed_cost_eur": 84.9,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 30.0,
+          "shipping_cost_eur": 20.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 15.0,
@@ -1863,14 +1901,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 200.01,
+          "landed_cost_eur": 195.01,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -1895,7 +1933,13 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
           "declaration_type": "H1",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "100.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac1000.00) = \u20ac100.00. Illustrative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 2.0,
@@ -1928,14 +1972,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1052.0,
+          "landed_cost_eur": 1102.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 50.0,
+          "shipping_cost_eur": 100.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -1964,6 +2008,7 @@ const SCENARIO_DATA = {
       },
       "date": "2026-08-01",
       "currencyCode": "EUR",
+      "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
         "buyerAgent": false,
@@ -1998,9 +2043,9 @@ const SCENARIO_DATA = {
       "declaration_type": "H7",
       "defaults_applied": [
         {
-          "default": "15.00",
+          "default": "10.00",
           "field": "shipping_cost_eur",
-          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+          "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac18.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
         }
       ],
       "duty_total_eur": 3.0,
@@ -2023,14 +2068,14 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 44.53,
+      "landed_cost_eur": 39.53,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
-      "shipping_cost_eur": 15.0,
+      "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 18.0,
@@ -2072,14 +2117,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 44.53,
+          "landed_cost_eur": 39.53,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 18.0,
@@ -2122,14 +2167,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 44.53,
+          "landed_cost_eur": 39.53,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 18.0,
@@ -2158,9 +2203,9 @@ const SCENARIO_DATA = {
           "declaration_type": "H7",
           "defaults_applied": [
             {
-              "default": "15.00",
+              "default": "10.00",
               "field": "shipping_cost_eur",
-              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac18.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
             }
           ],
           "duty_total_eur": 3.0,
@@ -2183,14 +2228,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 44.53,
+          "landed_cost_eur": 39.53,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 18.0,
@@ -2242,14 +2287,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 201.26,
+          "landed_cost_eur": 196.26,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -2274,7 +2319,13 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
           "declaration_type": "H1",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "100.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac1000.00) = \u20ac100.00. Illustrative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 4.75,
@@ -2295,14 +2346,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1054.75,
+          "landed_cost_eur": 1104.75,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 50.0,
+          "shipping_cost_eur": 100.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -2331,6 +2382,7 @@ const SCENARIO_DATA = {
       },
       "date": "2026-08-01",
       "currencyCode": "EUR",
+      "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": null,
         "buyerAgent": false,
@@ -2364,9 +2416,9 @@ const SCENARIO_DATA = {
       "declaration_type": "H7",
       "defaults_applied": [
         {
-          "default": "15.00",
+          "default": "10.00",
           "field": "shipping_cost_eur",
-          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+          "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac60.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
         }
       ],
       "duty_total_eur": 0.0,
@@ -2389,14 +2441,14 @@ const SCENARIO_DATA = {
           "regime": "standard_tariff"
         }
       ],
-      "landed_cost_eur": 75.0,
+      "landed_cost_eur": 70.0,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
-      "shipping_cost_eur": 15.0,
+      "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "oss_b2b",
         "vat_base_eur": 0.0,
@@ -2437,14 +2489,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 75.0,
+          "landed_cost_eur": 70.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -2486,14 +2538,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 75.0,
+          "landed_cost_eur": 70.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -2521,9 +2573,9 @@ const SCENARIO_DATA = {
           "declaration_type": "H7",
           "defaults_applied": [
             {
-              "default": "15.00",
+              "default": "10.00",
               "field": "shipping_cost_eur",
-              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac60.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
             }
           ],
           "duty_total_eur": 0.0,
@@ -2546,14 +2598,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 75.0,
+          "landed_cost_eur": 70.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -2599,14 +2651,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 165.01,
+          "landed_cost_eur": 160.01,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -2631,7 +2683,13 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
           "declaration_type": "H1",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "100.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac1000.00) = \u20ac100.00. Illustrative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -2652,14 +2710,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1050.0,
+          "landed_cost_eur": 1100.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 50.0,
+          "shipping_cost_eur": 100.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -2688,6 +2746,7 @@ const SCENARIO_DATA = {
       },
       "date": "2026-08-01",
       "currencyCode": "EUR",
+      "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
         "buyerAgent": false,
@@ -2721,9 +2780,9 @@ const SCENARIO_DATA = {
       "declaration_type": "H1",
       "defaults_applied": [
         {
-          "default": "15.00",
+          "default": "20.00",
           "field": "shipping_cost_eur",
-          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+          "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac200.00) = \u20ac20.00. Illustrative only \u2014 not from a live rate API."
         },
         {
           "default": false,
@@ -2751,14 +2810,14 @@ const SCENARIO_DATA = {
           "regime": "standard_tariff"
         }
       ],
-      "landed_cost_eur": 281.56,
+      "landed_cost_eur": 286.56,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
-      "shipping_cost_eur": 15.0,
+      "shipping_cost_eur": 20.0,
       "vat": {
         "collected_via": "import_clearance",
         "vat_base_eur": 224.0,
@@ -2799,14 +2858,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 281.56,
+          "landed_cost_eur": 286.56,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 20.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 224.0,
@@ -2848,14 +2907,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 281.56,
+          "landed_cost_eur": 286.56,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 20.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 224.0,
@@ -2883,9 +2942,9 @@ const SCENARIO_DATA = {
           "declaration_type": "H1",
           "defaults_applied": [
             {
-              "default": "15.00",
+              "default": "20.00",
               "field": "shipping_cost_eur",
-              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac200.00) = \u20ac20.00. Illustrative only \u2014 not from a live rate API."
             }
           ],
           "duty_total_eur": 24.0,
@@ -2908,14 +2967,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 281.56,
+          "landed_cost_eur": 286.56,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 20.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 224.0,
@@ -2940,7 +2999,13 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
           "declaration_type": "H1",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "100.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac1000.00) = \u20ac100.00. Illustrative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 24.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -2961,14 +3026,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1074.0,
+          "landed_cost_eur": 1124.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 50.0,
+          "shipping_cost_eur": 100.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -2997,6 +3062,7 @@ const SCENARIO_DATA = {
       },
       "date": "2026-08-01",
       "currencyCode": "EUR",
+      "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": null,
         "buyerAgent": false,
@@ -3031,9 +3097,9 @@ const SCENARIO_DATA = {
       "declaration_type": "H6",
       "defaults_applied": [
         {
-          "default": "5.00",
+          "default": "10.00",
           "field": "shipping_cost_eur",
-          "rationale": "Modeled small-parcel cost for channel 'postal'. Indicative only \u2014 not from a live rate API."
+          "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac20.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
         },
         {
           "default": true,
@@ -3061,14 +3127,14 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 31.8,
+      "landed_cost_eur": 36.8,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
-      "shipping_cost_eur": 5.0,
+      "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 20.0,
@@ -3110,14 +3176,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 31.8,
+          "landed_cost_eur": 36.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 5.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -3160,14 +3226,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 31.8,
+          "landed_cost_eur": 36.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 5.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -3196,9 +3262,9 @@ const SCENARIO_DATA = {
           "declaration_type": "H6",
           "defaults_applied": [
             {
-              "default": "5.00",
+              "default": "10.00",
               "field": "shipping_cost_eur",
-              "rationale": "Modeled small-parcel cost for channel 'postal'. Indicative only \u2014 not from a live rate API."
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac20.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
             }
           ],
           "duty_total_eur": 3.0,
@@ -3221,14 +3287,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 31.8,
+          "landed_cost_eur": 36.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 5.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -3280,14 +3346,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 183.51,
+          "landed_cost_eur": 188.51,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 5.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "special_arrangements",
             "vat_base_eur": 150.01,
@@ -3312,7 +3378,13 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
           "declaration_type": "H1",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "100.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac1000.00) = \u20ac100.00. Illustrative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -3333,14 +3405,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1050.0,
+          "landed_cost_eur": 1100.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 50.0,
+          "shipping_cost_eur": 100.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -3369,6 +3441,7 @@ const SCENARIO_DATA = {
       },
       "date": "2026-08-01",
       "currencyCode": "EUR",
+      "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
         "buyerAgent": false,
@@ -3403,9 +3476,9 @@ const SCENARIO_DATA = {
       "declaration_type": "H7",
       "defaults_applied": [
         {
-          "default": "15.00",
+          "default": "10.00",
           "field": "shipping_cost_eur",
-          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+          "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac20.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
         }
       ],
       "duty_total_eur": 3.0,
@@ -3428,14 +3501,14 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 41.8,
+      "landed_cost_eur": 36.8,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
-      "shipping_cost_eur": 15.0,
+      "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 20.0,
@@ -3477,14 +3550,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 41.8,
+          "landed_cost_eur": 36.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -3527,14 +3600,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 41.8,
+          "landed_cost_eur": 36.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -3563,9 +3636,9 @@ const SCENARIO_DATA = {
           "declaration_type": "H7",
           "defaults_applied": [
             {
-              "default": "15.00",
+              "default": "10.00",
               "field": "shipping_cost_eur",
-              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac20.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
             }
           ],
           "duty_total_eur": 3.0,
@@ -3588,14 +3661,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 41.8,
+          "landed_cost_eur": 36.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -3647,14 +3720,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 193.51,
+          "landed_cost_eur": 188.51,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -3679,7 +3752,13 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
           "declaration_type": "H1",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "100.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac1000.00) = \u20ac100.00. Illustrative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -3700,14 +3779,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1050.0,
+          "landed_cost_eur": 1100.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 50.0,
+          "shipping_cost_eur": 100.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -3736,6 +3815,7 @@ const SCENARIO_DATA = {
       },
       "date": "2026-08-01",
       "currencyCode": "EUR",
+      "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
         "buyerAgent": true,
@@ -3769,9 +3849,9 @@ const SCENARIO_DATA = {
       "declaration_type": "H7",
       "defaults_applied": [
         {
-          "default": "15.00",
+          "default": "10.00",
           "field": "shipping_cost_eur",
-          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+          "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac30.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
         },
         {
           "default": false,
@@ -3799,14 +3879,14 @@ const SCENARIO_DATA = {
           "regime": "standard_tariff"
         }
       ],
-      "landed_cost_eur": 50.7,
+      "landed_cost_eur": 45.7,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
-      "shipping_cost_eur": 15.0,
+      "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "import_clearance",
         "vat_base_eur": 30.0,
@@ -3847,14 +3927,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 50.7,
+          "landed_cost_eur": 45.7,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 30.0,
@@ -3896,14 +3976,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 50.7,
+          "landed_cost_eur": 45.7,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 30.0,
@@ -3931,9 +4011,9 @@ const SCENARIO_DATA = {
           "declaration_type": "H7",
           "defaults_applied": [
             {
-              "default": "15.00",
+              "default": "10.00",
               "field": "shipping_cost_eur",
-              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac30.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
             }
           ],
           "duty_total_eur": 0.0,
@@ -3956,14 +4036,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 50.7,
+          "landed_cost_eur": 45.7,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 30.0,
@@ -4009,14 +4089,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 193.51,
+          "landed_cost_eur": 188.51,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -4041,7 +4121,13 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
           "declaration_type": "H1",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "100.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac1000.00) = \u20ac100.00. Illustrative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -4062,14 +4148,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1050.0,
+          "landed_cost_eur": 1100.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 50.0,
+          "shipping_cost_eur": 100.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -4098,6 +4184,7 @@ const SCENARIO_DATA = {
       },
       "date": "2026-06-01",
       "currencyCode": "EUR",
+      "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
         "buyerAgent": false,
@@ -4131,9 +4218,9 @@ const SCENARIO_DATA = {
       "declaration_type": "H7",
       "defaults_applied": [
         {
-          "default": "15.00",
+          "default": "10.00",
           "field": "shipping_cost_eur",
-          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+          "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac20.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
         }
       ],
       "duty_total_eur": 0.0,
@@ -4156,14 +4243,14 @@ const SCENARIO_DATA = {
           "regime": "pre_e3_de_minimis"
         }
       ],
-      "landed_cost_eur": 38.8,
+      "landed_cost_eur": 33.8,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
-      "shipping_cost_eur": 15.0,
+      "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 20.0,
@@ -4204,14 +4291,14 @@ const SCENARIO_DATA = {
               "regime": "pre_e3_de_minimis"
             }
           ],
-          "landed_cost_eur": 38.8,
+          "landed_cost_eur": 33.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -4253,14 +4340,14 @@ const SCENARIO_DATA = {
               "regime": "pre_e3_de_minimis"
             }
           ],
-          "landed_cost_eur": 38.8,
+          "landed_cost_eur": 33.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -4288,9 +4375,9 @@ const SCENARIO_DATA = {
           "declaration_type": "H7",
           "defaults_applied": [
             {
-              "default": "15.00",
+              "default": "10.00",
               "field": "shipping_cost_eur",
-              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac20.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
             }
           ],
           "duty_total_eur": 0.0,
@@ -4313,14 +4400,14 @@ const SCENARIO_DATA = {
               "regime": "pre_e3_de_minimis"
             }
           ],
-          "landed_cost_eur": 38.8,
+          "landed_cost_eur": 33.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -4372,14 +4459,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 193.51,
+          "landed_cost_eur": 188.51,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -4404,7 +4491,13 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
           "declaration_type": "H1",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "100.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac1000.00) = \u20ac100.00. Illustrative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -4425,14 +4518,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1050.0,
+          "landed_cost_eur": 1100.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 50.0,
+          "shipping_cost_eur": 100.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -4461,6 +4554,7 @@ const SCENARIO_DATA = {
       },
       "date": "2026-12-01",
       "currencyCode": "EUR",
+      "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
         "buyerAgent": false,
@@ -4495,9 +4589,9 @@ const SCENARIO_DATA = {
       "declaration_type": "H7",
       "defaults_applied": [
         {
-          "default": "15.00",
+          "default": "10.00",
           "field": "shipping_cost_eur",
-          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+          "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac20.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
         }
       ],
       "duty_total_eur": 3.0,
@@ -4520,14 +4614,14 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 43.8,
+      "landed_cost_eur": 38.8,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
-      "shipping_cost_eur": 15.0,
+      "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 20.0,
@@ -4569,14 +4663,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 43.8,
+          "landed_cost_eur": 38.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -4619,14 +4713,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 43.8,
+          "landed_cost_eur": 38.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -4655,9 +4749,9 @@ const SCENARIO_DATA = {
           "declaration_type": "H7",
           "defaults_applied": [
             {
-              "default": "15.00",
+              "default": "10.00",
               "field": "shipping_cost_eur",
-              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac20.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
             }
           ],
           "duty_total_eur": 3.0,
@@ -4680,14 +4774,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 43.8,
+          "landed_cost_eur": 38.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -4739,14 +4833,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 195.51,
+          "landed_cost_eur": 190.51,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -4771,7 +4865,13 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
           "declaration_type": "H1",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "100.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac1000.00) = \u20ac100.00. Illustrative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -4792,14 +4892,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1052.0,
+          "landed_cost_eur": 1102.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 50.0,
+          "shipping_cost_eur": 100.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -4828,6 +4928,7 @@ const SCENARIO_DATA = {
       },
       "date": "2026-08-01",
       "currencyCode": "EUR",
+      "shipping_model": "percentage_demo",
       "euReform2026": {
         "iossNumber": "IM3720000123",
         "buyerAgent": false,
@@ -4874,9 +4975,9 @@ const SCENARIO_DATA = {
       "declaration_type": "H7",
       "defaults_applied": [
         {
-          "default": "15.00",
+          "default": "10.00",
           "field": "shipping_cost_eur",
-          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+          "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac55.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
         }
       ],
       "duty_total_eur": 3.0,
@@ -4913,14 +5014,14 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 88.0,
+      "landed_cost_eur": 83.0,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
-      "shipping_cost_eur": 15.0,
+      "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 55.0,
@@ -4976,14 +5077,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 88.0,
+          "landed_cost_eur": 83.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 55.0,
@@ -5040,14 +5141,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 88.0,
+          "landed_cost_eur": 83.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 55.0,
@@ -5075,9 +5176,9 @@ const SCENARIO_DATA = {
           "declaration_type": "H7",
           "defaults_applied": [
             {
-              "default": "15.00",
+              "default": "10.00",
               "field": "shipping_cost_eur",
-              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac25.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
             }
           ],
           "duty_total_eur": 3.0,
@@ -5102,14 +5203,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff_fta"
             }
           ],
-          "landed_cost_eur": 103.0,
+          "landed_cost_eur": 93.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 30.0,
+          "shipping_cost_eur": 20.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 25.0,
@@ -5175,14 +5276,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 199.01,
+          "landed_cost_eur": 194.01,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 15.0,
+          "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -5207,7 +5308,13 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
           "declaration_type": "H1",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "100.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac1000.00) = \u20ac100.00. Illustrative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 4.0,
@@ -5242,14 +5349,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1054.0,
+          "landed_cost_eur": 1104.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
-          "shipping_cost_eur": 50.0,
+          "shipping_cost_eur": 100.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -5432,6 +5539,16 @@ function loadScenario(id) {
     });
   });
 
+  // Update the shipping-cost form fields
+  const value = Number(response.consignment_value_eur || 0);
+  const shipping = Number(response.shipping_cost_eur || 0);
+  const pctRaw = (value * 0.10);
+  const floorActive = pctRaw < 10;
+  $('shipping_cost_display').value = '€' + shipping.toFixed(2);
+  $('shipping_formula').value = floorActive
+    ? `max(€10, 10% × €${value.toFixed(2)} = €${pctRaw.toFixed(2)}) → €10 (floor)`
+    : `10% × €${value.toFixed(2)} = €${pctRaw.toFixed(2)} (above €10 floor)`;
+
   renderTotals(response, payload);
   renderWork(response, payload);
   renderStrategies(strategies, payload);
@@ -5533,7 +5650,7 @@ function renderWork(d, payload) {
     html += '<h3>6. Shipping (modeled)</h3>';
     html += `<div class="step calc">
       <span class="label">Per-parcel shipping:</span> ${fmt(d.shipping_cost_eur)}<br>
-      <small>Indicative small-parcel rate by channel (express €15 · postal €5 · general cargo €50). Not a live rate quote — used so landed-cost comparisons across strategies reflect the channel change.</small>
+      <small><strong>Demo model</strong>: max(€10 floor, 10% × goods value) per parcel, uniform across channels. Illustrative — not from a live rate API. Under split_parcels, the floor applies independently to each sub-parcel, so splitting can never beat consolidating on shipping.</small>
     </div>`;
   }
 
@@ -5601,12 +5718,12 @@ const STRATEGY_EXPLANATIONS = {
   },
   drop_ioss_use_fta: {
     what: 'Drop IOSS at checkout; ship via postal designated operator with FTA preference.',
-    why_help: 'The €3 simplified fee is bypassed; standard tariff applies (often 0% under FTA). Postal lane is also cheaper to ship (€5 vs €15 express).',
+    why_help: 'The €3 simplified fee is bypassed; standard tariff applies (often 0% under FTA). Under the demo shipping model (10% of value), the channel switch is shipping-neutral — the saving comes purely from the €3 bypass + FTA exclusion.',
     why_filtered: 'No items qualify — origin not in EU FTA partner list, or FTA proof not held.',
   },
   split_parcels: {
     what: 'Ship each HS6+origin grouping as a separate parcel instead of 1 consolidated.',
-    why_worse: 'Per-parcel fees apply N times (e.g. IT €2/parcel, RO €4.90/parcel), AND shipping is paid per parcel (€15 × N).',
+    why_worse: 'Per-parcel fees apply N times (e.g. IT €2/parcel, RO €4.90/parcel). Each sub-parcel also pays max(€10 floor, 10% × sub-value) for shipping — low-value parcels hit the floor, so splitting can never beat consolidating on shipping either.',
     why_na: 'Only one HS6+origin grouping in this shipment — nothing to split.',
   },
   push_above_150: {
@@ -5617,7 +5734,7 @@ const STRATEGY_EXPLANATIONS = {
   },
   b2b_eu_warehouse: {
     what: 'Order in bulk (≥€1000) as B2B; fulfil EU customers from an EU warehouse.',
-    why_na: 'Requires bulk B2B (€1000+ floor), EU warehouse capacity, working capital — not a per-shipment fix. Shipping switches to consolidated freight (€50 flat) instead of per-parcel express.',
+    why_na: 'Requires bulk B2B (€1000+ floor), EU warehouse capacity, working capital — not a per-shipment fix. Under the demo shipping model the floored €1000 value drives ~€100 shipping (10%), so the bulk lane no longer looks artificially cheap — the case rests on duty + VAT savings at scale.',
   },
 };
 
