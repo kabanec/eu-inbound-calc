@@ -725,12 +725,18 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
       ],
       "consignment_value_eur": 24.0,
       "declarant": "seller",
       "declaration_type": "H7",
-      "defaults_applied": [],
+      "defaults_applied": [
+        {
+          "default": "15.00",
+          "field": "shipping_cost_eur",
+          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+        }
+      ],
       "duty_total_eur": 0.0,
       "fees": {
         "national_fee_eur": 0.0,
@@ -747,19 +753,20 @@ const SCENARIO_DATA = {
           ],
           "line_value_eur": 24.0,
           "notes": [
-            "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+            "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
           ],
           "qty_total": 2,
           "regime": "standard_tariff_fta"
         }
       ],
-      "landed_cost_eur": 28.56,
+      "landed_cost_eur": 43.56,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
+      "shipping_cost_eur": 15.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 24.0,
@@ -769,171 +776,12 @@ const SCENARIO_DATA = {
     },
     "strategies": [
       {
-        "complexity": 1,
-        "description": "Ship as currently configured.",
-        "name": "status_quo",
-        "result": {
-          "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
-          ],
-          "consignment_value_eur": 24.0,
-          "declarant": "seller",
-          "declaration_type": "H7",
-          "defaults_applied": [],
-          "duty_total_eur": 0.0,
-          "fees": {
-            "national_fee_eur": 0.0,
-            "national_fee_source": null,
-            "union_handling_fee_eur": 0.0
-          },
-          "item_breakdown": [
-            {
-              "duty_eur": 0.0,
-              "grouping_key": [
-                "610910",
-                "cotton t-shirt",
-                "GB"
-              ],
-              "line_value_eur": 24.0,
-              "notes": [
-                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
-              ],
-              "qty_total": 2,
-              "regime": "standard_tariff_fta"
-            }
-          ],
-          "landed_cost_eur": 28.56,
-          "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
-          ],
-          "vat": {
-            "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 24.0,
-            "vat_eur": 4.56,
-            "vat_rate": 0.19
-          }
-        },
-        "risk_notes": []
-      },
-      {
-        "complexity": 2,
-        "description": "Normalize descriptions so items sharing HS6+origin collapse to one grouping line.",
-        "name": "consolidate_descriptions",
-        "result": {
-          "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
-          ],
-          "consignment_value_eur": 24.0,
-          "declarant": "seller",
-          "declaration_type": "H7",
-          "defaults_applied": [],
-          "duty_total_eur": 0.0,
-          "fees": {
-            "national_fee_eur": 0.0,
-            "national_fee_source": null,
-            "union_handling_fee_eur": 0.0
-          },
-          "item_breakdown": [
-            {
-              "duty_eur": 0.0,
-              "grouping_key": [
-                "610910",
-                "cotton t-shirt",
-                "GB"
-              ],
-              "line_value_eur": 24.0,
-              "notes": [
-                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
-              ],
-              "qty_total": 2,
-              "regime": "standard_tariff_fta"
-            }
-          ],
-          "landed_cost_eur": 28.56,
-          "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
-          ],
-          "vat": {
-            "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 24.0,
-            "vat_eur": 4.56,
-            "vat_rate": 0.19
-          }
-        },
-        "risk_notes": [
-          "Description must remain ACCURATE — no over-genericization.",
-          "EU customs may challenge an inadequate description.",
-          "Best applied at catalog/PIM layer pre-shipment."
-        ]
-      },
-      {
         "complexity": 4,
-        "description": "One parcel per HS6+description+origin group. Almost always worse than consolidation.",
-        "name": "split_parcels",
-        "result": {
-          "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Split into 1 parcels — values, duties and totals are summed across parcels."
-          ],
-          "consignment_value_eur": 24.0,
-          "declarant": "seller",
-          "declaration_type": "H7",
-          "defaults_applied": [],
-          "duty_total_eur": 0.0,
-          "fees": {
-            "national_fee_eur": 0.0,
-            "national_fee_source": null,
-            "union_handling_fee_eur": 0.0
-          },
-          "item_breakdown": [
-            {
-              "duty_eur": 0.0,
-              "grouping_key": [
-                "610910",
-                "cotton t-shirt",
-                "GB"
-              ],
-              "line_value_eur": 24.0,
-              "notes": [
-                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
-              ],
-              "qty_total": 2,
-              "regime": "standard_tariff_fta"
-            }
-          ],
-          "landed_cost_eur": 28.56,
-          "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
-          ],
-          "vat": {
-            "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 24.0,
-            "vat_eur": 4.56,
-            "vat_rate": 0.19
-          }
-        },
-        "risk_notes": [
-          "Multiplies handling fees and Union handling fee.",
-          "Higher fulfillment cost.",
-          "Included for comparison; rarely optimal."
-        ]
-      },
-      {
-        "complexity": 4,
-        "description": "Postal non-IOSS with FTA preference — €3 bypassed; standard tariff (often 0%).",
+        "description": "Postal non-IOSS with FTA preference \u2014 \u20ac3 bypassed; standard tariff (often 0%).",
         "name": "drop_ioss_use_fta",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 24.0,
           "declarant": "postal_operator",
@@ -955,19 +803,20 @@ const SCENARIO_DATA = {
               ],
               "line_value_eur": 24.0,
               "notes": [
-                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
               ],
               "qty_total": 2,
               "regime": "standard_tariff_fta"
             }
           ],
-          "landed_cost_eur": 28.56,
+          "landed_cost_eur": 33.56,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 5.0,
           "vat": {
             "collected_via": "special_arrangements",
             "vat_base_eur": 24.0,
@@ -977,26 +826,133 @@ const SCENARIO_DATA = {
         },
         "risk_notes": [
           "Requires valid proof of preferential origin (REX, EUR.1, etc.).",
-          "Customer pays VAT on delivery — worse UX than IOSS at checkout.",
+          "Customer pays VAT on delivery \u2014 worse UX than IOSS at checkout.",
           "Special arrangements regime sunsets 1 July 2028."
         ]
       },
       {
-        "complexity": 3,
-        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
-        "name": "push_above_150",
+        "complexity": 1,
+        "description": "Ship as currently configured.",
+        "name": "status_quo",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
-          "consignment_value_eur": 150.01,
-          "declarant": "carrier",
-          "declaration_type": "H1",
+          "consignment_value_eur": 24.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 24.0,
+              "notes": [
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
+              ],
+              "qty_total": 2,
+              "regime": "standard_tariff_fta"
+            }
+          ],
+          "landed_cost_eur": 43.56,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "shipping_cost_eur": 15.0,
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 24.0,
+            "vat_eur": 4.56,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": []
+      },
+      {
+        "complexity": 2,
+        "description": "Normalize descriptions so items sharing HS6+origin collapse to one grouping line.",
+        "name": "consolidate_descriptions",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 24.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 24.0,
+              "notes": [
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
+              ],
+              "qty_total": 2,
+              "regime": "standard_tariff_fta"
+            }
+          ],
+          "landed_cost_eur": 43.56,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "shipping_cost_eur": 15.0,
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 24.0,
+            "vat_eur": 4.56,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Description must remain ACCURATE \u2014 no over-genericization.",
+          "EU customs may challenge an inadequate description.",
+          "Best applied at catalog/PIM layer pre-shipment."
+        ]
+      },
+      {
+        "complexity": 4,
+        "description": "One parcel per HS6+description+origin group. Almost always worse than consolidation.",
+        "name": "split_parcels",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Split into 1 parcels \u2014 values, duties, shipping and totals are summed across parcels."
+          ],
+          "consignment_value_eur": 24.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
           "defaults_applied": [
             {
-              "default": false,
-              "field": "ioss_registered",
-              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+              "default": "15.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
             }
           ],
           "duty_total_eur": 0.0,
@@ -1015,19 +971,81 @@ const SCENARIO_DATA = {
               ],
               "line_value_eur": 24.0,
               "notes": [
-                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
               ],
               "qty_total": 2,
               "regime": "standard_tariff_fta"
             }
           ],
-          "landed_cost_eur": 178.51,
+          "landed_cost_eur": 43.56,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 24.0,
+            "vat_eur": 4.56,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Multiplies handling fees and Union handling fee.",
+          "Higher fulfillment cost.",
+          "Included for comparison; rarely optimal."
+        ]
+      },
+      {
+        "complexity": 3,
+        "description": "Push consignment value above \u20ac150 to use standard tariff instead of \u20ac3 per item.",
+        "name": "push_above_150",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 150.01,
+          "declarant": "carrier",
+          "declaration_type": "H1",
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: value > \u20ac150 \u2192 IOSS cap exceeded"
+            }
+          ],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 24.0,
+              "notes": [
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
+              ],
+              "qty_total": 2,
+              "regime": "standard_tariff_fta"
+            }
+          ],
+          "landed_cost_eur": 193.51,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
+            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
+            "UCC Regulation (EU) 952/2013, Article 77"
+          ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -1043,11 +1061,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 5,
-        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "description": "Bulk B2B import + EU domestic fulfillment. \u20ac3 fully out; standard tariff once at scale.",
         "name": "b2b_eu_warehouse",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
@@ -1069,19 +1087,20 @@ const SCENARIO_DATA = {
               ],
               "line_value_eur": 24.0,
               "notes": [
-                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
               ],
               "qty_total": 2,
               "regime": "standard_tariff_fta"
             }
           ],
-          "landed_cost_eur": 1000.0,
+          "landed_cost_eur": 1050.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 50.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -1156,13 +1175,19 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-        "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
       ],
       "consignment_value_eur": 72.0,
       "declarant": "seller",
       "declaration_type": "H7",
-      "defaults_applied": [],
+      "defaults_applied": [
+        {
+          "default": "15.00",
+          "field": "shipping_cost_eur",
+          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+        }
+      ],
       "duty_total_eur": 9.0,
       "fees": {
         "national_fee_eur": 6.0,
@@ -1207,13 +1232,14 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 101.4,
+      "landed_cost_eur": 116.4,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
+      "shipping_cost_eur": 15.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 72.0,
@@ -1228,8 +1254,8 @@ const SCENARIO_DATA = {
         "name": "status_quo",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 72.0,
           "declarant": "seller",
@@ -1279,13 +1305,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 101.4,
+          "landed_cost_eur": 116.4,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 72.0,
@@ -1301,8 +1328,8 @@ const SCENARIO_DATA = {
         "name": "consolidate_descriptions",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 72.0,
           "declarant": "seller",
@@ -1352,13 +1379,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 101.4,
+          "landed_cost_eur": 116.4,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 72.0,
@@ -1367,7 +1395,7 @@ const SCENARIO_DATA = {
           }
         },
         "risk_notes": [
-          "Description must remain ACCURATE — no over-genericization.",
+          "Description must remain ACCURATE \u2014 no over-genericization.",
           "EU customs may challenge an inadequate description.",
           "Best applied at catalog/PIM layer pre-shipment."
         ]
@@ -1378,14 +1406,20 @@ const SCENARIO_DATA = {
         "name": "split_parcels",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
-            "Split into 3 parcels — values, duties and totals are summed across parcels."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure.",
+            "Split into 3 parcels \u2014 values, duties, shipping and totals are summed across parcels."
           ],
           "consignment_value_eur": 72.0,
           "declarant": "seller",
           "declaration_type": "H7",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "15.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 9.0,
           "fees": {
             "national_fee_eur": 2.0,
@@ -1406,13 +1440,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 101.4,
+          "landed_cost_eur": 146.4,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 45.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 12.0,
@@ -1428,11 +1463,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 3,
-        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "description": "Push consignment value above \u20ac150 to use standard tariff instead of \u20ac3 per item.",
         "name": "push_above_150",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 150.01,
           "declarant": "carrier",
@@ -1441,7 +1476,7 @@ const SCENARIO_DATA = {
             {
               "default": false,
               "field": "ioss_registered",
-              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+              "rationale": "OVERRIDE: value > \u20ac150 \u2192 IOSS cap exceeded"
             }
           ],
           "duty_total_eur": 0.0,
@@ -1488,13 +1523,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 186.01,
+          "landed_cost_eur": 201.01,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -1510,11 +1546,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 5,
-        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "description": "Bulk B2B import + EU domestic fulfillment. \u20ac3 fully out; standard tariff once at scale.",
         "name": "b2b_eu_warehouse",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
@@ -1564,13 +1600,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1006.0,
+          "landed_cost_eur": 1056.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 50.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -1635,13 +1672,19 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-        "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
       ],
       "consignment_value_eur": 45.0,
       "declarant": "seller",
       "declaration_type": "H7",
-      "defaults_applied": [],
+      "defaults_applied": [
+        {
+          "default": "15.00",
+          "field": "shipping_cost_eur",
+          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+        }
+      ],
       "duty_total_eur": 6.0,
       "fees": {
         "national_fee_eur": 2.0,
@@ -1674,13 +1717,14 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 62.9,
+      "landed_cost_eur": 77.9,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
+      "shipping_cost_eur": 15.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 45.0,
@@ -1695,8 +1739,8 @@ const SCENARIO_DATA = {
         "name": "status_quo",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 45.0,
           "declarant": "seller",
@@ -1734,13 +1778,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 62.9,
+          "landed_cost_eur": 77.9,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 45.0,
@@ -1756,8 +1801,8 @@ const SCENARIO_DATA = {
         "name": "consolidate_descriptions",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 45.0,
           "declarant": "seller",
@@ -1795,13 +1840,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 62.9,
+          "landed_cost_eur": 77.9,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 45.0,
@@ -1810,7 +1856,7 @@ const SCENARIO_DATA = {
           }
         },
         "risk_notes": [
-          "Description must remain ACCURATE — no over-genericization.",
+          "Description must remain ACCURATE \u2014 no over-genericization.",
           "EU customs may challenge an inadequate description.",
           "Best applied at catalog/PIM layer pre-shipment."
         ]
@@ -1821,14 +1867,20 @@ const SCENARIO_DATA = {
         "name": "split_parcels",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
-            "Split into 2 parcels — values, duties and totals are summed across parcels."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure.",
+            "Split into 2 parcels \u2014 values, duties, shipping and totals are summed across parcels."
           ],
           "consignment_value_eur": 45.0,
           "declarant": "seller",
           "declaration_type": "H7",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "15.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 6.0,
           "fees": {
             "national_fee_eur": 2.0,
@@ -1849,13 +1901,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 64.9,
+          "landed_cost_eur": 94.9,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 30.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 15.0,
@@ -1871,11 +1924,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 3,
-        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "description": "Push consignment value above \u20ac150 to use standard tariff instead of \u20ac3 per item.",
         "name": "push_above_150",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 150.01,
           "declarant": "carrier",
@@ -1884,7 +1937,7 @@ const SCENARIO_DATA = {
             {
               "default": false,
               "field": "ioss_registered",
-              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+              "rationale": "OVERRIDE: value > \u20ac150 \u2192 IOSS cap exceeded"
             }
           ],
           "duty_total_eur": 0.0,
@@ -1919,13 +1972,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 185.01,
+          "landed_cost_eur": 200.01,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -1941,11 +1995,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 5,
-        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "description": "Bulk B2B import + EU domestic fulfillment. \u20ac3 fully out; standard tariff once at scale.",
         "name": "b2b_eu_warehouse",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
@@ -1983,13 +2037,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1002.0,
+          "landed_cost_eur": 1052.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 50.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -2044,13 +2099,19 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-        "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
       ],
       "consignment_value_eur": 18.0,
       "declarant": "seller",
       "declaration_type": "H7",
-      "defaults_applied": [],
+      "defaults_applied": [
+        {
+          "default": "15.00",
+          "field": "shipping_cost_eur",
+          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+        }
+      ],
       "duty_total_eur": 3.0,
       "fees": {
         "national_fee_eur": 4.75,
@@ -2071,13 +2132,14 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 29.53,
+      "landed_cost_eur": 44.53,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
+      "shipping_cost_eur": 15.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 18.0,
@@ -2092,8 +2154,8 @@ const SCENARIO_DATA = {
         "name": "status_quo",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 18.0,
           "declarant": "seller",
@@ -2119,13 +2181,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 29.53,
+          "landed_cost_eur": 44.53,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 18.0,
@@ -2141,8 +2204,8 @@ const SCENARIO_DATA = {
         "name": "consolidate_descriptions",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 18.0,
           "declarant": "seller",
@@ -2168,13 +2231,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 29.53,
+          "landed_cost_eur": 44.53,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 18.0,
@@ -2183,7 +2247,7 @@ const SCENARIO_DATA = {
           }
         },
         "risk_notes": [
-          "Description must remain ACCURATE — no over-genericization.",
+          "Description must remain ACCURATE \u2014 no over-genericization.",
           "EU customs may challenge an inadequate description.",
           "Best applied at catalog/PIM layer pre-shipment."
         ]
@@ -2194,14 +2258,20 @@ const SCENARIO_DATA = {
         "name": "split_parcels",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
-            "Split into 1 parcels — values, duties and totals are summed across parcels."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure.",
+            "Split into 1 parcels \u2014 values, duties, shipping and totals are summed across parcels."
           ],
           "consignment_value_eur": 18.0,
           "declarant": "seller",
           "declaration_type": "H7",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "15.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 3.0,
           "fees": {
             "national_fee_eur": 4.75,
@@ -2222,13 +2292,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 29.53,
+          "landed_cost_eur": 44.53,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 18.0,
@@ -2244,11 +2315,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 3,
-        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "description": "Push consignment value above \u20ac150 to use standard tariff instead of \u20ac3 per item.",
         "name": "push_above_150",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 150.01,
           "declarant": "carrier",
@@ -2257,7 +2328,7 @@ const SCENARIO_DATA = {
             {
               "default": false,
               "field": "ioss_registered",
-              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+              "rationale": "OVERRIDE: value > \u20ac150 \u2192 IOSS cap exceeded"
             }
           ],
           "duty_total_eur": 0.0,
@@ -2280,13 +2351,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 186.26,
+          "landed_cost_eur": 201.26,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -2302,11 +2374,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 5,
-        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "description": "Bulk B2B import + EU domestic fulfillment. \u20ac3 fully out; standard tariff once at scale.",
         "name": "b2b_eu_warehouse",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
@@ -2332,13 +2404,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1004.75,
+          "landed_cost_eur": 1054.75,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 50.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -2393,12 +2466,18 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
       ],
       "consignment_value_eur": 60.0,
       "declarant": "agent",
       "declaration_type": "H7",
-      "defaults_applied": [],
+      "defaults_applied": [
+        {
+          "default": "15.00",
+          "field": "shipping_cost_eur",
+          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+        }
+      ],
       "duty_total_eur": 0.0,
       "fees": {
         "national_fee_eur": 0.0,
@@ -2419,13 +2498,14 @@ const SCENARIO_DATA = {
           "regime": "standard_tariff"
         }
       ],
-      "landed_cost_eur": 60.0,
+      "landed_cost_eur": 75.0,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
+      "shipping_cost_eur": 15.0,
       "vat": {
         "collected_via": "oss_b2b",
         "vat_base_eur": 0.0,
@@ -2440,7 +2520,7 @@ const SCENARIO_DATA = {
         "name": "status_quo",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 60.0,
           "declarant": "agent",
@@ -2466,13 +2546,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 60.0,
+          "landed_cost_eur": 75.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -2488,7 +2569,7 @@ const SCENARIO_DATA = {
         "name": "consolidate_descriptions",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 60.0,
           "declarant": "agent",
@@ -2514,13 +2595,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 60.0,
+          "landed_cost_eur": 75.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -2529,7 +2611,7 @@ const SCENARIO_DATA = {
           }
         },
         "risk_notes": [
-          "Description must remain ACCURATE — no over-genericization.",
+          "Description must remain ACCURATE \u2014 no over-genericization.",
           "EU customs may challenge an inadequate description.",
           "Best applied at catalog/PIM layer pre-shipment."
         ]
@@ -2540,13 +2622,19 @@ const SCENARIO_DATA = {
         "name": "split_parcels",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Split into 1 parcels — values, duties and totals are summed across parcels."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Split into 1 parcels \u2014 values, duties, shipping and totals are summed across parcels."
           ],
           "consignment_value_eur": 60.0,
           "declarant": "agent",
           "declaration_type": "H7",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "15.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -2567,13 +2655,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 60.0,
+          "landed_cost_eur": 75.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -2589,11 +2678,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 3,
-        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "description": "Push consignment value above \u20ac150 to use standard tariff instead of \u20ac3 per item.",
         "name": "push_above_150",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 150.01,
           "declarant": "agent",
@@ -2619,13 +2708,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 150.01,
+          "landed_cost_eur": 165.01,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -2641,11 +2731,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 5,
-        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "description": "Bulk B2B import + EU domestic fulfillment. \u20ac3 fully out; standard tariff once at scale.",
         "name": "b2b_eu_warehouse",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
@@ -2671,13 +2761,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1000.0,
+          "landed_cost_eur": 1050.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 50.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -2732,16 +2823,21 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
       ],
       "consignment_value_eur": 200.0,
       "declarant": "carrier",
       "declaration_type": "H1",
       "defaults_applied": [
         {
+          "default": "15.00",
+          "field": "shipping_cost_eur",
+          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+        },
+        {
           "default": false,
           "field": "ioss_registered",
-          "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+          "rationale": "OVERRIDE: value > \u20ac150 \u2192 IOSS cap exceeded"
         }
       ],
       "duty_total_eur": 24.0,
@@ -2764,13 +2860,14 @@ const SCENARIO_DATA = {
           "regime": "standard_tariff"
         }
       ],
-      "landed_cost_eur": 266.56,
+      "landed_cost_eur": 281.56,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
+      "shipping_cost_eur": 15.0,
       "vat": {
         "collected_via": "import_clearance",
         "vat_base_eur": 224.0,
@@ -2785,7 +2882,7 @@ const SCENARIO_DATA = {
         "name": "status_quo",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 200.0,
           "declarant": "carrier",
@@ -2811,13 +2908,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 266.56,
+          "landed_cost_eur": 281.56,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 224.0,
@@ -2833,7 +2931,7 @@ const SCENARIO_DATA = {
         "name": "consolidate_descriptions",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 200.0,
           "declarant": "carrier",
@@ -2859,13 +2957,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 266.56,
+          "landed_cost_eur": 281.56,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 224.0,
@@ -2874,7 +2973,7 @@ const SCENARIO_DATA = {
           }
         },
         "risk_notes": [
-          "Description must remain ACCURATE — no over-genericization.",
+          "Description must remain ACCURATE \u2014 no over-genericization.",
           "EU customs may challenge an inadequate description.",
           "Best applied at catalog/PIM layer pre-shipment."
         ]
@@ -2885,13 +2984,19 @@ const SCENARIO_DATA = {
         "name": "split_parcels",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Split into 1 parcels — values, duties and totals are summed across parcels."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Split into 1 parcels \u2014 values, duties, shipping and totals are summed across parcels."
           ],
           "consignment_value_eur": 200.0,
           "declarant": "carrier",
           "declaration_type": "H1",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "15.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 24.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -2912,13 +3017,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 266.56,
+          "landed_cost_eur": 281.56,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 224.0,
@@ -2934,11 +3040,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 5,
-        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "description": "Bulk B2B import + EU domestic fulfillment. \u20ac3 fully out; standard tariff once at scale.",
         "name": "b2b_eu_warehouse",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
@@ -2964,13 +3070,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1024.0,
+          "landed_cost_eur": 1074.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 50.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -3025,17 +3132,22 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-        "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
       ],
       "consignment_value_eur": 20.0,
       "declarant": "seller",
       "declaration_type": "H6",
       "defaults_applied": [
         {
+          "default": "5.00",
+          "field": "shipping_cost_eur",
+          "rationale": "Modeled small-parcel cost for channel 'postal'. Indicative only \u2014 not from a live rate API."
+        },
+        {
           "default": true,
           "field": "ioss_registered",
-          "rationale": "93% of B2C ≤€150 EU imports are IOSS-registered (Council 2025-12-12)"
+          "rationale": "93% of B2C \u2264\u20ac150 EU imports are IOSS-registered (Council 2025-12-12)"
         }
       ],
       "duty_total_eur": 3.0,
@@ -3058,13 +3170,14 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 26.8,
+      "landed_cost_eur": 31.8,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
+      "shipping_cost_eur": 5.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 20.0,
@@ -3079,8 +3192,8 @@ const SCENARIO_DATA = {
         "name": "status_quo",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 20.0,
           "declarant": "seller",
@@ -3106,13 +3219,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 26.8,
+          "landed_cost_eur": 31.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 5.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -3128,8 +3242,8 @@ const SCENARIO_DATA = {
         "name": "consolidate_descriptions",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 20.0,
           "declarant": "seller",
@@ -3155,13 +3269,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 26.8,
+          "landed_cost_eur": 31.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 5.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -3170,7 +3285,7 @@ const SCENARIO_DATA = {
           }
         },
         "risk_notes": [
-          "Description must remain ACCURATE — no over-genericization.",
+          "Description must remain ACCURATE \u2014 no over-genericization.",
           "EU customs may challenge an inadequate description.",
           "Best applied at catalog/PIM layer pre-shipment."
         ]
@@ -3181,14 +3296,20 @@ const SCENARIO_DATA = {
         "name": "split_parcels",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
-            "Split into 1 parcels — values, duties and totals are summed across parcels."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure.",
+            "Split into 1 parcels \u2014 values, duties, shipping and totals are summed across parcels."
           ],
           "consignment_value_eur": 20.0,
           "declarant": "seller",
           "declaration_type": "H6",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "5.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Modeled small-parcel cost for channel 'postal'. Indicative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 3.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -3209,13 +3330,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 26.8,
+          "landed_cost_eur": 31.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 5.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -3231,11 +3353,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 3,
-        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "description": "Push consignment value above \u20ac150 to use standard tariff instead of \u20ac3 per item.",
         "name": "push_above_150",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 150.01,
           "declarant": "postal_operator",
@@ -3244,7 +3366,7 @@ const SCENARIO_DATA = {
             {
               "default": false,
               "field": "ioss_registered",
-              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+              "rationale": "OVERRIDE: value > \u20ac150 \u2192 IOSS cap exceeded"
             }
           ],
           "duty_total_eur": 0.0,
@@ -3267,13 +3389,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 178.51,
+          "landed_cost_eur": 183.51,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 5.0,
           "vat": {
             "collected_via": "special_arrangements",
             "vat_base_eur": 150.01,
@@ -3289,11 +3412,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 5,
-        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "description": "Bulk B2B import + EU domestic fulfillment. \u20ac3 fully out; standard tariff once at scale.",
         "name": "b2b_eu_warehouse",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
@@ -3319,13 +3442,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1000.0,
+          "landed_cost_eur": 1050.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 50.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -3380,13 +3504,19 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-        "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
       ],
       "consignment_value_eur": 20.0,
       "declarant": "seller",
       "declaration_type": "H7",
-      "defaults_applied": [],
+      "defaults_applied": [
+        {
+          "default": "15.00",
+          "field": "shipping_cost_eur",
+          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+        }
+      ],
       "duty_total_eur": 3.0,
       "fees": {
         "national_fee_eur": 0.0,
@@ -3407,13 +3537,14 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 26.8,
+      "landed_cost_eur": 41.8,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
+      "shipping_cost_eur": 15.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 20.0,
@@ -3428,8 +3559,8 @@ const SCENARIO_DATA = {
         "name": "status_quo",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 20.0,
           "declarant": "seller",
@@ -3455,13 +3586,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 26.8,
+          "landed_cost_eur": 41.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -3477,8 +3609,8 @@ const SCENARIO_DATA = {
         "name": "consolidate_descriptions",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 20.0,
           "declarant": "seller",
@@ -3504,13 +3636,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 26.8,
+          "landed_cost_eur": 41.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -3519,7 +3652,7 @@ const SCENARIO_DATA = {
           }
         },
         "risk_notes": [
-          "Description must remain ACCURATE — no over-genericization.",
+          "Description must remain ACCURATE \u2014 no over-genericization.",
           "EU customs may challenge an inadequate description.",
           "Best applied at catalog/PIM layer pre-shipment."
         ]
@@ -3530,14 +3663,20 @@ const SCENARIO_DATA = {
         "name": "split_parcels",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
-            "Split into 1 parcels — values, duties and totals are summed across parcels."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure.",
+            "Split into 1 parcels \u2014 values, duties, shipping and totals are summed across parcels."
           ],
           "consignment_value_eur": 20.0,
           "declarant": "seller",
           "declaration_type": "H7",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "15.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 3.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -3558,13 +3697,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 26.8,
+          "landed_cost_eur": 41.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -3580,11 +3720,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 3,
-        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "description": "Push consignment value above \u20ac150 to use standard tariff instead of \u20ac3 per item.",
         "name": "push_above_150",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 150.01,
           "declarant": "carrier",
@@ -3593,7 +3733,7 @@ const SCENARIO_DATA = {
             {
               "default": false,
               "field": "ioss_registered",
-              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+              "rationale": "OVERRIDE: value > \u20ac150 \u2192 IOSS cap exceeded"
             }
           ],
           "duty_total_eur": 0.0,
@@ -3616,13 +3756,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 178.51,
+          "landed_cost_eur": 193.51,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -3638,11 +3779,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 5,
-        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "description": "Bulk B2B import + EU domestic fulfillment. \u20ac3 fully out; standard tariff once at scale.",
         "name": "b2b_eu_warehouse",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
@@ -3668,13 +3809,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1000.0,
+          "landed_cost_eur": 1050.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 50.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -3729,12 +3871,17 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
       ],
       "consignment_value_eur": 30.0,
       "declarant": "agent",
       "declaration_type": "H7",
       "defaults_applied": [
+        {
+          "default": "15.00",
+          "field": "shipping_cost_eur",
+          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+        },
         {
           "default": false,
           "field": "ioss_registered",
@@ -3761,13 +3908,14 @@ const SCENARIO_DATA = {
           "regime": "standard_tariff"
         }
       ],
-      "landed_cost_eur": 35.7,
+      "landed_cost_eur": 50.7,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
+      "shipping_cost_eur": 15.0,
       "vat": {
         "collected_via": "import_clearance",
         "vat_base_eur": 30.0,
@@ -3782,7 +3930,7 @@ const SCENARIO_DATA = {
         "name": "status_quo",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 30.0,
           "declarant": "agent",
@@ -3808,13 +3956,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 35.7,
+          "landed_cost_eur": 50.7,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 30.0,
@@ -3830,7 +3979,7 @@ const SCENARIO_DATA = {
         "name": "consolidate_descriptions",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 30.0,
           "declarant": "agent",
@@ -3856,13 +4005,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 35.7,
+          "landed_cost_eur": 50.7,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 30.0,
@@ -3871,7 +4021,7 @@ const SCENARIO_DATA = {
           }
         },
         "risk_notes": [
-          "Description must remain ACCURATE — no over-genericization.",
+          "Description must remain ACCURATE \u2014 no over-genericization.",
           "EU customs may challenge an inadequate description.",
           "Best applied at catalog/PIM layer pre-shipment."
         ]
@@ -3882,13 +4032,19 @@ const SCENARIO_DATA = {
         "name": "split_parcels",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Split into 1 parcels — values, duties and totals are summed across parcels."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Split into 1 parcels \u2014 values, duties, shipping and totals are summed across parcels."
           ],
           "consignment_value_eur": 30.0,
           "declarant": "agent",
           "declaration_type": "H7",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "15.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -3909,13 +4065,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 35.7,
+          "landed_cost_eur": 50.7,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 30.0,
@@ -3931,11 +4088,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 3,
-        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "description": "Push consignment value above \u20ac150 to use standard tariff instead of \u20ac3 per item.",
         "name": "push_above_150",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 150.01,
           "declarant": "agent",
@@ -3961,13 +4118,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 178.51,
+          "landed_cost_eur": 193.51,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -3983,11 +4141,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 5,
-        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "description": "Bulk B2B import + EU domestic fulfillment. \u20ac3 fully out; standard tariff once at scale.",
         "name": "b2b_eu_warehouse",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
@@ -4013,13 +4171,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1000.0,
+          "landed_cost_eur": 1050.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 50.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -4074,12 +4233,18 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Pre-€3 regime: standard tariff with €150 de minimis still applicable. EU 2026 reform fields ignored."
+        "Pre-\u20ac3 regime: standard tariff with \u20ac150 de minimis still applicable. EU 2026 reform fields ignored."
       ],
       "consignment_value_eur": 20.0,
       "declarant": "seller",
       "declaration_type": "H7",
-      "defaults_applied": [],
+      "defaults_applied": [
+        {
+          "default": "15.00",
+          "field": "shipping_cost_eur",
+          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+        }
+      ],
       "duty_total_eur": 0.0,
       "fees": {
         "national_fee_eur": 0.0,
@@ -4100,13 +4265,14 @@ const SCENARIO_DATA = {
           "regime": "pre_e3_de_minimis"
         }
       ],
-      "landed_cost_eur": 23.8,
+      "landed_cost_eur": 38.8,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
+      "shipping_cost_eur": 15.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 20.0,
@@ -4121,7 +4287,7 @@ const SCENARIO_DATA = {
         "name": "status_quo",
         "result": {
           "compliance_warnings": [
-            "Pre-€3 regime: standard tariff with €150 de minimis still applicable. EU 2026 reform fields ignored."
+            "Pre-\u20ac3 regime: standard tariff with \u20ac150 de minimis still applicable. EU 2026 reform fields ignored."
           ],
           "consignment_value_eur": 20.0,
           "declarant": "seller",
@@ -4147,13 +4313,14 @@ const SCENARIO_DATA = {
               "regime": "pre_e3_de_minimis"
             }
           ],
-          "landed_cost_eur": 23.8,
+          "landed_cost_eur": 38.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -4169,7 +4336,7 @@ const SCENARIO_DATA = {
         "name": "consolidate_descriptions",
         "result": {
           "compliance_warnings": [
-            "Pre-€3 regime: standard tariff with €150 de minimis still applicable. EU 2026 reform fields ignored."
+            "Pre-\u20ac3 regime: standard tariff with \u20ac150 de minimis still applicable. EU 2026 reform fields ignored."
           ],
           "consignment_value_eur": 20.0,
           "declarant": "seller",
@@ -4195,13 +4362,14 @@ const SCENARIO_DATA = {
               "regime": "pre_e3_de_minimis"
             }
           ],
-          "landed_cost_eur": 23.8,
+          "landed_cost_eur": 38.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -4210,7 +4378,7 @@ const SCENARIO_DATA = {
           }
         },
         "risk_notes": [
-          "Description must remain ACCURATE — no over-genericization.",
+          "Description must remain ACCURATE \u2014 no over-genericization.",
           "EU customs may challenge an inadequate description.",
           "Best applied at catalog/PIM layer pre-shipment."
         ]
@@ -4221,13 +4389,19 @@ const SCENARIO_DATA = {
         "name": "split_parcels",
         "result": {
           "compliance_warnings": [
-            "Pre-€3 regime: standard tariff with €150 de minimis still applicable. EU 2026 reform fields ignored.",
-            "Split into 1 parcels — values, duties and totals are summed across parcels."
+            "Pre-\u20ac3 regime: standard tariff with \u20ac150 de minimis still applicable. EU 2026 reform fields ignored.",
+            "Split into 1 parcels \u2014 values, duties, shipping and totals are summed across parcels."
           ],
           "consignment_value_eur": 20.0,
           "declarant": "seller",
           "declaration_type": "H7",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "15.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -4248,13 +4422,14 @@ const SCENARIO_DATA = {
               "regime": "pre_e3_de_minimis"
             }
           ],
-          "landed_cost_eur": 23.8,
+          "landed_cost_eur": 38.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -4270,11 +4445,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 3,
-        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "description": "Push consignment value above \u20ac150 to use standard tariff instead of \u20ac3 per item.",
         "name": "push_above_150",
         "result": {
           "compliance_warnings": [
-            "Pre-€3 regime: standard tariff with €150 de minimis still applicable. EU 2026 reform fields ignored."
+            "Pre-\u20ac3 regime: standard tariff with \u20ac150 de minimis still applicable. EU 2026 reform fields ignored."
           ],
           "consignment_value_eur": 150.01,
           "declarant": "carrier",
@@ -4283,7 +4458,7 @@ const SCENARIO_DATA = {
             {
               "default": false,
               "field": "ioss_registered",
-              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+              "rationale": "OVERRIDE: value > \u20ac150 \u2192 IOSS cap exceeded"
             }
           ],
           "duty_total_eur": 0.0,
@@ -4306,13 +4481,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 178.51,
+          "landed_cost_eur": 193.51,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -4328,11 +4504,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 5,
-        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "description": "Bulk B2B import + EU domestic fulfillment. \u20ac3 fully out; standard tariff once at scale.",
         "name": "b2b_eu_warehouse",
         "result": {
           "compliance_warnings": [
-            "Pre-€3 regime: standard tariff with €150 de minimis still applicable. EU 2026 reform fields ignored."
+            "Pre-\u20ac3 regime: standard tariff with \u20ac150 de minimis still applicable. EU 2026 reform fields ignored."
           ],
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
@@ -4358,13 +4534,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1000.0,
+          "landed_cost_eur": 1050.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 50.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -4419,13 +4596,19 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "MISSING_PRODUCT_IDENTIFIERS — DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026.",
-        "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+        "MISSING_PRODUCT_IDENTIFIERS \u2014 DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
       ],
       "consignment_value_eur": 20.0,
       "declarant": "seller",
       "declaration_type": "H7",
-      "defaults_applied": [],
+      "defaults_applied": [
+        {
+          "default": "15.00",
+          "field": "shipping_cost_eur",
+          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+        }
+      ],
       "duty_total_eur": 3.0,
       "fees": {
         "national_fee_eur": 0.0,
@@ -4446,13 +4629,14 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 28.8,
+      "landed_cost_eur": 43.8,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
+      "shipping_cost_eur": 15.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 20.0,
@@ -4467,8 +4651,8 @@ const SCENARIO_DATA = {
         "name": "status_quo",
         "result": {
           "compliance_warnings": [
-            "MISSING_PRODUCT_IDENTIFIERS — DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+            "MISSING_PRODUCT_IDENTIFIERS \u2014 DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 20.0,
           "declarant": "seller",
@@ -4494,13 +4678,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 28.8,
+          "landed_cost_eur": 43.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -4516,8 +4701,8 @@ const SCENARIO_DATA = {
         "name": "consolidate_descriptions",
         "result": {
           "compliance_warnings": [
-            "MISSING_PRODUCT_IDENTIFIERS — DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+            "MISSING_PRODUCT_IDENTIFIERS \u2014 DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 20.0,
           "declarant": "seller",
@@ -4543,13 +4728,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 28.8,
+          "landed_cost_eur": 43.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -4558,7 +4744,7 @@ const SCENARIO_DATA = {
           }
         },
         "risk_notes": [
-          "Description must remain ACCURATE — no over-genericization.",
+          "Description must remain ACCURATE \u2014 no over-genericization.",
           "EU customs may challenge an inadequate description.",
           "Best applied at catalog/PIM layer pre-shipment."
         ]
@@ -4569,14 +4755,20 @@ const SCENARIO_DATA = {
         "name": "split_parcels",
         "result": {
           "compliance_warnings": [
-            "MISSING_PRODUCT_IDENTIFIERS — DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure.",
-            "Split into 1 parcels — values, duties and totals are summed across parcels."
+            "MISSING_PRODUCT_IDENTIFIERS \u2014 DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure.",
+            "Split into 1 parcels \u2014 values, duties, shipping and totals are summed across parcels."
           ],
           "consignment_value_eur": 20.0,
           "declarant": "seller",
           "declaration_type": "H7",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "15.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 3.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -4597,13 +4789,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 28.8,
+          "landed_cost_eur": 43.8,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 20.0,
@@ -4619,11 +4812,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 3,
-        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "description": "Push consignment value above \u20ac150 to use standard tariff instead of \u20ac3 per item.",
         "name": "push_above_150",
         "result": {
           "compliance_warnings": [
-            "MISSING_PRODUCT_IDENTIFIERS — DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026."
+            "MISSING_PRODUCT_IDENTIFIERS \u2014 DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026."
           ],
           "consignment_value_eur": 150.01,
           "declarant": "carrier",
@@ -4632,7 +4825,7 @@ const SCENARIO_DATA = {
             {
               "default": false,
               "field": "ioss_registered",
-              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+              "rationale": "OVERRIDE: value > \u20ac150 \u2192 IOSS cap exceeded"
             }
           ],
           "duty_total_eur": 0.0,
@@ -4655,13 +4848,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 180.51,
+          "landed_cost_eur": 195.51,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -4677,11 +4871,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 5,
-        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "description": "Bulk B2B import + EU domestic fulfillment. \u20ac3 fully out; standard tariff once at scale.",
         "name": "b2b_eu_warehouse",
         "result": {
           "compliance_warnings": [
-            "MISSING_PRODUCT_IDENTIFIERS — DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026."
+            "MISSING_PRODUCT_IDENTIFIERS \u2014 DA C(2026)2760 requires merchant ID, manufacturer ID, or GTIN per item from 1 Nov 2026."
           ],
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
@@ -4707,13 +4901,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1002.0,
+          "landed_cost_eur": 1052.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 50.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -4780,13 +4975,19 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-        "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
       ],
       "consignment_value_eur": 55.0,
       "declarant": "seller",
       "declaration_type": "H7",
-      "defaults_applied": [],
+      "defaults_applied": [
+        {
+          "default": "15.00",
+          "field": "shipping_cost_eur",
+          "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+        }
+      ],
       "duty_total_eur": 3.0,
       "fees": {
         "national_fee_eur": 4.0,
@@ -4803,7 +5004,7 @@ const SCENARIO_DATA = {
           ],
           "line_value_eur": 25.0,
           "notes": [
-            "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+            "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
           ],
           "qty_total": 1,
           "regime": "standard_tariff_fta"
@@ -4821,13 +5022,14 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 73.0,
+      "landed_cost_eur": 88.0,
       "legal_references": [
         "Council Regulation (EU) 2026/382 of 11 February 2026",
         "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
         "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
         "UCC Regulation (EU) 952/2013, Article 77"
       ],
+      "shipping_cost_eur": 15.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
         "vat_base_eur": 55.0,
@@ -4842,8 +5044,8 @@ const SCENARIO_DATA = {
         "name": "status_quo",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 55.0,
           "declarant": "seller",
@@ -4865,7 +5067,7 @@ const SCENARIO_DATA = {
               ],
               "line_value_eur": 25.0,
               "notes": [
-                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
               ],
               "qty_total": 1,
               "regime": "standard_tariff_fta"
@@ -4883,13 +5085,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 73.0,
+          "landed_cost_eur": 88.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 55.0,
@@ -4905,8 +5108,8 @@ const SCENARIO_DATA = {
         "name": "consolidate_descriptions",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Article 148(3) invalidation facilitation does NOT apply to distance sales ≤ €150 (DA point 12) — returns require standard customs procedure."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 55.0,
           "declarant": "seller",
@@ -4928,7 +5131,7 @@ const SCENARIO_DATA = {
               ],
               "line_value_eur": 25.0,
               "notes": [
-                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
               ],
               "qty_total": 1,
               "regime": "standard_tariff_fta"
@@ -4946,13 +5149,14 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 73.0,
+          "landed_cost_eur": 88.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 55.0,
@@ -4961,7 +5165,7 @@ const SCENARIO_DATA = {
           }
         },
         "risk_notes": [
-          "Description must remain ACCURATE — no over-genericization.",
+          "Description must remain ACCURATE \u2014 no over-genericization.",
           "EU customs may challenge an inadequate description.",
           "Best applied at catalog/PIM layer pre-shipment."
         ]
@@ -4972,13 +5176,19 @@ const SCENARIO_DATA = {
         "name": "split_parcels",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Split into 2 parcels — values, duties and totals are summed across parcels."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Split into 2 parcels \u2014 values, duties, shipping and totals are summed across parcels."
           ],
           "consignment_value_eur": 55.0,
           "declarant": "seller",
           "declaration_type": "H7",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": "15.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Modeled small-parcel cost for channel 'express'. Indicative only \u2014 not from a live rate API."
+            }
+          ],
           "duty_total_eur": 3.0,
           "fees": {
             "national_fee_eur": 2.0,
@@ -4995,19 +5205,20 @@ const SCENARIO_DATA = {
               ],
               "line_value_eur": 25.0,
               "notes": [
-                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
               ],
               "qty_total": 1,
               "regime": "standard_tariff_fta"
             }
           ],
-          "landed_cost_eur": 73.0,
+          "landed_cost_eur": 103.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 30.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
             "vat_base_eur": 25.0,
@@ -5023,11 +5234,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 3,
-        "description": "Push consignment value above €150 to use standard tariff instead of €3 per item.",
+        "description": "Push consignment value above \u20ac150 to use standard tariff instead of \u20ac3 per item.",
         "name": "push_above_150",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 150.01,
           "declarant": "carrier",
@@ -5036,7 +5247,7 @@ const SCENARIO_DATA = {
             {
               "default": false,
               "field": "ioss_registered",
-              "rationale": "OVERRIDE: value > €150 → IOSS cap exceeded"
+              "rationale": "OVERRIDE: value > \u20ac150 \u2192 IOSS cap exceeded"
             }
           ],
           "duty_total_eur": 0.0,
@@ -5055,7 +5266,7 @@ const SCENARIO_DATA = {
               ],
               "line_value_eur": 25.0,
               "notes": [
-                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
               ],
               "qty_total": 1,
               "regime": "standard_tariff_fta"
@@ -5073,13 +5284,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 184.01,
+          "landed_cost_eur": 199.01,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 15.0,
           "vat": {
             "collected_via": "import_clearance",
             "vat_base_eur": 150.01,
@@ -5095,11 +5307,11 @@ const SCENARIO_DATA = {
       },
       {
         "complexity": 5,
-        "description": "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",
+        "description": "Bulk B2B import + EU domestic fulfillment. \u20ac3 fully out; standard tariff once at scale.",
         "name": "b2b_eu_warehouse",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul – 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
           ],
           "consignment_value_eur": 1000.0,
           "declarant": "agent",
@@ -5121,7 +5333,7 @@ const SCENARIO_DATA = {
               ],
               "line_value_eur": 25.0,
               "notes": [
-                "FTA preference applied (origin GB); €3 EXCLUDED per DA Art. 1(1)(a)."
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
               ],
               "qty_total": 1,
               "regime": "standard_tariff_fta"
@@ -5139,13 +5351,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1004.0,
+          "landed_cost_eur": 1054.0,
           "legal_references": [
             "Council Regulation (EU) 2026/382 of 11 February 2026",
             "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
             "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
             "UCC Regulation (EU) 952/2013, Article 77"
           ],
+          "shipping_cost_eur": 50.0,
           "vat": {
             "collected_via": "oss_b2b",
             "vat_base_eur": 0.0,
@@ -5257,6 +5470,11 @@ function renderCostGrid(d) {
       <div class="val">${fmt(feesTotal)}</div>
       <div class="note">${feeNote.length ? feeNote.join(' + ') : 'none'}</div>
     </div>
+    <div class="cost-card">
+      <div class="lbl">Shipping</div>
+      <div class="val">${fmt(d.shipping_cost_eur)}</div>
+      <div class="note">modeled small-parcel rate</div>
+    </div>
   `;
 }
 
@@ -5340,12 +5558,12 @@ const STRATEGY_EXPLANATIONS = {
   },
   drop_ioss_use_fta: {
     what: 'Drop IOSS at checkout; ship via postal designated operator with FTA preference.',
-    why_help: 'The €3 simplified fee is bypassed; standard tariff applies (often 0% under FTA).',
+    why_help: 'The €3 simplified fee is bypassed; standard tariff applies (often 0% under FTA). Postal lane is also cheaper to ship (€5 vs €15 express).',
     why_filtered: 'No items qualify — origin not in EU FTA partner list, or FTA proof not held.',
   },
   split_parcels: {
     what: 'Ship each HS6+origin grouping as a separate parcel instead of 1 consolidated.',
-    why_worse: 'Per-parcel fees apply N times (e.g. IT €2/parcel, RO €4.90/parcel), increasing total.',
+    why_worse: 'Per-parcel fees apply N times (e.g. IT €2/parcel, RO €4.90/parcel), AND shipping is paid per parcel (€15 × N).',
     why_na: 'Only one HS6+origin grouping in this shipment — nothing to split.',
   },
   push_above_150: {
@@ -5356,7 +5574,7 @@ const STRATEGY_EXPLANATIONS = {
   },
   b2b_eu_warehouse: {
     what: 'Order in bulk (≥€1000) as B2B; fulfil EU customers from an EU warehouse.',
-    why_na: 'Requires bulk B2B (€1000+ floor), EU warehouse capacity, working capital — not a per-shipment fix.',
+    why_na: 'Requires bulk B2B (€1000+ floor), EU warehouse capacity, working capital — not a per-shipment fix. Shipping switches to consolidated freight (€50 flat) instead of per-parcel express.',
   },
 };
 
@@ -5649,13 +5867,23 @@ function renderWork(d, payload) {
     }
   }
 
-  // 6. Final result
-  html += '<h3>6. Final result</h3>';
+  // 6. Shipping (modeled)
+  if (Number(d.shipping_cost_eur) > 0) {
+    html += '<h3>6. Shipping (modeled)</h3>';
+    html += `<div class="step calc">
+      <span class="label">Per-parcel shipping:</span> ${fmt(d.shipping_cost_eur)}<br>
+      <small>Indicative small-parcel rate by channel (express €15 · postal €5 · general cargo €50). Not a live rate quote — used so landed-cost comparisons across strategies reflect the channel change.</small>
+    </div>`;
+  }
+
+  // 7. Final result
+  html += '<h3>7. Final result</h3>';
   const feesTotal = Number(d.fees.union_handling_fee_eur || 0) + Number(d.fees.national_fee_eur || 0);
   html += `<div class="step result">
     <span class="label">Duty:</span> ${fmt(d.duty_total_eur)} ·
     <span class="label">VAT:</span> ${fmt(d.vat.vat_eur)} ·
-    <span class="label">Fees:</span> ${fmt(feesTotal)}<br>
+    <span class="label">Fees:</span> ${fmt(feesTotal)} ·
+    <span class="label">Shipping:</span> ${fmt(d.shipping_cost_eur)}<br>
     <span class="label">Landed:</span> ${fmt(d.landed_cost_eur)}
   </div>`;
 

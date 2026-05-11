@@ -891,6 +891,7 @@ function renderTotals(d, payload) {
     <div class="total-row"><span>VAT (${d.vat.collected_via})</span><span>${fmt(d.vat.vat_eur)}</span></div>
     <div class="total-row"><span>Union handling fee — from 1 Nov 2026</span><span>${fmt(d.fees.union_handling_fee_eur)}</span></div>
     <div class="total-row"><span>National fee${nationalFeeNotes[ms] ? ` — ${nationalFeeNotes[ms]}` : ''}</span><span>${fmt(d.fees.national_fee_eur)}</span></div>
+    <div class="total-row"><span>Shipping (modeled)</span><span>${fmt(d.shipping_cost_eur)}</span></div>
     <div class="total-row grand"><span>Total landed cost</span><span>${fmt(d.landed_cost_eur)}</span></div>
     <div class="meta-tags" style="margin-top:8px">
       <span class="meta-tag">Decl: ${d.declaration_type}</span>
@@ -967,18 +968,28 @@ function renderWork(d, payload) {
     }
   }
 
+  // Shipping (modeled)
+  if (d.shipping_cost_eur > 0) {
+    html += '<h3>6. Shipping (modeled)</h3>';
+    html += `<div class="step calc">
+      <span class="label">Per-parcel shipping:</span> ${fmt(d.shipping_cost_eur)}<br>
+      <small>Indicative small-parcel rate by channel (express €15 · postal €5 · general cargo €50). Not a live rate quote — used so landed-cost comparisons across strategies reflect the channel change.</small>
+    </div>`;
+  }
+
   // Result
-  html += '<h3>6. Final result</h3>';
+  html += '<h3>7. Final result</h3>';
   html += `<div class="step result">
     <span class="label">Duty:</span> ${fmt(d.duty_total_eur)} ·
     <span class="label">VAT:</span> ${fmt(d.vat.vat_eur)} ·
-    <span class="label">Fees:</span> ${fmt(parseFloat(d.fees.union_handling_fee_eur) + parseFloat(d.fees.national_fee_eur))}<br>
+    <span class="label">Fees:</span> ${fmt(parseFloat(d.fees.union_handling_fee_eur) + parseFloat(d.fees.national_fee_eur))} ·
+    <span class="label">Shipping:</span> ${fmt(d.shipping_cost_eur)}<br>
     <span class="label">Landed:</span> ${fmt(d.landed_cost_eur)}
   </div>`;
 
   // Avalara getQuote baseline — internal only
   if (INTERNAL_MODE) {
-    html += '<h3>7. Avalara getQuote baseline</h3>';
+    html += '<h3>8. Avalara getQuote baseline</h3>';
     const avaTotal = parseFloat(d.avalara_total_eur || 0);
     const engTotal = parseFloat(d.duty_total_eur || 0);
     const avaDiff  = (avaTotal - engTotal).toFixed(2);
@@ -1077,12 +1088,12 @@ const STRATEGY_EXPLANATIONS = {
   },
   drop_ioss_use_fta: {
     what: 'Drop IOSS at checkout; ship via postal designated operator with FTA preference.',
-    why_help: 'The €3 simplified fee is bypassed; standard tariff applies (often 0% under FTA).',
+    why_help: 'The €3 simplified fee is bypassed; standard tariff applies (often 0% under FTA). Postal lane is also cheaper to ship (€5 vs €15 express).',
     why_filtered: 'No items qualify — origin not in EU FTA partner list, or FTA proof not held.',
   },
   split_parcels: {
     what: 'Ship each HS6+origin grouping as a separate parcel instead of 1 consolidated.',
-    why_worse: 'Per-parcel fees apply N times (e.g. IT €2/parcel, RO €4.90/parcel), increasing total.',
+    why_worse: 'Per-parcel fees apply N times (e.g. IT €2/parcel, RO €4.90/parcel), AND shipping is paid per parcel (€15 × N).',
     why_na: 'Only one HS6+origin grouping in this shipment — nothing to split.',
   },
   push_above_150: {
@@ -1093,7 +1104,7 @@ const STRATEGY_EXPLANATIONS = {
   },
   b2b_eu_warehouse: {
     what: 'Order in bulk (≥€1000) as B2B; fulfil EU customers from an EU warehouse.',
-    why_na: 'Requires bulk B2B (€1000+ floor), EU warehouse capacity, working capital — not a per-shipment fix.',
+    why_na: 'Requires bulk B2B (€1000+ floor), EU warehouse capacity, working capital — not a per-shipment fix. Shipping switches to consolidated freight (€50 flat) instead of per-parcel express.',
   },
 };
 
