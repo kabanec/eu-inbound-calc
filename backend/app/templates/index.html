@@ -362,6 +362,7 @@
     <!-- Actions -->
     <div class="actions">
       <button class="btn btn-primary" onclick="runCalculate()">Calculate Landed Cost</button>
+      <button class="btn btn-secondary" onclick="showMyWork()">Show My Work</button>
       <button class="btn btn-secondary" onclick="runStrategy()">Compare Strategies</button>
     </div>
 
@@ -387,7 +388,7 @@
   <div class="work-panel">
     <h2>🔍 Show Your Work</h2>
     <div id="work">
-      <div class="empty">Run a calculation to see the decision tree, defaults applied, and legal references.</div>
+      <div class="empty">Click <strong>Show My Work</strong> after calculating to reveal the decision tree, defaults applied, and legal references.</div>
     </div>
   </div>
 
@@ -604,10 +605,37 @@ const FTA_PARTNERS = ['GB', 'CH', 'JP', 'KR', 'VN', 'NO', 'IS', 'LI', 'TR', 'AD'
 
 // ---- Demo scenarios ----
 const SCENARIOS = [
+  // ---------- GB-origin (Royal Mail demo bundle) ----------
+  {
+    id: 'gb_postal_ioss',
+    label: '🇬🇧📮 Royal Mail: GB→DE postal + IOSS',
+    desc: 'UK IOSS-registered seller via Royal Mail Tracked. FTA preference → €3 bypassed; VAT collected at checkout',
+    setup: () => {
+      reset();
+      setSelect('destination_ms', 'DE');
+      setSelect('ship_from', 'GB');
+      setMethod('postal');
+      document.getElementById('ioss_registered').checked = true;
+      addItem({ hs6: '610910', desc: 'Cotton t-shirt', origin: 'GB', qty: 1, unit_value: 35, std_rate: 0.12, fta_rate: 0.0, fta_proof: true });
+    }
+  },
+  {
+    id: 'gb_postal_no_ioss',
+    label: '🇬🇧📮 Royal Mail: GB→DE postal, no IOSS',
+    desc: 'Non-IOSS UK seller via Royal Mail. Postal special-arrangements VAT collected by designated operator at delivery',
+    setup: () => {
+      reset();
+      setSelect('destination_ms', 'DE');
+      setSelect('ship_from', 'GB');
+      setMethod('postal');
+      document.getElementById('ioss_registered').checked = false;
+      addItem({ hs6: '610910', desc: 'Cotton t-shirt', origin: 'GB', qty: 1, unit_value: 35, std_rate: 0.12, fta_rate: 0.0, fta_proof: true });
+    }
+  },
   {
     id: 'gb_fta',
-    label: '🇬🇧 GB→DE: FTA exclusion demo',
-    desc: 'UK origin with FTA proof — €3 bypassed, standard tariff (0%) applies',
+    label: '🇬🇧 GB→DE: express + FTA exclusion',
+    desc: 'UK origin via express carrier with FTA proof — €3 bypassed, standard tariff at 0% preferential',
     setup: () => {
       reset();
       setSelect('destination_ms', 'DE');
@@ -616,6 +644,34 @@ const SCENARIOS = [
       addItem({ hs6: '610910', desc: 'Cotton t-shirt', origin: 'GB', qty: 2, unit_value: 12, std_rate: 0.12, fta_rate: 0.0, fta_proof: true });
     }
   },
+  {
+    id: 'gb_fr_postal',
+    label: '🇬🇧→🇫🇷 GB→FR postal: FTA saves €3, FR fee stays',
+    desc: 'Royal Mail to France. FTA exclusion drops €3 EU fee, but FR €2/HS6 line tax (TPC) still applies per HS6 group',
+    setup: () => {
+      reset();
+      setSelect('destination_ms', 'FR');
+      setSelect('ship_from', 'GB');
+      setMethod('postal');
+      document.getElementById('ioss_registered').checked = true;
+      addItem({ hs6: '610910', desc: 'Cotton t-shirt', origin: 'GB', qty: 1, unit_value: 25, std_rate: 0.12, fta_rate: 0.0, fta_proof: true });
+      addItem({ hs6: '420232', desc: 'Leather wallet', origin: 'GB', qty: 1, unit_value: 35, std_rate: 0.03, fta_rate: 0.0, fta_proof: true });
+    }
+  },
+  {
+    id: 'gb_above_150',
+    label: '🇬🇧💸 GB→DE >€150: H1 + FTA preferential tariff',
+    desc: 'Higher-value UK shipment via Royal Mail. Above €150 simplified cap — full standard customs entry, FTA preference applied (0% MFN-preferential)',
+    setup: () => {
+      reset();
+      setSelect('destination_ms', 'DE');
+      setSelect('ship_from', 'GB');
+      setMethod('postal');
+      document.getElementById('ioss_registered').checked = false;
+      addItem({ hs6: '610910', desc: 'Cotton t-shirt', origin: 'GB', qty: 1, unit_value: 200, std_rate: 0.12, fta_rate: 0.0, fta_proof: true });
+    }
+  },
+  // ---------- CN-origin and other reference scenarios ----------
   {
     id: 'fr_stack',
     label: '🇫🇷 CN→FR: French €2/HS6 stack',
@@ -908,10 +964,20 @@ function onShippingOverride() {
 }
 
 // ---- Calculate ----
+// Cache the latest /api/calculate response + payload so "Show My Work" can
+// render the decision tree from the same data WITHOUT re-fetching.
+let _lastCalcResponse = null;
+let _lastCalcPayload = null;
+
 async function runCalculate() {
   const payload = buildPayload();
   $('totals').innerHTML = '<div class="empty">Calculating…</div>';
-  $('work').innerHTML = '<div class="empty">Calculating…</div>';
+  // Reset Work panel back to its empty state — user reveals it via "Show My Work".
+  $('work').innerHTML = '<div class="empty">Click <strong>Show My Work</strong> to reveal the decision tree, defaults applied, and legal references.</div>';
+  // Also reset Strategy card — comparing only happens via its own button.
+  $('strategies').innerHTML = '<div class="empty">Click <strong>Compare Strategies</strong> to evaluate alternatives.</div>';
+  _lastCalcResponse = null;
+  _lastCalcPayload = null;
   try {
     const r = await fetch('/api/calculate', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
     const data = await r.json();
@@ -922,11 +988,23 @@ async function runCalculate() {
       $('work').innerHTML = '';
       return;
     }
+    _lastCalcResponse = data;
+    _lastCalcPayload = payload;
     renderTotals(data, payload);
-    renderWork(data, payload);
+    // NOTE: renderWork is NOT called here — user clicks "Show My Work" to reveal.
   } catch (e) {
     $('totals').innerHTML = `<div class="warning">Network error: ${e.message}</div>`;
   }
+}
+
+function showMyWork() {
+  if (!_lastCalcResponse || !_lastCalcPayload) {
+    $('work').innerHTML = '<div class="empty">Click <strong>Calculate Landed Cost</strong> first, then come back.</div>';
+    return;
+  }
+  renderWork(_lastCalcResponse, _lastCalcPayload);
+  // Scroll the right pane into view on mobile / narrow viewports.
+  document.querySelector('.work-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 async function runStrategy() {
