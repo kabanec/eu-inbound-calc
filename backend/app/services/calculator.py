@@ -129,12 +129,19 @@ def _calculate_vat(
             vat_eur=Decimal("0.00"), collected_via="oss_b2b",
         )
     if c.ioss_registered:
+        # IOSS taxable amount is intrinsic-only per Reg 282/2011 Art. 5(1)
+        # and Dir 2006/112 Art. 369y. Shipping is NOT in the VAT base even
+        # though it IS in the customs (CIF) value for duty purposes.
         base = c.intrinsic_value_eur
         return VATBreakdown(
             vat_rate=rate, vat_base_eur=_round(base),
             vat_eur=_round(base * rate), collected_via="ioss_at_checkout",
         )
-    base = c.intrinsic_value_eur + duty_total
+    # Non-IOSS: Dir 2006/112 Art. 85/86 — VAT base = customs value (CIF) + duty
+    # + incidental expenses up to first destination. CIF already includes
+    # shipping to the EU border, so we add shipping_cost_eur explicitly here.
+    shipping = c.shipping_cost_eur or Decimal("0.00")
+    base = c.intrinsic_value_eur + shipping + duty_total
     if c.postal_designated_op:
         return VATBreakdown(
             vat_rate=rate, vat_base_eur=_round(base),

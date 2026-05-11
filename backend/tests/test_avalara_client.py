@@ -89,6 +89,39 @@ class TestPayloadStructure:
         item_node = payload["lines"][0]["item"]
         assert item_node["classifications"][0]["hscode"] == "61091000"
 
+    def test_shipping_passed_as_destination_parameter_for_cif_duty(self, mock_avalara):
+        """Avalara needs basket-level SHIPPING in destination parameters to
+        compute duty on CIF (UCC Art. 70/71). Without it, duty is FOB-based
+        and understates the customs value.
+        """
+        from app.services.avalara_client import _build_payload
+        c = _ready_consignment(shipping_cost_eur=Decimal("12.50"))
+        payload = _build_payload(c)
+        dest_params = {p["name"]: p for p in payload["destinations"][0]["parameters"]}
+        assert "SHIPPING" in dest_params
+        assert dest_params["SHIPPING"]["value"] == "12.50"
+        assert dest_params["SHIPPING"]["unit"] == "EUR"
+
+    def test_no_shipping_parameter_when_zero(self, mock_avalara):
+        """When shipping is zero, omit the SHIPPING parameter so Avalara
+        doesn't prorate a zero across lines (keeps payload minimal).
+        """
+        from app.services.avalara_client import _build_payload
+        c = _ready_consignment(shipping_cost_eur=Decimal("0.00"))
+        payload = _build_payload(c)
+        dest_params = {p["name"]: p for p in payload["destinations"][0]["parameters"]}
+        assert "SHIPPING" not in dest_params
+
+    def test_line_level_shipping_zero_is_not_emitted(self, mock_avalara):
+        """Per-line SHIPPING=0.00 conflicted with basket-level proration —
+        ensure it's not emitted on lines anymore.
+        """
+        from app.services.avalara_client import _build_payload
+        c = _ready_consignment(shipping_cost_eur=Decimal("15.00"))
+        payload = _build_payload(c)
+        line_params = {p["name"]: p for p in payload["lines"][0]["item"]["parameters"]}
+        assert "SHIPPING" not in line_params
+
 
 class TestResponseParsing:
     def _gc_response(self, line_number, cost_lines, duty_summary=None, granularity=None,

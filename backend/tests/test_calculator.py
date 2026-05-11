@@ -225,13 +225,44 @@ class TestVAT:
         assert r.vat.vat_eur == Decimal("19.00")
 
     def test_special_arrangements_includes_duty(self):
+        # Dir 2006/112 Art. 85/86: VAT base for non-IOSS imports =
+        # CIF (intrinsic + shipping) + duty. Default postal shipping = €15.
         c = Consignment(items=[make_item(value=100, std_rate=0.10)],
                         destination_ms="DE", ioss_registered=False,
                         postal_designated_op=True,
+                        shipping_cost_eur=Decimal("15.00"),
                         transaction_date=date(2026, 8, 1))
         r = calculate(c)
         assert r.vat.collected_via == "special_arrangements"
-        assert r.vat.vat_base_eur == Decimal("103.00")  # 100 + €3 postal
+        # 100 (intrinsic) + 15 (shipping/CIF) + 3 (€3 simplified duty) = 118
+        assert r.vat.vat_base_eur == Decimal("118.00")
+
+    def test_standard_import_vat_includes_shipping_cif(self):
+        # Standard import >€150, non-IOSS, non-postal. Per Dir 2006/112
+        # Art. 85/86: VAT base = customs value (CIF) + duty. CIF includes
+        # shipping to EU border, so shipping must be in the VAT base.
+        c = Consignment(items=[make_item(value=200, std_rate=0.12)],
+                        destination_ms="DE", ioss_registered=False,
+                        shipping_cost_eur=Decimal("20.00"),
+                        transaction_date=date(2026, 8, 1))
+        r = calculate(c)
+        assert r.vat.collected_via == "import_clearance"
+        # Base = 200 (intrinsic) + 20 (shipping) + duty
+        expected_base = Decimal("220.00") + r.duty_total_eur
+        assert r.vat.vat_base_eur == expected_base
+
+    def test_ioss_vat_excludes_shipping(self):
+        # Reg 282/2011 Art. 5(1): IOSS taxable amount is intrinsic value
+        # only — shipping is NOT in the VAT base even though it IS in CIF
+        # for duty purposes. Regression for the CIF/VAT split.
+        c = Consignment(items=[make_item(value=100)], destination_ms="DE",
+                        ioss_registered=True,
+                        shipping_cost_eur=Decimal("25.00"),
+                        transaction_date=date(2026, 8, 1))
+        r = calculate(c)
+        assert r.vat.collected_via == "ioss_at_checkout"
+        assert r.vat.vat_base_eur == Decimal("100.00")
+        assert r.vat.vat_eur == Decimal("19.00")
 
 
 # National fees ------------------------------------------------------------

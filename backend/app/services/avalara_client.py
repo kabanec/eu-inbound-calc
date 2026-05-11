@@ -97,7 +97,6 @@ def _build_line(i: int, item, c: Consignment) -> dict:
             ],
             "parameters": [
                 {"name": "weight", "value": "0", "unit": "kg"},
-                {"name": "SHIPPING", "value": "0.00", "unit": "EUR"},
             ],
         },
         "classificationParameters": [],
@@ -108,6 +107,18 @@ def _build_line(i: int, item, c: Consignment) -> dict:
             "hscode": _to_cn8(item.hs6),
         }]
     return line
+
+
+def _destination_parameters(c: Consignment) -> list[dict]:
+    """Per-destination parameters. SHIPPING here flips Avalara to CIF duty
+    basis (UCC Art. 70/71). Avalara prorates the basket-level SHIPPING
+    across lines automatically.
+    """
+    params: list[dict] = []
+    shipping = c.shipping_cost_eur or Decimal("0.00")
+    if shipping > 0:
+        params.append({"name": "SHIPPING", "value": str(shipping), "unit": "EUR"})
+    return params
 
 
 def _build_payload(c: Consignment) -> dict:
@@ -121,7 +132,7 @@ def _build_payload(c: Consignment) -> dict:
         "shipFrom": {"country": (c.ship_from or "CN").upper()},
         "destinations": [{
             "shipTo": {"country": c.destination_ms.lower()},
-            "parameters": [],
+            "parameters": _destination_parameters(c),
             "taxRegistered": bool(c.b2b),
         }],
         "lines": [_build_line(i, item, c) for i, item in enumerate(c.items)],
