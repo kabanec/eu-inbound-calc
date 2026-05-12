@@ -291,7 +291,7 @@ def calculate(c: Consignment) -> CalculationResult:
         )
         if not suspended:
             fees.national_fee_eur = ava_resp.national_fee_eur
-            fees.national_fee_source = "Avalara CCF"
+            fees.national_fee_source = "Customs administrative fee"
 
     vat = _calculate_vat(c, duty_total, fees)
 
