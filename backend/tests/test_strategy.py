@@ -24,6 +24,7 @@ from app.services.strategy import (
     _b2b_eu_warehouse,
     _consolidate_descriptions,
     _drop_ioss_use_fta,
+    _drop_ioss_use_mfn,
     _force_above_150,
     _split_parcels,
     _status_quo,
@@ -173,7 +174,44 @@ class TestDropIossUseFta:
         assert s.name == "drop_ioss_use_fta"
 
 
-# -- _b2b_eu_warehouse -----------------------------------------------------
+# -- _drop_ioss_use_mfn ----------------------------------------------------
+
+class TestDropIossUseMfn:
+    def test_returns_none_when_not_using_ioss(self, mock_avalara):
+        """Strategy only applies when caller is currently using IOSS."""
+        c = Consignment(
+            items=[Item(hs6="610910", origin="CN", qty=1,
+                        unit_value_eur=Decimal("20.00"))],
+            destination_ms="DE",
+            ioss_registered=False,
+        )
+        assert _drop_ioss_use_mfn(c) is None
+
+    def test_returns_strategy_for_non_fta_ioss_consignment(self, mock_avalara):
+        """CN-origin IOSS consignment (no FTA available) → strategy fires."""
+        s = _drop_ioss_use_mfn(_under_150_consignment())
+        assert s is not None
+        assert s.name == "drop_ioss_use_mfn"
+
+    def test_flips_ioss_off_and_uses_express_channel(self, mock_avalara):
+        """Result must have ioss off, no postal designation, express channel —
+        otherwise either €3 path could still fire."""
+        s = _drop_ioss_use_mfn(_under_150_consignment())
+        assert s is not None
+        # Resulting consignment configuration should disengage both €3 triggers.
+        # The recalc's regime per line should be standard_tariff (not e3_simplified).
+        regimes = {ib.regime for ib in s.result.item_breakdown}
+        assert "e3_simplified" not in regimes, (
+            "drop_ioss_use_mfn must produce standard_tariff lines; "
+            "if e3_simplified appears, either ioss wasn't flipped or postal trigger fired"
+        )
+
+    def test_fires_alongside_fta_strategies_when_fta_eligible(self, mock_avalara):
+        """For FTA-eligible IOSS consignments, the MFN strategy still fires
+        (no FTA gate). The ranking decides which wins — typically FTA wins
+        because FTA preferential rate ≤ MFN."""
+        s = _drop_ioss_use_mfn(_all_fta_consignment())
+        assert s is not None  # gateless beyond 'currently IOSS'
 
 class TestB2BWarehouse:
     def test_floors_value_at_1000(self, mock_avalara):
@@ -246,6 +284,26 @@ class TestRecommend:
         result = recommend(_under_150_consignment())
         names = [s.name for s in result]
         assert "drop_ioss_use_fta" not in names
+
+    def test_recommend_includes_drop_ioss_use_mfn_for_ioss_basket(self, mock_avalara):
+        """drop_ioss_use_mfn must surface for any IOSS consignment, regardless
+        of FTA eligibility — its gate is just 'currently using IOSS'."""
+        result = recommend(_under_150_consignment())
+        names = [s.name for s in result]
+        assert "drop_ioss_use_mfn" in names
+
+    def test_recommend_drops_drop_ioss_use_mfn_when_not_using_ioss(self, mock_avalara):
+        """When the caller is already on the standard-tariff path (ioss off),
+        the strategy is redundant and should not appear."""
+        c = Consignment(
+            items=[Item(hs6="610910", origin="CN", qty=1,
+                        unit_value_eur=Decimal("20.00"))],
+            destination_ms="DE",
+            ioss_registered=False,
+        )
+        result = recommend(c)
+        names = [s.name for s in result]
+        assert "drop_ioss_use_mfn" not in names
 
 
 # -- shipping cost modeling ------------------------------------------------

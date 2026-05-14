@@ -211,6 +211,37 @@ def _drop_ioss_use_express_fta(c: Consignment) -> Optional[Strategy]:
     )
 
 
+def _drop_ioss_use_mfn(c: Consignment) -> Optional[Strategy]:
+    """Drop IOSS, ship express → neither €3 path fires → standard MFN.
+
+    Beats €3 whenever (MFN rate × line value) < €3 per line. Around half of
+    EU HS codes have MFN ≤ 6%, so on low-value (≲ €50 / 6%) consignments the
+    standard tariff is cheaper than the €3 flat. Gated only on 'currently
+    using IOSS' — the calculator + sort decide whether it wins.
+    """
+    if not c.ioss_registered:
+        return None
+    new_c = deepcopy(c)
+    new_c.ioss_registered = False
+    new_c.postal_designated_op = False
+    new_c.channel = "express"
+    _override_channel_shipping(new_c, "express")
+    return Strategy(
+        "drop_ioss_use_mfn",
+        "Drop IOSS, ship express/courier — neither €3 path fires. Standard MFN "
+        "tariff applies. Optimal for low-value goods on low-MFN HS codes "
+        "(~51% of EU HS codes are ≤ 6%, where MFN × value beats the €3 flat "
+        "below the break-even point of €3 / MFN rate).",
+        calculate(new_c), 3,
+        [
+            "Customer pays import VAT on delivery (worse checkout UX vs. IOSS).",
+            "Broker fees may apply on the express channel.",
+            "Only optimal when standard MFN duty < €3 per line — advisor's "
+            "ranking surfaces this automatically when it wins.",
+        ],
+    )
+
+
 def _b2b_eu_warehouse(c: Consignment) -> Strategy:
     new_c = deepcopy(c)
     new_c.b2b = True
@@ -247,6 +278,7 @@ def recommend(c: Consignment) -> list[Strategy]:
         _force_above_150(c),
         _drop_ioss_use_fta(c),
         _drop_ioss_use_express_fta(c),
+        _drop_ioss_use_mfn(c),
         _b2b_eu_warehouse(c),
     ]
     valid = [s for s in candidates if s is not None]
