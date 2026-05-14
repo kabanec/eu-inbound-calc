@@ -682,7 +682,7 @@ const FTA_PARTNERS = ['GB', 'CH', 'JP', 'KR', 'VN', 'NO', 'IS', 'LI', 'TR', 'AD'
 
 // ---- Demo scenario catalog (12 scenarios) ----
 const SCENARIOS = [
-  { id: 'gb_fta',             label: '🇬🇧 GB→DE: FTA exclusion demo',           desc: 'UK origin with FTA proof — €3 bypassed, standard tariff (0%) applies' },
+  { id: 'gb_fta',             label: '🇬🇧 GB→DE: FTA + IOSS (asymmetric)',     desc: 'UK origin + FTA proof + IOSS — path (a) still fires (€3). FTA only bypasses on the postal path. Strategy advisor proposes drop-IOSS-via-express to actually use FTA.' },
   { id: 'fr_stack',           label: '🇫🇷 GB→FR: French €2/HS6 stack',          desc: 'Multi-HS basket from UK to France — national €2/line (TPC) on top of EU €3' },
   { id: 'it_parcel',          label: '🇮🇹 CN→IT: Italian €2/parcel (Jul 2026)', desc: 'Italy flat €2/parcel — suspended until 1 Jul 2026, then active' },
   { id: 'ro_logistics',       label: '🇷🇴 CN→RO: Romanian €4.90 logistics tax', desc: '25 RON per-parcel logistics tax (≈ €4.90) on top of EU regime' },
@@ -690,7 +690,7 @@ const SCENARIOS = [
   { id: 'over_150',           label: '💸 CN→DE: >€150 forces standard',          desc: 'Value exceeds €150 cap — €3 simplified regime no longer applies' },
   { id: 'postal_no_ioss',     label: '📮 CN→DE: Postal non-IOSS',                desc: 'Postal Designated Op channel — €3 still triggered without IOSS' },
   { id: 'vanilla',            label: '🟢 CN→DE: Vanilla €3',                     desc: 'Baseline scenario — single B2C IOSS tee, simplest €3 path' },
-  { id: 'buyer_agent_break',  label: '🚫 CN→DE: Buyer agent breaks IOSS',        desc: 'Customer-nominated buyer agent voids the distance-sale construct — IOSS legally precluded' },
+  { id: 'buyer_agent_break',  label: '🏷️ CN→DE: Buyer agent + IOSS (Art. 14a)',  desc: 'Marketplace acting as buyer agent + IOSS — Art. 14a deemed-supplier means €3 still applies. The flag is informational (declarant label), not a duty-math determinant.' },
   { id: 'pre_e3_era',         label: '⏪ CN→DE on 2026-06-01: Pre-€3 era',       desc: 'Same shipment 1 month before €3 launch — €150 de minimis still active' },
   { id: 'post_union_handling',label: '🆕 CN→DE on 2026-12-01: Union handling',   desc: 'After 1 Nov 2026 — EU-wide €2 union handling fee applies on top of €3' },
   { id: 'mixed_fta_basket',   label: '🔀 GB+CN→FR: Mixed FTA basket',            desc: 'UK tee with FTA proof + Chinese wallet — per-line regimes diverge' },
@@ -743,7 +743,8 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
       ],
       "consignment_value_eur": 24.0,
       "declarant": "seller",
@@ -755,7 +756,7 @@ const SCENARIO_DATA = {
           "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac24.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
         }
       ],
-      "duty_total_eur": 0.0,
+      "duty_total_eur": 3.0,
       "fees": {
         "national_fee_eur": 0.0,
         "national_fee_source": null,
@@ -763,7 +764,7 @@ const SCENARIO_DATA = {
       },
       "item_breakdown": [
         {
-          "duty_eur": 0.0,
+          "duty_eur": 3.0,
           "grouping_key": [
             "610910",
             "cotton t-shirt",
@@ -771,199 +772,33 @@ const SCENARIO_DATA = {
           ],
           "line_value_eur": 24.0,
           "notes": [
-            "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
+            "\u20ac3 once for 2 units on this declared line (one item per DA Art. 1(1)(b)(61))."
           ],
           "qty_total": 2,
-          "regime": "standard_tariff_fta"
+          "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 38.56,
+      "landed_cost_eur": 43.46,
       "legal_references": [
-        "Council Regulation (EU) 2026/382 of 11 February 2026",
-        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-        "UCC Regulation (EU) 952/2013, Article 77"
+        "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+        "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+        "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+        "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+        "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
       ],
       "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
-        "vat_base_eur": 24.0,
-        "vat_eur": 4.56,
+        "vat_base_eur": 34.0,
+        "vat_eur": 6.46,
         "vat_rate": 0.19
       }
     },
     "strategies": [
       {
-        "complexity": 1,
-        "description": "Ship as currently configured.",
-        "name": "status_quo",
-        "result": {
-          "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
-          ],
-          "consignment_value_eur": 24.0,
-          "declarant": "seller",
-          "declaration_type": "H7",
-          "defaults_applied": [],
-          "duty_total_eur": 0.0,
-          "fees": {
-            "national_fee_eur": 0.0,
-            "national_fee_source": null,
-            "union_handling_fee_eur": 0.0
-          },
-          "item_breakdown": [
-            {
-              "duty_eur": 0.0,
-              "grouping_key": [
-                "610910",
-                "cotton t-shirt",
-                "GB"
-              ],
-              "line_value_eur": 24.0,
-              "notes": [
-                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
-              ],
-              "qty_total": 2,
-              "regime": "standard_tariff_fta"
-            }
-          ],
-          "landed_cost_eur": 38.56,
-          "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
-          ],
-          "shipping_cost_eur": 10.0,
-          "vat": {
-            "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 24.0,
-            "vat_eur": 4.56,
-            "vat_rate": 0.19
-          }
-        },
-        "risk_notes": []
-      },
-      {
-        "complexity": 2,
-        "description": "Normalize descriptions so items sharing HS6+origin collapse to one grouping line.",
-        "name": "consolidate_descriptions",
-        "result": {
-          "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
-          ],
-          "consignment_value_eur": 24.0,
-          "declarant": "seller",
-          "declaration_type": "H7",
-          "defaults_applied": [],
-          "duty_total_eur": 0.0,
-          "fees": {
-            "national_fee_eur": 0.0,
-            "national_fee_source": null,
-            "union_handling_fee_eur": 0.0
-          },
-          "item_breakdown": [
-            {
-              "duty_eur": 0.0,
-              "grouping_key": [
-                "610910",
-                "cotton t-shirt",
-                "GB"
-              ],
-              "line_value_eur": 24.0,
-              "notes": [
-                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
-              ],
-              "qty_total": 2,
-              "regime": "standard_tariff_fta"
-            }
-          ],
-          "landed_cost_eur": 38.56,
-          "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
-          ],
-          "shipping_cost_eur": 10.0,
-          "vat": {
-            "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 24.0,
-            "vat_eur": 4.56,
-            "vat_rate": 0.19
-          }
-        },
-        "risk_notes": [
-          "Description must remain ACCURATE \u2014 no over-genericization.",
-          "EU customs may challenge an inadequate description.",
-          "Best applied at catalog/PIM layer pre-shipment."
-        ]
-      },
-      {
         "complexity": 4,
-        "description": "One parcel per HS6+description+origin group. Almost always worse than consolidation.",
-        "name": "split_parcels",
-        "result": {
-          "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
-            "Split into 1 parcels \u2014 values, duties, shipping and totals are summed across parcels."
-          ],
-          "consignment_value_eur": 24.0,
-          "declarant": "seller",
-          "declaration_type": "H7",
-          "defaults_applied": [
-            {
-              "default": "10.00",
-              "field": "shipping_cost_eur",
-              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac24.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
-            }
-          ],
-          "duty_total_eur": 0.0,
-          "fees": {
-            "national_fee_eur": 0.0,
-            "national_fee_source": null,
-            "union_handling_fee_eur": 0.0
-          },
-          "item_breakdown": [
-            {
-              "duty_eur": 0.0,
-              "grouping_key": [
-                "610910",
-                "cotton t-shirt",
-                "GB"
-              ],
-              "line_value_eur": 24.0,
-              "notes": [
-                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
-              ],
-              "qty_total": 2,
-              "regime": "standard_tariff_fta"
-            }
-          ],
-          "landed_cost_eur": 38.56,
-          "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
-          ],
-          "shipping_cost_eur": 10.0,
-          "vat": {
-            "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 24.0,
-            "vat_eur": 4.56,
-            "vat_rate": 0.19
-          }
-        },
-        "risk_notes": [
-          "Multiplies handling fees and Union handling fee.",
-          "Higher fulfillment cost.",
-          "Included for comparison; rarely optimal."
-        ]
-      },
-      {
-        "complexity": 4,
-        "description": "Postal non-IOSS with FTA preference \u2014 \u20ac3 bypassed; standard tariff (often 0%).",
+        "description": "Drop IOSS, ship postal with FTA proof \u2014 bypasses \u20ac3 via DA Art. 1(1)(a) revised def (24), which excludes FTA goods from the postal-consignment definition. IOSS path (a) keeps \u20ac3 in play regardless of FTA, so leaving path (a) is the only way an FTA-eligible seller escapes \u20ac3.",
         "name": "drop_ioss_use_fta",
         "result": {
           "compliance_warnings": [
@@ -995,31 +830,275 @@ const SCENARIO_DATA = {
               ],
               "line_value_eur": 24.0,
               "notes": [
-                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED via path (b) postal \u2014 DA Art. 1(1)(a) revised def (24)."
               ],
               "qty_total": 2,
               "regime": "standard_tariff_fta"
             }
           ],
-          "landed_cost_eur": 38.56,
+          "landed_cost_eur": 40.46,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "special_arrangements",
-            "vat_base_eur": 24.0,
-            "vat_eur": 4.56,
+            "vat_base_eur": 34.0,
+            "vat_eur": 6.46,
             "vat_rate": 0.19
           }
         },
         "risk_notes": [
-          "Requires valid proof of preferential origin (REX, EUR.1, etc.).",
+          "Requires valid proof of preferential origin (REX statement, EUR.1, etc.) AND direct transport from origin country (or non-alteration declaration).",
+          "OPERATIONAL CAVEAT: 'postal' under DA 2015/2446 def (25) = UPU-designated national operators (Royal Mail, La Poste, Deutsche Post, etc.). The CN22/CN23 forms have no formal FTA proof field, and the H6 reduced dataset does not include REX/EUR.1 references. Whether the destination postal operator transmits an origin statement on the commercial invoice through to customs via H6 is inconsistent \u2014 in practice many postal shipments still get charged \u20ac3 even with FTA-eligible goods. Verify with destination posts before relying on this path. See _drop_ioss_use_express_fta for the more operationally reliable variant.",
           "Customer pays VAT on delivery \u2014 worse UX than IOSS at checkout.",
-          "Special arrangements regime sunsets 1 July 2028."
+          "Special Arrangements regime for postal VAT collection sunsets 1 July 2028."
+        ]
+      },
+      {
+        "complexity": 4,
+        "description": "Drop IOSS, ship express with REX statement \u2014 neither \u20ac3 path fires. Standard tariff at FTA preferential rate (often 0%). The H1/H7 electronic declaration carries REX/EUR.1 references reliably, unlike the postal H6 reduced dataset. Operationally the most realistic FTA bypass.",
+        "name": "drop_ioss_use_express_fta",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
+          ],
+          "consignment_value_eur": 24.0,
+          "declarant": "carrier",
+          "declaration_type": "H7",
+          "defaults_applied": [
+            {
+              "default": "10.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac24.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
+            }
+          ],
+          "duty_total_eur": 0.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 0.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 24.0,
+              "notes": [
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED via path (b) postal \u2014 DA Art. 1(1)(a) revised def (24)."
+              ],
+              "qty_total": 2,
+              "regime": "standard_tariff_fta"
+            }
+          ],
+          "landed_cost_eur": 40.46,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
+          ],
+          "shipping_cost_eur": 10.0,
+          "vat": {
+            "collected_via": "import_clearance",
+            "vat_base_eur": 34.0,
+            "vat_eur": 6.46,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Requires REX statement on commercial invoice or equivalent FTA proof for the destination MS customs to grant preference.",
+          "Direct-transport requirement: ship_from == origin OR non_alteration declaration documented in the customs entry.",
+          "Customer pays import VAT on delivery via broker \u2014 worse UX than IOSS, and broker fees are additional friction.",
+          "Express shipping is typically pricier than postal \u2014 model the all-in landed cost, not just the duty saving."
+        ]
+      },
+      {
+        "complexity": 1,
+        "description": "Ship as currently configured.",
+        "name": "status_quo",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
+          ],
+          "consignment_value_eur": 24.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 24.0,
+              "notes": [
+                "\u20ac3 once for 2 units on this declared line (one item per DA Art. 1(1)(b)(61))."
+              ],
+              "qty_total": 2,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 43.46,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
+          ],
+          "shipping_cost_eur": 10.0,
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 34.0,
+            "vat_eur": 6.46,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": []
+      },
+      {
+        "complexity": 2,
+        "description": "Normalize descriptions so items sharing HS6+origin collapse to one grouping line.",
+        "name": "consolidate_descriptions",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
+          ],
+          "consignment_value_eur": 24.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 24.0,
+              "notes": [
+                "\u20ac3 once for 2 units on this declared line (one item per DA Art. 1(1)(b)(61))."
+              ],
+              "qty_total": 2,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 43.46,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
+          ],
+          "shipping_cost_eur": 10.0,
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 34.0,
+            "vat_eur": 6.46,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Description must remain ACCURATE \u2014 no over-genericization.",
+          "EU customs may challenge an inadequate description.",
+          "Best applied at catalog/PIM layer pre-shipment."
+        ]
+      },
+      {
+        "complexity": 4,
+        "description": "One parcel per HS6+description+origin group. Almost always worse than consolidation.",
+        "name": "split_parcels",
+        "result": {
+          "compliance_warnings": [
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure.",
+            "Split into 1 parcels \u2014 values, duties, shipping and totals are summed across parcels."
+          ],
+          "consignment_value_eur": 24.0,
+          "declarant": "seller",
+          "declaration_type": "H7",
+          "defaults_applied": [
+            {
+              "default": "10.00",
+              "field": "shipping_cost_eur",
+              "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac24.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
+            }
+          ],
+          "duty_total_eur": 3.0,
+          "fees": {
+            "national_fee_eur": 0.0,
+            "national_fee_source": null,
+            "union_handling_fee_eur": 0.0
+          },
+          "item_breakdown": [
+            {
+              "duty_eur": 3.0,
+              "grouping_key": [
+                "610910",
+                "cotton t-shirt",
+                "GB"
+              ],
+              "line_value_eur": 24.0,
+              "notes": [
+                "\u20ac3 once for 2 units on this declared line (one item per DA Art. 1(1)(b)(61))."
+              ],
+              "qty_total": 2,
+              "regime": "e3_simplified"
+            }
+          ],
+          "landed_cost_eur": 43.46,
+          "legal_references": [
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
+          ],
+          "shipping_cost_eur": 10.0,
+          "vat": {
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 34.0,
+            "vat_eur": 6.46,
+            "vat_rate": 0.19
+          }
+        },
+        "risk_notes": [
+          "Multiplies handling fees and Union handling fee.",
+          "Higher fulfillment cost.",
+          "Included for comparison; rarely optimal."
         ]
       },
       {
@@ -1056,24 +1135,26 @@ const SCENARIO_DATA = {
               ],
               "line_value_eur": 24.0,
               "notes": [
-                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED via path (b) postal \u2014 DA Art. 1(1)(a) revised def (24)."
               ],
               "qty_total": 2,
               "regime": "standard_tariff_fta"
             }
           ],
-          "landed_cost_eur": 188.51,
+          "landed_cost_eur": 190.41,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
-            "vat_base_eur": 150.01,
-            "vat_eur": 28.5,
+            "vat_base_eur": 160.01,
+            "vat_eur": 30.4,
             "vat_rate": 0.19
           }
         },
@@ -1117,7 +1198,7 @@ const SCENARIO_DATA = {
               ],
               "line_value_eur": 24.0,
               "notes": [
-                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED via path (b) postal \u2014 DA Art. 1(1)(a) revised def (24)."
               ],
               "qty_total": 2,
               "regime": "standard_tariff_fta"
@@ -1125,10 +1206,12 @@ const SCENARIO_DATA = {
           ],
           "landed_cost_eur": 1100.0,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 100.0,
           "vat": {
@@ -1264,18 +1347,20 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 111.4,
+      "landed_cost_eur": 113.4,
       "legal_references": [
-        "Council Regulation (EU) 2026/382 of 11 February 2026",
-        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-        "UCC Regulation (EU) 952/2013, Article 77"
+        "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+        "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+        "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+        "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+        "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
       ],
       "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
-        "vat_base_eur": 72.0,
-        "vat_eur": 14.4,
+        "vat_base_eur": 82.0,
+        "vat_eur": 16.4,
         "vat_rate": 0.2
       }
     },
@@ -1337,18 +1422,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 111.4,
+          "landed_cost_eur": 113.4,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 72.0,
-            "vat_eur": 14.4,
+            "vat_base_eur": 82.0,
+            "vat_eur": 16.4,
             "vat_rate": 0.2
           }
         },
@@ -1411,18 +1498,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 111.4,
+          "landed_cost_eur": 113.4,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 72.0,
-            "vat_eur": 14.4,
+            "vat_base_eur": 82.0,
+            "vat_eur": 16.4,
             "vat_rate": 0.2
           }
         },
@@ -1472,18 +1561,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 131.4,
+          "landed_cost_eur": 137.4,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 30.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 12.0,
-            "vat_eur": 2.4,
+            "vat_base_eur": 22.0,
+            "vat_eur": 4.4,
             "vat_rate": 0.2
           }
         },
@@ -1557,10 +1648,12 @@ const SCENARIO_DATA = {
           ],
           "landed_cost_eur": 198.01,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
@@ -1640,10 +1733,12 @@ const SCENARIO_DATA = {
           ],
           "landed_cost_eur": 1106.0,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 100.0,
           "vat": {
@@ -1757,18 +1852,20 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 72.9,
+      "landed_cost_eur": 75.1,
       "legal_references": [
-        "Council Regulation (EU) 2026/382 of 11 February 2026",
-        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-        "UCC Regulation (EU) 952/2013, Article 77"
+        "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+        "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+        "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+        "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+        "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
       ],
       "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
-        "vat_base_eur": 45.0,
-        "vat_eur": 9.9,
+        "vat_base_eur": 55.0,
+        "vat_eur": 12.1,
         "vat_rate": 0.22
       }
     },
@@ -1818,18 +1915,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 72.9,
+          "landed_cost_eur": 75.1,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 45.0,
-            "vat_eur": 9.9,
+            "vat_base_eur": 55.0,
+            "vat_eur": 12.1,
             "vat_rate": 0.22
           }
         },
@@ -1880,18 +1979,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 72.9,
+          "landed_cost_eur": 75.1,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 45.0,
-            "vat_eur": 9.9,
+            "vat_base_eur": 55.0,
+            "vat_eur": 12.1,
             "vat_rate": 0.22
           }
         },
@@ -1941,18 +2042,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 84.9,
+          "landed_cost_eur": 89.3,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 20.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 15.0,
-            "vat_eur": 3.3,
+            "vat_base_eur": 25.0,
+            "vat_eur": 5.5,
             "vat_rate": 0.22
           }
         },
@@ -2012,18 +2115,20 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 195.01,
+          "landed_cost_eur": 197.21,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
-            "vat_base_eur": 150.01,
-            "vat_eur": 33.0,
+            "vat_base_eur": 160.01,
+            "vat_eur": 35.2,
             "vat_rate": 0.22
           }
         },
@@ -2085,10 +2190,12 @@ const SCENARIO_DATA = {
           ],
           "landed_cost_eur": 1102.0,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 100.0,
           "vat": {
@@ -2162,7 +2269,7 @@ const SCENARIO_DATA = {
       ],
       "duty_total_eur": 3.0,
       "fees": {
-        "national_fee_eur": 4.75,
+        "national_fee_eur": 4.8,
         "national_fee_source": "Customs administrative fee",
         "union_handling_fee_eur": 0.0
       },
@@ -2180,18 +2287,20 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 39.53,
+      "landed_cost_eur": 41.68,
       "legal_references": [
-        "Council Regulation (EU) 2026/382 of 11 February 2026",
-        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-        "UCC Regulation (EU) 952/2013, Article 77"
+        "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+        "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+        "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+        "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+        "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
       ],
       "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
-        "vat_base_eur": 18.0,
-        "vat_eur": 3.78,
+        "vat_base_eur": 28.0,
+        "vat_eur": 5.88,
         "vat_rate": 0.21
       }
     },
@@ -2211,7 +2320,7 @@ const SCENARIO_DATA = {
           "defaults_applied": [],
           "duty_total_eur": 3.0,
           "fees": {
-            "national_fee_eur": 4.75,
+            "national_fee_eur": 4.8,
             "national_fee_source": "Customs administrative fee",
             "union_handling_fee_eur": 0.0
           },
@@ -2229,18 +2338,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 39.53,
+          "landed_cost_eur": 41.68,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 18.0,
-            "vat_eur": 3.78,
+            "vat_base_eur": 28.0,
+            "vat_eur": 5.88,
             "vat_rate": 0.21
           }
         },
@@ -2261,7 +2372,7 @@ const SCENARIO_DATA = {
           "defaults_applied": [],
           "duty_total_eur": 3.0,
           "fees": {
-            "national_fee_eur": 4.75,
+            "national_fee_eur": 4.8,
             "national_fee_source": "Customs administrative fee",
             "union_handling_fee_eur": 0.0
           },
@@ -2279,18 +2390,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 39.53,
+          "landed_cost_eur": 41.68,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 18.0,
-            "vat_eur": 3.78,
+            "vat_base_eur": 28.0,
+            "vat_eur": 5.88,
             "vat_rate": 0.21
           }
         },
@@ -2322,7 +2435,7 @@ const SCENARIO_DATA = {
           ],
           "duty_total_eur": 3.0,
           "fees": {
-            "national_fee_eur": 4.75,
+            "national_fee_eur": 4.8,
             "national_fee_source": "Customs administrative fee",
             "union_handling_fee_eur": 0.0
           },
@@ -2340,18 +2453,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 39.53,
+          "landed_cost_eur": 41.68,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 18.0,
-            "vat_eur": 3.78,
+            "vat_base_eur": 28.0,
+            "vat_eur": 5.88,
             "vat_rate": 0.21
           }
         },
@@ -2381,7 +2496,7 @@ const SCENARIO_DATA = {
           ],
           "duty_total_eur": 0.0,
           "fees": {
-            "national_fee_eur": 4.75,
+            "national_fee_eur": 4.8,
             "national_fee_source": "Customs administrative fee",
             "union_handling_fee_eur": 0.0
           },
@@ -2399,18 +2514,20 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 196.26,
+          "landed_cost_eur": 198.41,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
-            "vat_base_eur": 150.01,
-            "vat_eur": 31.5,
+            "vat_base_eur": 160.01,
+            "vat_eur": 33.6,
             "vat_rate": 0.21
           }
         },
@@ -2440,7 +2557,7 @@ const SCENARIO_DATA = {
           ],
           "duty_total_eur": 0.0,
           "fees": {
-            "national_fee_eur": 4.75,
+            "national_fee_eur": 4.8,
             "national_fee_source": "Customs administrative fee",
             "union_handling_fee_eur": 0.0
           },
@@ -2458,12 +2575,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1104.75,
+          "landed_cost_eur": 1104.8,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 100.0,
           "vat": {
@@ -2556,10 +2675,12 @@ const SCENARIO_DATA = {
       ],
       "landed_cost_eur": 70.0,
       "legal_references": [
-        "Council Regulation (EU) 2026/382 of 11 February 2026",
-        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-        "UCC Regulation (EU) 952/2013, Article 77"
+        "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+        "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+        "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+        "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+        "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
       ],
       "shipping_cost_eur": 10.0,
       "vat": {
@@ -2604,10 +2725,12 @@ const SCENARIO_DATA = {
           ],
           "landed_cost_eur": 70.0,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
@@ -2653,10 +2776,12 @@ const SCENARIO_DATA = {
           ],
           "landed_cost_eur": 70.0,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
@@ -2713,10 +2838,12 @@ const SCENARIO_DATA = {
           ],
           "landed_cost_eur": 70.0,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
@@ -2766,10 +2893,12 @@ const SCENARIO_DATA = {
           ],
           "landed_cost_eur": 160.01,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
@@ -2825,10 +2954,12 @@ const SCENARIO_DATA = {
           ],
           "landed_cost_eur": 1100.0,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 100.0,
           "vat": {
@@ -2904,7 +3035,7 @@ const SCENARIO_DATA = {
           "rationale": "OVERRIDE: value > \u20ac150 \u2192 IOSS cap exceeded"
         }
       ],
-      "duty_total_eur": 24.0,
+      "duty_total_eur": 26.4,
       "fees": {
         "national_fee_eur": 0.0,
         "national_fee_source": null,
@@ -2912,7 +3043,7 @@ const SCENARIO_DATA = {
       },
       "item_breakdown": [
         {
-          "duty_eur": 24.0,
+          "duty_eur": 26.4,
           "grouping_key": [
             "610910",
             "cotton t-shirt",
@@ -2924,18 +3055,20 @@ const SCENARIO_DATA = {
           "regime": "standard_tariff"
         }
       ],
-      "landed_cost_eur": 286.56,
+      "landed_cost_eur": 293.22,
       "legal_references": [
-        "Council Regulation (EU) 2026/382 of 11 February 2026",
-        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-        "UCC Regulation (EU) 952/2013, Article 77"
+        "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+        "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+        "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+        "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+        "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
       ],
       "shipping_cost_eur": 20.0,
       "vat": {
         "collected_via": "import_clearance",
-        "vat_base_eur": 224.0,
-        "vat_eur": 42.56,
+        "vat_base_eur": 246.4,
+        "vat_eur": 46.82,
         "vat_rate": 0.19
       }
     },
@@ -2952,7 +3085,7 @@ const SCENARIO_DATA = {
           "declarant": "carrier",
           "declaration_type": "H1",
           "defaults_applied": [],
-          "duty_total_eur": 24.0,
+          "duty_total_eur": 26.4,
           "fees": {
             "national_fee_eur": 0.0,
             "national_fee_source": null,
@@ -2960,7 +3093,7 @@ const SCENARIO_DATA = {
           },
           "item_breakdown": [
             {
-              "duty_eur": 24.0,
+              "duty_eur": 26.4,
               "grouping_key": [
                 "610910",
                 "cotton t-shirt",
@@ -2972,18 +3105,20 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 286.56,
+          "landed_cost_eur": 293.22,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 20.0,
           "vat": {
             "collected_via": "import_clearance",
-            "vat_base_eur": 224.0,
-            "vat_eur": 42.56,
+            "vat_base_eur": 246.4,
+            "vat_eur": 46.82,
             "vat_rate": 0.19
           }
         },
@@ -3001,7 +3136,7 @@ const SCENARIO_DATA = {
           "declarant": "carrier",
           "declaration_type": "H1",
           "defaults_applied": [],
-          "duty_total_eur": 24.0,
+          "duty_total_eur": 26.4,
           "fees": {
             "national_fee_eur": 0.0,
             "national_fee_source": null,
@@ -3009,7 +3144,7 @@ const SCENARIO_DATA = {
           },
           "item_breakdown": [
             {
-              "duty_eur": 24.0,
+              "duty_eur": 26.4,
               "grouping_key": [
                 "610910",
                 "cotton t-shirt",
@@ -3021,18 +3156,20 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 286.56,
+          "landed_cost_eur": 293.22,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 20.0,
           "vat": {
             "collected_via": "import_clearance",
-            "vat_base_eur": 224.0,
-            "vat_eur": 42.56,
+            "vat_base_eur": 246.4,
+            "vat_eur": 46.82,
             "vat_rate": 0.19
           }
         },
@@ -3061,7 +3198,7 @@ const SCENARIO_DATA = {
               "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac200.00) = \u20ac20.00. Illustrative only \u2014 not from a live rate API."
             }
           ],
-          "duty_total_eur": 24.0,
+          "duty_total_eur": 26.4,
           "fees": {
             "national_fee_eur": 0.0,
             "national_fee_source": null,
@@ -3069,7 +3206,7 @@ const SCENARIO_DATA = {
           },
           "item_breakdown": [
             {
-              "duty_eur": 24.0,
+              "duty_eur": 26.4,
               "grouping_key": [
                 "610910",
                 "cotton t-shirt",
@@ -3081,18 +3218,20 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 286.56,
+          "landed_cost_eur": 293.22,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 20.0,
           "vat": {
             "collected_via": "import_clearance",
-            "vat_base_eur": 224.0,
-            "vat_eur": 42.56,
+            "vat_base_eur": 246.4,
+            "vat_eur": 46.82,
             "vat_rate": 0.19
           }
         },
@@ -3120,7 +3259,7 @@ const SCENARIO_DATA = {
               "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac1000.00) = \u20ac100.00. Illustrative only \u2014 not from a live rate API."
             }
           ],
-          "duty_total_eur": 24.0,
+          "duty_total_eur": 36.0,
           "fees": {
             "national_fee_eur": 0.0,
             "national_fee_source": null,
@@ -3128,7 +3267,7 @@ const SCENARIO_DATA = {
           },
           "item_breakdown": [
             {
-              "duty_eur": 24.0,
+              "duty_eur": 36.0,
               "grouping_key": [
                 "610910",
                 "cotton t-shirt",
@@ -3140,12 +3279,14 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 1124.0,
+          "landed_cost_eur": 1136.0,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 100.0,
           "vat": {
@@ -3237,18 +3378,20 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 37.37,
+      "landed_cost_eur": 39.27,
       "legal_references": [
-        "Council Regulation (EU) 2026/382 of 11 February 2026",
-        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-        "UCC Regulation (EU) 952/2013, Article 77"
+        "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+        "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+        "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+        "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+        "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
       ],
       "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "special_arrangements",
-        "vat_base_eur": 23.0,
-        "vat_eur": 4.37,
+        "vat_base_eur": 33.0,
+        "vat_eur": 6.27,
         "vat_rate": 0.19
       }
     },
@@ -3286,18 +3429,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 37.37,
+          "landed_cost_eur": 39.27,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "special_arrangements",
-            "vat_base_eur": 23.0,
-            "vat_eur": 4.37,
+            "vat_base_eur": 33.0,
+            "vat_eur": 6.27,
             "vat_rate": 0.19
           }
         },
@@ -3336,18 +3481,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 37.37,
+          "landed_cost_eur": 39.27,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "special_arrangements",
-            "vat_base_eur": 23.0,
-            "vat_eur": 4.37,
+            "vat_base_eur": 33.0,
+            "vat_eur": 6.27,
             "vat_rate": 0.19
           }
         },
@@ -3397,18 +3544,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 37.37,
+          "landed_cost_eur": 39.27,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "special_arrangements",
-            "vat_base_eur": 23.0,
-            "vat_eur": 4.37,
+            "vat_base_eur": 33.0,
+            "vat_eur": 6.27,
             "vat_rate": 0.19
           }
         },
@@ -3450,18 +3599,20 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 188.51,
+          "landed_cost_eur": 190.41,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "special_arrangements",
-            "vat_base_eur": 150.01,
-            "vat_eur": 28.5,
+            "vat_base_eur": 160.01,
+            "vat_eur": 30.4,
             "vat_rate": 0.19
           }
         },
@@ -3511,10 +3662,12 @@ const SCENARIO_DATA = {
           ],
           "landed_cost_eur": 1100.0,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 100.0,
           "vat": {
@@ -3606,18 +3759,20 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 36.8,
+      "landed_cost_eur": 38.7,
       "legal_references": [
-        "Council Regulation (EU) 2026/382 of 11 February 2026",
-        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-        "UCC Regulation (EU) 952/2013, Article 77"
+        "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+        "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+        "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+        "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+        "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
       ],
       "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
-        "vat_base_eur": 20.0,
-        "vat_eur": 3.8,
+        "vat_base_eur": 30.0,
+        "vat_eur": 5.7,
         "vat_rate": 0.19
       }
     },
@@ -3655,18 +3810,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 36.8,
+          "landed_cost_eur": 38.7,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 20.0,
-            "vat_eur": 3.8,
+            "vat_base_eur": 30.0,
+            "vat_eur": 5.7,
             "vat_rate": 0.19
           }
         },
@@ -3705,18 +3862,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 36.8,
+          "landed_cost_eur": 38.7,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 20.0,
-            "vat_eur": 3.8,
+            "vat_base_eur": 30.0,
+            "vat_eur": 5.7,
             "vat_rate": 0.19
           }
         },
@@ -3766,18 +3925,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 36.8,
+          "landed_cost_eur": 38.7,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 20.0,
-            "vat_eur": 3.8,
+            "vat_base_eur": 30.0,
+            "vat_eur": 5.7,
             "vat_rate": 0.19
           }
         },
@@ -3825,18 +3986,20 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 188.51,
+          "landed_cost_eur": 190.41,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
-            "vat_base_eur": 150.01,
-            "vat_eur": 28.5,
+            "vat_base_eur": 160.01,
+            "vat_eur": 30.4,
             "vat_rate": 0.19
           }
         },
@@ -3886,10 +4049,12 @@ const SCENARIO_DATA = {
           ],
           "landed_cost_eur": 1100.0,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 100.0,
           "vat": {
@@ -3948,7 +4113,8 @@ const SCENARIO_DATA = {
     },
     "response": {
       "compliance_warnings": [
-        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
+        "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+        "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
       ],
       "consignment_value_eur": 30.0,
       "declarant": "agent",
@@ -3958,14 +4124,9 @@ const SCENARIO_DATA = {
           "default": "10.00",
           "field": "shipping_cost_eur",
           "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac30.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
-        },
-        {
-          "default": false,
-          "field": "ioss_registered",
-          "rationale": "OVERRIDE: buyer_agent breaks distance-sale construct"
         }
       ],
-      "duty_total_eur": 0.0,
+      "duty_total_eur": 3.0,
       "fees": {
         "national_fee_eur": 0.0,
         "national_fee_source": null,
@@ -3973,7 +4134,7 @@ const SCENARIO_DATA = {
       },
       "item_breakdown": [
         {
-          "duty_eur": 0.0,
+          "duty_eur": 3.0,
           "grouping_key": [
             "610910",
             "cotton t-shirt",
@@ -3982,21 +4143,23 @@ const SCENARIO_DATA = {
           "line_value_eur": 30.0,
           "notes": [],
           "qty_total": 1,
-          "regime": "standard_tariff"
+          "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 45.7,
+      "landed_cost_eur": 50.6,
       "legal_references": [
-        "Council Regulation (EU) 2026/382 of 11 February 2026",
-        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-        "UCC Regulation (EU) 952/2013, Article 77"
+        "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+        "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+        "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+        "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+        "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
       ],
       "shipping_cost_eur": 10.0,
       "vat": {
-        "collected_via": "import_clearance",
-        "vat_base_eur": 30.0,
-        "vat_eur": 5.7,
+        "collected_via": "ioss_at_checkout",
+        "vat_base_eur": 40.0,
+        "vat_eur": 7.6,
         "vat_rate": 0.19
       }
     },
@@ -4007,13 +4170,14 @@ const SCENARIO_DATA = {
         "name": "status_quo",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 30.0,
           "declarant": "agent",
           "declaration_type": "H7",
           "defaults_applied": [],
-          "duty_total_eur": 0.0,
+          "duty_total_eur": 3.0,
           "fees": {
             "national_fee_eur": 0.0,
             "national_fee_source": null,
@@ -4021,7 +4185,7 @@ const SCENARIO_DATA = {
           },
           "item_breakdown": [
             {
-              "duty_eur": 0.0,
+              "duty_eur": 3.0,
               "grouping_key": [
                 "610910",
                 "cotton t-shirt",
@@ -4030,21 +4194,23 @@ const SCENARIO_DATA = {
               "line_value_eur": 30.0,
               "notes": [],
               "qty_total": 1,
-              "regime": "standard_tariff"
+              "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 45.7,
+          "landed_cost_eur": 50.6,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
-            "collected_via": "import_clearance",
-            "vat_base_eur": 30.0,
-            "vat_eur": 5.7,
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 40.0,
+            "vat_eur": 7.6,
             "vat_rate": 0.19
           }
         },
@@ -4056,13 +4222,14 @@ const SCENARIO_DATA = {
         "name": "consolidate_descriptions",
         "result": {
           "compliance_warnings": [
-            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026."
+            "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure."
           ],
           "consignment_value_eur": 30.0,
           "declarant": "agent",
           "declaration_type": "H7",
           "defaults_applied": [],
-          "duty_total_eur": 0.0,
+          "duty_total_eur": 3.0,
           "fees": {
             "national_fee_eur": 0.0,
             "national_fee_source": null,
@@ -4070,7 +4237,7 @@ const SCENARIO_DATA = {
           },
           "item_breakdown": [
             {
-              "duty_eur": 0.0,
+              "duty_eur": 3.0,
               "grouping_key": [
                 "610910",
                 "cotton t-shirt",
@@ -4079,21 +4246,23 @@ const SCENARIO_DATA = {
               "line_value_eur": 30.0,
               "notes": [],
               "qty_total": 1,
-              "regime": "standard_tariff"
+              "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 45.7,
+          "landed_cost_eur": 50.6,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
-            "collected_via": "import_clearance",
-            "vat_base_eur": 30.0,
-            "vat_eur": 5.7,
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 40.0,
+            "vat_eur": 7.6,
             "vat_rate": 0.19
           }
         },
@@ -4110,6 +4279,7 @@ const SCENARIO_DATA = {
         "result": {
           "compliance_warnings": [
             "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure.",
             "Split into 1 parcels \u2014 values, duties, shipping and totals are summed across parcels."
           ],
           "consignment_value_eur": 30.0,
@@ -4122,7 +4292,7 @@ const SCENARIO_DATA = {
               "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac30.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
             }
           ],
-          "duty_total_eur": 0.0,
+          "duty_total_eur": 3.0,
           "fees": {
             "national_fee_eur": 0.0,
             "national_fee_source": null,
@@ -4130,7 +4300,7 @@ const SCENARIO_DATA = {
           },
           "item_breakdown": [
             {
-              "duty_eur": 0.0,
+              "duty_eur": 3.0,
               "grouping_key": [
                 "610910",
                 "cotton t-shirt",
@@ -4139,21 +4309,23 @@ const SCENARIO_DATA = {
               "line_value_eur": 30.0,
               "notes": [],
               "qty_total": 1,
-              "regime": "standard_tariff"
+              "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 45.7,
+          "landed_cost_eur": 50.6,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
-            "collected_via": "import_clearance",
-            "vat_base_eur": 30.0,
-            "vat_eur": 5.7,
+            "collected_via": "ioss_at_checkout",
+            "vat_base_eur": 40.0,
+            "vat_eur": 7.6,
             "vat_rate": 0.19
           }
         },
@@ -4174,7 +4346,13 @@ const SCENARIO_DATA = {
           "consignment_value_eur": 150.01,
           "declarant": "agent",
           "declaration_type": "H1",
-          "defaults_applied": [],
+          "defaults_applied": [
+            {
+              "default": false,
+              "field": "ioss_registered",
+              "rationale": "OVERRIDE: value > \u20ac150 \u2192 IOSS cap exceeded"
+            }
+          ],
           "duty_total_eur": 0.0,
           "fees": {
             "national_fee_eur": 0.0,
@@ -4195,18 +4373,20 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 188.51,
+          "landed_cost_eur": 190.41,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
-            "vat_base_eur": 150.01,
-            "vat_eur": 28.5,
+            "vat_base_eur": 160.01,
+            "vat_eur": 30.4,
             "vat_rate": 0.19
           }
         },
@@ -4256,10 +4436,12 @@ const SCENARIO_DATA = {
           ],
           "landed_cost_eur": 1100.0,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 100.0,
           "vat": {
@@ -4350,18 +4532,20 @@ const SCENARIO_DATA = {
           "regime": "pre_e3_de_minimis"
         }
       ],
-      "landed_cost_eur": 33.8,
+      "landed_cost_eur": 35.7,
       "legal_references": [
-        "Council Regulation (EU) 2026/382 of 11 February 2026",
-        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-        "UCC Regulation (EU) 952/2013, Article 77"
+        "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+        "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+        "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+        "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+        "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
       ],
       "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
-        "vat_base_eur": 20.0,
-        "vat_eur": 3.8,
+        "vat_base_eur": 30.0,
+        "vat_eur": 5.7,
         "vat_rate": 0.19
       }
     },
@@ -4398,18 +4582,20 @@ const SCENARIO_DATA = {
               "regime": "pre_e3_de_minimis"
             }
           ],
-          "landed_cost_eur": 33.8,
+          "landed_cost_eur": 35.7,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 20.0,
-            "vat_eur": 3.8,
+            "vat_base_eur": 30.0,
+            "vat_eur": 5.7,
             "vat_rate": 0.19
           }
         },
@@ -4447,18 +4633,20 @@ const SCENARIO_DATA = {
               "regime": "pre_e3_de_minimis"
             }
           ],
-          "landed_cost_eur": 33.8,
+          "landed_cost_eur": 35.7,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 20.0,
-            "vat_eur": 3.8,
+            "vat_base_eur": 30.0,
+            "vat_eur": 5.7,
             "vat_rate": 0.19
           }
         },
@@ -4507,18 +4695,20 @@ const SCENARIO_DATA = {
               "regime": "pre_e3_de_minimis"
             }
           ],
-          "landed_cost_eur": 33.8,
+          "landed_cost_eur": 35.7,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 20.0,
-            "vat_eur": 3.8,
+            "vat_base_eur": 30.0,
+            "vat_eur": 5.7,
             "vat_rate": 0.19
           }
         },
@@ -4566,18 +4756,20 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 188.51,
+          "landed_cost_eur": 190.41,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
-            "vat_base_eur": 150.01,
-            "vat_eur": 28.5,
+            "vat_base_eur": 160.01,
+            "vat_eur": 30.4,
             "vat_rate": 0.19
           }
         },
@@ -4627,10 +4819,12 @@ const SCENARIO_DATA = {
           ],
           "landed_cost_eur": 1100.0,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 100.0,
           "vat": {
@@ -4722,18 +4916,20 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 38.8,
+      "landed_cost_eur": 40.7,
       "legal_references": [
-        "Council Regulation (EU) 2026/382 of 11 February 2026",
-        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-        "UCC Regulation (EU) 952/2013, Article 77"
+        "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+        "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+        "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+        "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+        "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
       ],
       "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
-        "vat_base_eur": 20.0,
-        "vat_eur": 3.8,
+        "vat_base_eur": 30.0,
+        "vat_eur": 5.7,
         "vat_rate": 0.19
       }
     },
@@ -4771,18 +4967,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 38.8,
+          "landed_cost_eur": 40.7,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 20.0,
-            "vat_eur": 3.8,
+            "vat_base_eur": 30.0,
+            "vat_eur": 5.7,
             "vat_rate": 0.19
           }
         },
@@ -4821,18 +5019,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 38.8,
+          "landed_cost_eur": 40.7,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 20.0,
-            "vat_eur": 3.8,
+            "vat_base_eur": 30.0,
+            "vat_eur": 5.7,
             "vat_rate": 0.19
           }
         },
@@ -4882,18 +5082,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 38.8,
+          "landed_cost_eur": 40.7,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 20.0,
-            "vat_eur": 3.8,
+            "vat_base_eur": 30.0,
+            "vat_eur": 5.7,
             "vat_rate": 0.19
           }
         },
@@ -4941,18 +5143,20 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 190.51,
+          "landed_cost_eur": 192.41,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
-            "vat_base_eur": 150.01,
-            "vat_eur": 28.5,
+            "vat_base_eur": 160.01,
+            "vat_eur": 30.4,
             "vat_rate": 0.19
           }
         },
@@ -5002,10 +5206,12 @@ const SCENARIO_DATA = {
           ],
           "landed_cost_eur": 1102.0,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 100.0,
           "vat": {
@@ -5089,7 +5295,7 @@ const SCENARIO_DATA = {
           "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac55.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
         }
       ],
-      "duty_total_eur": 3.0,
+      "duty_total_eur": 6.0,
       "fees": {
         "national_fee_eur": 4.0,
         "national_fee_source": "Customs administrative fee",
@@ -5097,18 +5303,16 @@ const SCENARIO_DATA = {
       },
       "item_breakdown": [
         {
-          "duty_eur": 0.0,
+          "duty_eur": 3.0,
           "grouping_key": [
             "610910",
             "cotton t-shirt",
             "GB"
           ],
           "line_value_eur": 25.0,
-          "notes": [
-            "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
-          ],
+          "notes": [],
           "qty_total": 1,
-          "regime": "standard_tariff_fta"
+          "regime": "e3_simplified"
         },
         {
           "duty_eur": 3.0,
@@ -5123,18 +5327,20 @@ const SCENARIO_DATA = {
           "regime": "e3_simplified"
         }
       ],
-      "landed_cost_eur": 83.0,
+      "landed_cost_eur": 88.0,
       "legal_references": [
-        "Council Regulation (EU) 2026/382 of 11 February 2026",
-        "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-        "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-        "UCC Regulation (EU) 952/2013, Article 77"
+        "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+        "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+        "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+        "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+        "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+        "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
       ],
       "shipping_cost_eur": 10.0,
       "vat": {
         "collected_via": "ioss_at_checkout",
-        "vat_base_eur": 55.0,
-        "vat_eur": 11.0,
+        "vat_base_eur": 65.0,
+        "vat_eur": 13.0,
         "vat_rate": 0.2
       }
     },
@@ -5152,7 +5358,7 @@ const SCENARIO_DATA = {
           "declarant": "seller",
           "declaration_type": "H7",
           "defaults_applied": [],
-          "duty_total_eur": 3.0,
+          "duty_total_eur": 6.0,
           "fees": {
             "national_fee_eur": 4.0,
             "national_fee_source": "Customs administrative fee",
@@ -5160,18 +5366,16 @@ const SCENARIO_DATA = {
           },
           "item_breakdown": [
             {
-              "duty_eur": 0.0,
+              "duty_eur": 3.0,
               "grouping_key": [
                 "610910",
                 "cotton t-shirt",
                 "GB"
               ],
               "line_value_eur": 25.0,
-              "notes": [
-                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
-              ],
+              "notes": [],
               "qty_total": 1,
-              "regime": "standard_tariff_fta"
+              "regime": "e3_simplified"
             },
             {
               "duty_eur": 3.0,
@@ -5186,18 +5390,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 83.0,
+          "landed_cost_eur": 88.0,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 55.0,
-            "vat_eur": 11.0,
+            "vat_base_eur": 65.0,
+            "vat_eur": 13.0,
             "vat_rate": 0.2
           }
         },
@@ -5216,7 +5422,7 @@ const SCENARIO_DATA = {
           "declarant": "seller",
           "declaration_type": "H7",
           "defaults_applied": [],
-          "duty_total_eur": 3.0,
+          "duty_total_eur": 6.0,
           "fees": {
             "national_fee_eur": 4.0,
             "national_fee_source": "Customs administrative fee",
@@ -5224,18 +5430,16 @@ const SCENARIO_DATA = {
           },
           "item_breakdown": [
             {
-              "duty_eur": 0.0,
+              "duty_eur": 3.0,
               "grouping_key": [
                 "610910",
                 "cotton t-shirt",
                 "GB"
               ],
               "line_value_eur": 25.0,
-              "notes": [
-                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
-              ],
+              "notes": [],
               "qty_total": 1,
-              "regime": "standard_tariff_fta"
+              "regime": "e3_simplified"
             },
             {
               "duty_eur": 3.0,
@@ -5250,18 +5454,20 @@ const SCENARIO_DATA = {
               "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 83.0,
+          "landed_cost_eur": 88.0,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 55.0,
-            "vat_eur": 11.0,
+            "vat_base_eur": 65.0,
+            "vat_eur": 13.0,
             "vat_rate": 0.2
           }
         },
@@ -5278,6 +5484,7 @@ const SCENARIO_DATA = {
         "result": {
           "compliance_warnings": [
             "Product identifiers voluntary 1 Jul \u2013 31 Oct 2026, mandatory from 1 Nov 2026.",
+            "Article 148(3) invalidation facilitation does NOT apply to distance sales \u2264 \u20ac150 (DA point 12) \u2014 returns require standard customs procedure.",
             "Split into 2 parcels \u2014 values, duties, shipping and totals are summed across parcels."
           ],
           "consignment_value_eur": 55.0,
@@ -5290,7 +5497,7 @@ const SCENARIO_DATA = {
               "rationale": "Demo model: max(\u20ac10.00, 10% \u00d7 \u20ac25.00) = \u20ac10.00. Illustrative only \u2014 not from a live rate API."
             }
           ],
-          "duty_total_eur": 3.0,
+          "duty_total_eur": 6.0,
           "fees": {
             "national_fee_eur": 2.0,
             "national_fee_source": "Customs administrative fee",
@@ -5298,32 +5505,32 @@ const SCENARIO_DATA = {
           },
           "item_breakdown": [
             {
-              "duty_eur": 0.0,
+              "duty_eur": 3.0,
               "grouping_key": [
                 "610910",
                 "cotton t-shirt",
                 "GB"
               ],
               "line_value_eur": 25.0,
-              "notes": [
-                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
-              ],
+              "notes": [],
               "qty_total": 1,
-              "regime": "standard_tariff_fta"
+              "regime": "e3_simplified"
             }
           ],
-          "landed_cost_eur": 93.0,
+          "landed_cost_eur": 100.0,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 20.0,
           "vat": {
             "collected_via": "ioss_at_checkout",
-            "vat_base_eur": 25.0,
-            "vat_eur": 5.0,
+            "vat_base_eur": 35.0,
+            "vat_eur": 7.0,
             "vat_rate": 0.2
           }
         },
@@ -5367,7 +5574,7 @@ const SCENARIO_DATA = {
               ],
               "line_value_eur": 25.0,
               "notes": [
-                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED via path (b) postal \u2014 DA Art. 1(1)(a) revised def (24)."
               ],
               "qty_total": 1,
               "regime": "standard_tariff_fta"
@@ -5385,18 +5592,20 @@ const SCENARIO_DATA = {
               "regime": "standard_tariff"
             }
           ],
-          "landed_cost_eur": 194.01,
+          "landed_cost_eur": 196.01,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 10.0,
           "vat": {
             "collected_via": "import_clearance",
-            "vat_base_eur": 150.01,
-            "vat_eur": 30.0,
+            "vat_base_eur": 160.01,
+            "vat_eur": 32.0,
             "vat_rate": 0.2
           }
         },
@@ -5440,7 +5649,7 @@ const SCENARIO_DATA = {
               ],
               "line_value_eur": 25.0,
               "notes": [
-                "FTA preference applied (origin GB); \u20ac3 EXCLUDED per DA Art. 1(1)(a)."
+                "FTA preference applied (origin GB); \u20ac3 EXCLUDED via path (b) postal \u2014 DA Art. 1(1)(a) revised def (24)."
               ],
               "qty_total": 1,
               "regime": "standard_tariff_fta"
@@ -5460,10 +5669,12 @@ const SCENARIO_DATA = {
           ],
           "landed_cost_eur": 1104.0,
           "legal_references": [
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77"
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (\u20ac3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC \u2014 Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)"
           ],
           "shipping_cost_eur": 100.0,
           "vat": {
@@ -5481,7 +5692,7 @@ const SCENARIO_DATA = {
         ]
       }
     ]
-  }
+  },
 };
 
 
