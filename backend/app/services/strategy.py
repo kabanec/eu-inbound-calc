@@ -14,18 +14,24 @@ from .calculator import calculate, group_items
 from .defaults import apply_all_defaults
 
 
-def _override_channel_shipping(new_c: Consignment, channel: str) -> None:
+def _override_channel_shipping(
+    new_c: Consignment, target_channel: str, original_channel: str
+) -> None:
     """Apply a per-channel shipping override that respects shipping_model.
 
-    Under 'flat_per_channel', uses SHIPPING_COSTS_EUR[channel].
-    Under 'percentage_demo', leaves shipping_cost_eur=None so the defaults
-    engine recomputes it from the (possibly modified) consignment value —
-    channel selection no longer affects shipping in that model.
+    Preserves a user-supplied shipping_cost_eur when the strategy keeps the
+    SAME channel as the original consignment — the user's number is the
+    source of truth for that channel. When the channel actually changes, the
+    user's value (which described the original channel) no longer applies:
+      flat_per_channel → swap to SHIPPING_COSTS_EUR[target_channel]
+      percentage_demo  → clear to None so defaults recompute from value
     """
+    if target_channel == original_channel and new_c.shipping_cost_eur is not None:
+        return
     if new_c.shipping_model == "percentage_demo":
         new_c.shipping_cost_eur = None
     else:
-        new_c.shipping_cost_eur = SHIPPING_COSTS_EUR[channel]
+        new_c.shipping_cost_eur = SHIPPING_COSTS_EUR[target_channel]
 
 
 @dataclass
@@ -145,7 +151,7 @@ def _drop_ioss_use_fta(c: Consignment) -> Optional[Strategy]:
     # Postal lane → defer to shipping_model:
     #   flat_per_channel → SHIPPING_COSTS_EUR['postal'] (cheaper than express)
     #   percentage_demo  → recomputed from value, channel-agnostic
-    _override_channel_shipping(new_c, "postal")
+    _override_channel_shipping(new_c, "postal", c.channel)
     return Strategy(
         "drop_ioss_use_fta",
         "Drop IOSS, ship postal with FTA proof — bypasses €3 via DA Art. 1(1)(a) "
@@ -190,7 +196,7 @@ def _drop_ioss_use_express_fta(c: Consignment) -> Optional[Strategy]:
     new_c.ioss_registered = False
     new_c.postal_designated_op = False
     new_c.channel = "express"
-    _override_channel_shipping(new_c, "express")
+    _override_channel_shipping(new_c, "express", c.channel)
     return Strategy(
         "drop_ioss_use_express_fta",
         "Drop IOSS, ship express with REX statement — neither €3 path fires. "
@@ -225,7 +231,7 @@ def _drop_ioss_use_mfn(c: Consignment) -> Optional[Strategy]:
     new_c.ioss_registered = False
     new_c.postal_designated_op = False
     new_c.channel = "express"
-    _override_channel_shipping(new_c, "express")
+    _override_channel_shipping(new_c, "express", c.channel)
     return Strategy(
         "drop_ioss_use_mfn",
         "Drop IOSS, ship express/courier — neither €3 path fires. Standard MFN "
@@ -252,7 +258,7 @@ def _b2b_eu_warehouse(c: Consignment) -> Strategy:
     )
     # Bulk import → consolidated freight rate (flat model) or value-based
     # demo cost. Under percentage_demo, the floored €1000 drives shipping.
-    _override_channel_shipping(new_c, "general_cargo")
+    _override_channel_shipping(new_c, "general_cargo", c.channel)
     return Strategy(
         "b2b_eu_warehouse",
         "Bulk B2B import + EU domestic fulfillment. €3 fully out; standard tariff once at scale.",

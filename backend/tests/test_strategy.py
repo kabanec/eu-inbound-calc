@@ -23,6 +23,7 @@ from app.reference.data import SHIPPING_COSTS_EUR
 from app.services.strategy import (
     _b2b_eu_warehouse,
     _consolidate_descriptions,
+    _drop_ioss_use_express_fta,
     _drop_ioss_use_fta,
     _drop_ioss_use_mfn,
     _force_above_150,
@@ -466,3 +467,95 @@ class TestPercentageDemoShippingModel:
         s = _split_parcels(c)
         assert s is not None
         assert s.result.shipping_cost_eur == Decimal("60.00")
+
+
+# -- user-supplied shipping override --------------------------------------
+
+class TestUserShippingOverride:
+    """The UI surfaces an editable per-parcel shipping+handling field. The
+    user's value must:
+      - flow through to status_quo, consolidate_descriptions, force_above_150
+        (same shipment, no channel change)
+      - be PRESERVED for same-channel strategies (drop_ioss_use_express_fta,
+        drop_ioss_use_mfn — both keep express)
+      - be REPLACED by the new channel's flat rate when a strategy changes
+        channel (drop_ioss_use_fta → postal, b2b_eu_warehouse → general_cargo)
+    """
+
+    def _express_with_override(self, override_eur: str = "22.50") -> Consignment:
+        """Default express consignment with a user-typed shipping override."""
+        return Consignment(
+            items=[Item(hs6="610910", description="cotton tee", origin="GB",
+                        qty=1, unit_value_eur=Decimal("40.00"),
+                        fta_proof_held=True)],
+            destination_ms="DE",
+            ioss_registered=True,
+            channel="express",
+            shipping_cost_eur=Decimal(override_eur),
+        )
+
+    def test_status_quo_preserves_user_override(self, mock_avalara):
+        """status_quo never changes channel → user value must survive."""
+        s = _status_quo(self._express_with_override())
+        assert s.result.shipping_cost_eur == Decimal("22.50")
+
+    def test_force_above_150_preserves_user_override(self, mock_avalara):
+        """Pushing value above €150 doesn't change channel → preserve."""
+        s = _force_above_150(self._express_with_override())
+        assert s is not None
+        assert s.result.shipping_cost_eur == Decimal("22.50")
+
+    def test_consolidate_descriptions_preserves_user_override(self, mock_avalara):
+        """Description normalization is a metadata change only — preserve."""
+        s = _consolidate_descriptions(self._express_with_override())
+        assert s.result.shipping_cost_eur == Decimal("22.50")
+
+    def test_drop_ioss_use_express_fta_preserves_user_override(self, mock_avalara):
+        """express → express (same channel) — user value MUST be preserved.
+        REGRESSION: previously _override_channel_shipping clobbered the user
+        value with SHIPPING_COSTS_EUR['express'] (€15) even though the channel
+        didn't change."""
+        s = _drop_ioss_use_express_fta(self._express_with_override())
+        assert s is not None
+        assert s.result.shipping_cost_eur == Decimal("22.50"), (
+            "Same-channel strategy must preserve user override, not swap to flat rate"
+        )
+
+    def test_drop_ioss_use_mfn_preserves_user_override(self, mock_avalara):
+        """express → express (same channel) — user value preserved."""
+        s = _drop_ioss_use_mfn(self._express_with_override())
+        assert s is not None
+        assert s.result.shipping_cost_eur == Decimal("22.50")
+
+    def test_drop_ioss_use_fta_replaces_override_on_channel_switch(self, mock_avalara):
+        """express → postal (channel change) — user value no longer applies;
+        strategy uses the postal channel's flat rate."""
+        s = _drop_ioss_use_fta(self._express_with_override())
+        assert s is not None
+        assert s.result.shipping_cost_eur == SHIPPING_COSTS_EUR["postal"]
+
+    def test_b2b_warehouse_replaces_override_on_channel_switch(self, mock_avalara):
+        """express → general_cargo — user value replaced with freight rate."""
+        s = _b2b_eu_warehouse(self._express_with_override())
+        assert s.result.shipping_cost_eur == SHIPPING_COSTS_EUR["general_cargo"]
+
+    def test_postal_origin_preserves_user_override_when_strategy_keeps_postal(
+        self, mock_avalara
+    ):
+        """If user is already on postal with a custom rate, drop_ioss_use_fta
+        keeps postal — must preserve the user value, not reset to €5 flat."""
+        c = Consignment(
+            items=[Item(hs6="610910", description="cotton tee", origin="GB",
+                        qty=1, unit_value_eur=Decimal("40.00"),
+                        fta_proof_held=True)],
+            destination_ms="DE",
+            ioss_registered=True,
+            channel="postal",
+            postal_designated_op=True,
+            shipping_cost_eur=Decimal("8.00"),
+        )
+        s = _drop_ioss_use_fta(c)
+        assert s is not None
+        assert s.result.shipping_cost_eur == Decimal("8.00"), (
+            "Postal → postal must preserve user-supplied €8, not reset to €5 default"
+        )
