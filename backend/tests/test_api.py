@@ -126,6 +126,40 @@ class TestAvalaraAdapter:
         c = from_avalara_getquote(payload)
         assert c.items[0].origin == "GB"
 
+    def test_shipping_cost_override_passes_through(self):
+        """User-supplied shipping_cost_eur on the payload flows to Consignment."""
+        payload = {
+            "addresses": {"shipTo": {"country": "DE"}, "shipFrom": {"country": "GB"}},
+            "date": "2026-08-01",
+            "lines": [{"hsCode": "610910", "quantity": 1, "amount": 40}],
+            "shipping_cost_eur": 22.50,
+        }
+        from decimal import Decimal
+        c = from_avalara_getquote(payload)
+        assert c.shipping_cost_eur == Decimal("22.5")
+
+    def test_shipping_cost_omitted_stays_none(self):
+        """Without the field, shipping_cost_eur remains None — defaults engine fills it."""
+        payload = {
+            "addresses": {"shipTo": {"country": "DE"}, "shipFrom": {"country": "GB"}},
+            "date": "2026-08-01",
+            "lines": [{"hsCode": "610910", "quantity": 1, "amount": 40}],
+        }
+        c = from_avalara_getquote(payload)
+        assert c.shipping_cost_eur is None
+
+    def test_shipping_cost_negative_or_garbage_ignored(self):
+        """Malformed values silently default to None rather than crashing."""
+        for bad in (-5, "not-a-number", None):
+            payload = {
+                "addresses": {"shipTo": {"country": "DE"}, "shipFrom": {"country": "GB"}},
+                "date": "2026-08-01",
+                "lines": [{"hsCode": "610910", "quantity": 1, "amount": 40}],
+                "shipping_cost_eur": bad,
+            }
+            c = from_avalara_getquote(payload)
+            assert c.shipping_cost_eur is None, f"Bad input {bad!r} must yield None"
+
 
 # API endpoints -----------------------------------------------------------
 class TestAPI:

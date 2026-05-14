@@ -11,8 +11,8 @@ See docs/samples/ for example payloads.
 from __future__ import annotations
 
 from datetime import date
-from decimal import Decimal
-from typing import Any
+from decimal import Decimal, InvalidOperation
+from typing import Any, Optional
 
 from ..models.schemas import Consignment, Item
 
@@ -75,6 +75,20 @@ def from_avalara_getquote(payload: dict[str, Any]) -> Consignment:
         else "flat_per_channel"
     )
 
+    # User-supplied shipping+handling override (per-parcel, in EUR). When
+    # present, the calculator uses this value verbatim instead of deriving
+    # one from shipping_model. Accept any non-negative number; reject silently
+    # otherwise so a typo doesn't crash the request.
+    shipping_override_raw = payload.get("shipping_cost_eur")
+    shipping_cost_eur: Optional[Decimal] = None
+    if shipping_override_raw is not None:
+        try:
+            candidate = Decimal(str(shipping_override_raw))
+            if candidate >= 0:
+                shipping_cost_eur = candidate
+        except (InvalidOperation, ValueError):
+            pass
+
     # Pass None for omitted boolean flags so the defaults engine can log them.
     # Only assign explicit True/False if the payload actually contained the field.
     return Consignment(
@@ -93,6 +107,7 @@ def from_avalara_getquote(payload: dict[str, Any]) -> Consignment:
         non_alteration_confirmed=bool(eu_ext.get("nonAlterationConfirmed", False)),
         transaction_date=txn_date if txn_date_raw else None,
         shipping_model=shipping_model,
+        shipping_cost_eur=shipping_cost_eur,
         avalara_doc_code=payload.get("code"),
         customer_vat_number=vat_number,
     )
