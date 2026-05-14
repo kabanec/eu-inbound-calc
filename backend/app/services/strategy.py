@@ -150,14 +150,63 @@ def _drop_ioss_use_fta(c: Consignment) -> Optional[Strategy]:
         "drop_ioss_use_fta",
         "Drop IOSS, ship postal with FTA proof — bypasses €3 via DA Art. 1(1)(a) "
         "revised def (24), which excludes FTA goods from the postal-consignment "
-        "definition. IOSS path (a) keeps €3 in play regardless of FTA, so the "
-        "ONLY way an FTA-eligible seller escapes €3 is to leave path (a).",
+        "definition. IOSS path (a) keeps €3 in play regardless of FTA, so leaving "
+        "path (a) is the only way an FTA-eligible seller escapes €3.",
         calculate(new_c), 4,
         [
-            "Requires valid proof of preferential origin (REX, EUR.1, etc.) AND "
-            "direct transport from origin country (or non-alteration declaration).",
+            "Requires valid proof of preferential origin (REX statement, EUR.1, etc.) "
+            "AND direct transport from origin country (or non-alteration declaration).",
+            "OPERATIONAL CAVEAT: 'postal' under DA 2015/2446 def (25) = UPU-designated "
+            "national operators (Royal Mail, La Poste, Deutsche Post, etc.). The CN22/"
+            "CN23 forms have no formal FTA proof field, and the H6 reduced dataset does "
+            "not include REX/EUR.1 references. Whether the destination postal operator "
+            "transmits an origin statement on the commercial invoice through to customs "
+            "via H6 is inconsistent — in practice many postal shipments still get "
+            "charged €3 even with FTA-eligible goods. Verify with destination posts "
+            "before relying on this path. See _drop_ioss_use_express_fta for the more "
+            "operationally reliable variant.",
             "Customer pays VAT on delivery — worse UX than IOSS at checkout.",
             "Special Arrangements regime for postal VAT collection sunsets 1 July 2028.",
+        ],
+    )
+
+
+def _drop_ioss_use_express_fta(c: Consignment) -> Optional[Strategy]:
+    """Operationally-preferred FTA bypass: drop IOSS, keep express, claim FTA.
+
+    Neither €3 path fires:
+      - Path (a) IOSS: not used → doesn't fire.
+      - Path (b) postal per def (24): only UPU-designated operators count as
+        "postal" under DA 2015/2446 def (25), so express is not path (b).
+    Standard tariff applies; FTA preferential rate (often 0%) kicks in via
+    the regular H1/H7 declaration, which accepts REX statement in its
+    electronic dataset (unlike the postal H6 reduced dataset)."""
+    if not all(
+        it.origin.upper() in FTA_PARTNERS and it.fta_proof_held
+        for it in c.items
+    ):
+        return None
+    new_c = deepcopy(c)
+    new_c.ioss_registered = False
+    new_c.postal_designated_op = False
+    new_c.channel = "express"
+    _override_channel_shipping(new_c, "express")
+    return Strategy(
+        "drop_ioss_use_express_fta",
+        "Drop IOSS, ship express with REX statement — neither €3 path fires. "
+        "Standard tariff at FTA preferential rate (often 0%). The H1/H7 electronic "
+        "declaration carries REX/EUR.1 references reliably, unlike the postal H6 "
+        "reduced dataset. Operationally the most realistic FTA bypass.",
+        calculate(new_c), 4,
+        [
+            "Requires REX statement on commercial invoice or equivalent FTA proof "
+            "for the destination MS customs to grant preference.",
+            "Direct-transport requirement: ship_from == origin OR non_alteration "
+            "declaration documented in the customs entry.",
+            "Customer pays import VAT on delivery via broker — worse UX than IOSS, "
+            "and broker fees are additional friction.",
+            "Express shipping is typically pricier than postal — model the all-in "
+            "landed cost, not just the duty saving.",
         ],
     )
 
@@ -197,6 +246,7 @@ def recommend(c: Consignment) -> list[Strategy]:
         _split_parcels(c),
         _force_above_150(c),
         _drop_ioss_use_fta(c),
+        _drop_ioss_use_express_fta(c),
         _b2b_eu_warehouse(c),
     ]
     valid = [s for s in candidates if s is not None]

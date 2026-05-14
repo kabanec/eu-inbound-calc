@@ -539,7 +539,7 @@ function buildExplainerHTML() {
           <em>excludes</em> (i) IOSS-exempt goods and (ii) goods benefiting from
           preferential measures (FTA). So <strong>FTA proof + direct transport on
           a postal-non-IOSS shipment bypasses €3</strong> and standard preferential
-          tariff applies.
+          tariff applies — <em>in principle</em>.
         </div>
         <div class="regime-citation">${cite('da_c_2026_2760', 'DA Art. 1(1)(a)')}</div>
       </div>
@@ -549,6 +549,23 @@ function buildExplainerHTML() {
       and to postal consignments as defined in Article 1(24)." Two paths, asymmetric
       FTA treatment.
     </p>
+    <div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:10px 12px;margin:12px 0 0;border-radius:4px">
+      <strong style="font-size:12px;color:#92400e">⚠️ Operational reality on path (b):</strong>
+      <p style="font-size:12px;line-height:1.6;color:#374151;margin:6px 0 0">
+        "Postal" under ${cite('da_2015_2446', 'DA 2015/2446')} def (25) means
+        <strong>UPU-designated national operators</strong> (Royal Mail, La Poste,
+        Deutsche Post, etc.) — not DHL Express / FedEx / UPS. The CN22/CN23 customs
+        forms have no FTA-proof field, and the postal H6 reduced dataset does not
+        carry REX/EUR.1 references. Whether the destination postal operator transmits
+        an origin statement on the commercial invoice through to customs is
+        inconsistent. <strong>In practice many postal shipments with FTA-eligible
+        goods are still charged €3</strong> because the proof never reaches the
+        customs entry. Verify with the destination posts before relying on path (b).
+        The more operationally reliable FTA bypass is: drop IOSS but keep
+        <strong>express</strong> — H1/H7 declarations carry REX statements reliably
+        (see the "Drop IOSS → express + FTA" strategy in the advisor).
+      </p>
+    </div>
   </div>`;
   h += `<div class="modal-section">
     <h3>€3 applies per declared LINE, not per consignment</h3>
@@ -712,8 +729,8 @@ const SCENARIOS = [
   },
   {
     id: 'gb_postal_no_ioss',
-    label: '🇬🇧📮 GB→DE postal, no IOSS + FTA: €3 bypassed',
-    desc: 'Path (a) IOSS does NOT fire (no IOSS). Path (b) postal def (24) excludes FTA goods → no €3. Standard preferential tariff (0%) applies. VAT collected on delivery via Special Arrangements — worse UX, but cheaper landed cost when FTA preference is available.',
+    label: '🇬🇧📮 GB→DE postal, no IOSS + FTA: €3 bypassed IN PRINCIPLE',
+    desc: 'Path (a) IOSS does NOT fire (no IOSS). Path (b) postal def (24) excludes FTA goods → standard preferential tariff (0%) applies. OPERATIONAL CAVEAT: CN22/CN23 has no FTA-proof field and postal H6 dataset does not carry REX references, so the destination post may not transmit your origin statement to customs. In real life many postal+FTA shipments are still charged €3 — see "Drop IOSS → express + FTA" strategy for the reliable variant.',
     setup: () => {
       reset();
       setSelect('destination_ms', 'DE');
@@ -1315,12 +1332,13 @@ function escHtml(s) {
 }
 
 const STRATEGY_LABELS = {
-  status_quo:               'Status quo',
-  consolidate_descriptions: 'Consolidate descriptions',
-  split_parcels:            'Split into separate parcels',
-  push_above_150:           'Push value above €150',
-  drop_ioss_use_fta:        'Drop IOSS, use postal + FTA',
-  b2b_eu_warehouse:         'Bulk B2B + EU warehouse fulfilment',
+  status_quo:                 'Status quo',
+  consolidate_descriptions:   'Consolidate descriptions',
+  split_parcels:              'Split into separate parcels',
+  push_above_150:             'Push value above €150',
+  drop_ioss_use_fta:          'Drop IOSS → postal + FTA (literal, often impractical)',
+  drop_ioss_use_express_fta:  'Drop IOSS → express + FTA (operationally reliable)',
+  b2b_eu_warehouse:           'Bulk B2B + EU warehouse fulfilment',
 };
 function strategyLabel(name) {
   if (STRATEGY_LABELS[name]) return STRATEGY_LABELS[name];
@@ -1328,11 +1346,12 @@ function strategyLabel(name) {
 }
 
 const STRATEGY_BUCKETS = {
-  consolidate_descriptions: 'operational',
-  drop_ioss_use_fta:        'operational',
-  split_parcels:            'counter',
-  push_above_150:           'counter',
-  b2b_eu_warehouse:         'pivot',
+  consolidate_descriptions:   'operational',
+  drop_ioss_use_fta:          'operational',
+  drop_ioss_use_express_fta:  'operational',
+  split_parcels:              'counter',
+  push_above_150:             'counter',
+  b2b_eu_warehouse:           'pivot',
 };
 const BUCKET_META = {
   operational: { icon: '🛠', title: 'Operational fixes' },
@@ -1347,8 +1366,15 @@ const STRATEGY_EXPLANATIONS = {
     why_na: 'No items share HS6+origin with different descriptions — nothing to consolidate.',
   },
   drop_ioss_use_fta: {
-    what: 'Drop IOSS at checkout; ship via postal designated operator with FTA preference.',
-    why_help: 'The €3 simplified fee is bypassed; standard tariff applies (often 0% under FTA). Postal lane is also cheaper to ship (€5 vs €15 express).',
+    what: 'Drop IOSS at checkout; ship via UPU-designated postal operator with FTA proof. Path (b) of the DA excludes FTA goods from "goods in postal consignment" → no €3.',
+    why_help: 'The €3 is bypassed; standard tariff at FTA preferential rate (often 0%). Postal is cheaper to ship than express.',
+    caveat: 'OPERATIONAL: CN22/CN23 forms have no FTA proof field; postal H6 reduced dataset does not include REX references. Whether the destination post transmits an origin statement on the commercial invoice through to customs is inconsistent. In practice, many postal shipments are still charged €3 even with FTA-eligible goods.',
+    why_filtered: 'No items qualify — origin not in EU FTA partner list, or FTA proof not held.',
+  },
+  drop_ioss_use_express_fta: {
+    what: 'Drop IOSS at checkout; keep express carrier; provide REX statement on commercial invoice. Neither path (a) IOSS nor path (b) postal fires → standard tariff with FTA preference.',
+    why_help: 'The H1/H7 electronic declaration carries REX/EUR.1 references reliably (unlike postal H6 reduced dataset), so FTA preference is operationally achievable. The €3 is bypassed; duty often 0% under FTA.',
+    caveat: 'Customer pays import VAT on delivery via broker — worse UX than IOSS, plus broker fees. Express shipping is pricier than postal, so model the all-in landed cost.',
     why_filtered: 'No items qualify — origin not in EU FTA partner list, or FTA proof not held.',
   },
   split_parcels: {
@@ -1376,6 +1402,8 @@ function modifiedInputFor(name, payload) {
       return 'Description normalisation: items sharing HS6+origin get a unified description.';
     case 'drop_ioss_use_fta':
       return 'Channel: express → postal · IOSS: yes → no · FTA proof applied.';
+    case 'drop_ioss_use_express_fta':
+      return 'Channel: express (kept) · IOSS: yes → no · FTA proof applied via H1/H7.';
     case 'split_parcels': {
       const groupings = new Set(lines.map(l => `${l.hsCode}|${l.countryOfOrigin}`));
       const n = Math.max(groupings.size, 1);
@@ -1411,6 +1439,8 @@ function strategyApplicability(name, payload) {
       return false;
     case 'drop_ioss_use_fta':
       return true;
+    case 'drop_ioss_use_express_fta':
+      return true;
     default:
       return true;
   }
@@ -1444,7 +1474,7 @@ function renderStrategies(strategies, payload) {
   const statusQuo = strategies.find(s => s.name === 'status_quo');
   const sqCost = statusQuo ? Number(statusQuo.result.landed_cost_eur || 0) : 0;
 
-  const ALL_NAMES = ['consolidate_descriptions','drop_ioss_use_fta','split_parcels','push_above_150','b2b_eu_warehouse'];
+  const ALL_NAMES = ['consolidate_descriptions','drop_ioss_use_fta','drop_ioss_use_express_fta','split_parcels','push_above_150','b2b_eu_warehouse'];
   const byName = Object.fromEntries(strategies.map(s => [s.name, s]));
 
   const rows = ALL_NAMES.map(name => {
@@ -1490,7 +1520,7 @@ function renderStrategies(strategies, payload) {
       parts.push(`<span class="lbl">Result:</span> Same cost as status quo (within €0.50). Strategy ran but didn't move the needle.`);
     } else if (r.state === 'na_inapplicable') {
       let reason = exp.why_na || 'Strategy does not apply to this shipment.';
-      if (r.name === 'drop_ioss_use_fta' && r.filteredByBackend) {
+      if ((r.name === 'drop_ioss_use_fta' || r.name === 'drop_ioss_use_express_fta') && r.filteredByBackend) {
         reason = exp.why_filtered || reason;
       } else if (r.name === 'push_above_150' && r.filteredByBackend) {
         reason = exp.why_na || 'Already above €150 — strategy not applicable.';
