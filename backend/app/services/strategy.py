@@ -148,12 +148,16 @@ def _drop_ioss_use_fta(c: Consignment) -> Optional[Strategy]:
     _override_channel_shipping(new_c, "postal")
     return Strategy(
         "drop_ioss_use_fta",
-        "Postal non-IOSS with FTA preference — €3 bypassed; standard tariff (often 0%).",
+        "Drop IOSS, ship postal with FTA proof — bypasses €3 via DA Art. 1(1)(a) "
+        "revised def (24), which excludes FTA goods from the postal-consignment "
+        "definition. IOSS path (a) keeps €3 in play regardless of FTA, so the "
+        "ONLY way an FTA-eligible seller escapes €3 is to leave path (a).",
         calculate(new_c), 4,
         [
-            "Requires valid proof of preferential origin (REX, EUR.1, etc.).",
+            "Requires valid proof of preferential origin (REX, EUR.1, etc.) AND "
+            "direct transport from origin country (or non-alteration declaration).",
             "Customer pays VAT on delivery — worse UX than IOSS at checkout.",
-            "Special arrangements regime sunsets 1 July 2028.",
+            "Special Arrangements regime for postal VAT collection sunsets 1 July 2028.",
         ],
     )
 

@@ -406,13 +406,28 @@ const CITATIONS = {
   },
   da_c_2026_2760: {
     short: 'DA C(2026)2760',
-    full: 'Commission Delegated Regulation C(2026)2760 of 30 April 2026 — €3 per-item simplified duty fee and conditions for the e-commerce simplified regime',
-    url: 'https://taxation-customs.ec.europa.eu/customs/eu-customs-reform_en',
+    full: 'Commission Delegated Regulation C(2026)2760 of 30 April 2026 (Council document ST 8820/2026) — amends DA 2015/2446 for the temporary €3 customs duty on low-value distance sales',
+    url: 'https://data.consilium.europa.eu/doc/document/ST-8820-2026-INIT/en/pdf',
   },
   dir_2006_112: {
     short: 'VAT Directive 2006/112/EC',
-    full: 'Council Directive 2006/112/EC of 28 November 2006 on the common system of value added tax',
+    full: 'Council Directive 2006/112/EC of 28 November 2006 on the common system of value added tax — IOSS place of supply (Art. 33(c)), taxable amount (Arts. 73, 78), import VAT base (Arts. 85, 86), IOSS import exemption (Art. 143(1)(ca))',
     url: 'https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=celex%3A32006L0112',
+  },
+  commission_q17: {
+    short: 'Commission VAT e-commerce Q17 Ex.2',
+    full: 'Commission Explanatory Notes on VAT e-commerce rules (DG TAXUD, Sep 2020), Question 17 Example 2 — IOSS taxable amount includes transport charges: goods €140 + transport €20 → VAT 20% × €160 = €32',
+    url: 'https://vat-one-stop-shop.ec.europa.eu/system/files/2021-07/vatecommerceexplanatory_notes_28102020_en.pdf',
+  },
+  reg_282_2011: {
+    short: 'Reg. (EU) 282/2011 Art. 5(1)',
+    full: 'Council Implementing Regulation (EU) No 282/2011, Article 5(1) — definition of "intrinsic value" for the €150 IOSS eligibility threshold (excludes transport, insurance, taxes)',
+    url: 'https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32011R0282',
+  },
+  council_dec2025: {
+    short: 'Council political agreement (12 Dec 2025)',
+    full: 'Council of the EU press release of 12 December 2025 — political agreement on the €3 customs duty (Reg. 2026/382 was formally adopted on 11 February 2026)',
+    url: 'https://www.consilium.europa.eu/en/press/press-releases/2025/12/12/customs-council-agrees-to-levy-customs-duty-on-small-parcels-as-of-1-july-2026/',
   },
   ioss_dir_2017_2455: {
     short: 'IOSS Dir. 2017/2455/EU',
@@ -482,33 +497,75 @@ function buildExplainerHTML() {
   h += `<div class="modal-section">
     <h3>The Big Picture</h3>
     <p style="font-size:13px;line-height:1.7;color:#374151;margin:0">
-      From <strong>1 July 2026</strong>, every low-value parcel (≤ €150) entering the EU pays a per-item
-      customs fee under the new €3 simplified regime — ${cite('reg_2026_382')} + ${cite('da_c_2026_2760')}.
-      The old €22 VAT exemption is gone. IOSS (Import One-Stop Shop) handles VAT collection for registered
-      sellers under ${cite('ioss_dir_2017_2455')}. Some member states layer additional national fees on top.
+      From <strong>1 July 2026 to 1 July 2028</strong>, every low-value parcel (≤ €150)
+      entering the EU pays a temporary <strong>€3 per declared line</strong> under
+      ${cite('reg_2026_382')} (adopted 11 Feb 2026, following Council political agreement
+      on ${cite('council_dec2025', '12 Dec 2025')}) and ${cite('da_c_2026_2760')}.
+      The old €22 VAT exemption was abolished in 2021; IOSS (${cite('ioss_dir_2017_2455')})
+      handles VAT at checkout. Some member states layer national fees on top.
     </p>
   </div>`;
   h += `<div class="modal-section">
-    <h3>Which regime applies to each item?</h3>
-    <div class="regime-cards">
+    <h3>The two trigger paths (and why FTA only saves you on one of them)</h3>
+    <p style="font-size:13px;line-height:1.7;color:#374151;margin:0 0 10px">
+      ${cite('da_c_2026_2760', 'DA C(2026)2760')} Recital 2 says the €3 applies when EITHER:
+    </p>
+    <div class="regime-cards" style="grid-template-columns:1fr 1fr">
       <div class="regime-card e3">
-        <div class="regime-name">🔴 €3 / item</div>
-        <div class="regime-desc">B2C · ≤ €150 · non-FTA origin. Flat simplified duty per line item.</div>
-        <div class="regime-citation">${cite('da_c_2026_2760', 'DA C(2026)2760')}</div>
+        <div class="regime-name">Path (a): IOSS-exempt</div>
+        <div class="regime-desc">
+          The importation is exempt from VAT under
+          ${cite('dir_2006_112', 'Dir 2006/112 Art. 143(1)(ca)')} — i.e., the seller (or
+          marketplace) used IOSS to collect VAT at checkout. <strong>FTA does NOT bypass
+          €3 on this path.</strong> The FTA exclusion in def (24) is scoped to path (b)
+          only.
+        </div>
+        <div class="regime-citation">${cite('da_c_2026_2760', 'DA Recital 2')}</div>
       </div>
-      <div class="regime-card fta">
-        <div class="regime-name">🟢 FTA €0</div>
-        <div class="regime-desc">Origin country has EU FTA + valid proof (REX, EUR.1, etc.) → zero duty.</div>
+      <div class="regime-card postal">
+        <div class="regime-name">Path (b): Postal consignment</div>
+        <div class="regime-desc">
+          The goods fit the new "goods in postal consignment" definition in
+          ${cite('da_c_2026_2760', 'DA Art. 1(1)(a) revised def (24)')}, which
+          <em>excludes</em> (i) IOSS-exempt goods and (ii) goods benefiting from
+          preferential measures (FTA). So <strong>FTA proof + direct transport on
+          a postal-non-IOSS shipment bypasses €3</strong> and standard preferential
+          tariff applies.
+        </div>
         <div class="regime-citation">${cite('da_c_2026_2760', 'DA Art. 1(1)(a)')}</div>
       </div>
+    </div>
+    <p style="font-size:12px;line-height:1.6;color:#6b7280;margin:10px 0 0">
+      Commission Explanatory Memorandum to the DA (p.2): "applies only to IOSS holders
+      and to postal consignments as defined in Article 1(24)." Two paths, asymmetric
+      FTA treatment.
+    </p>
+  </div>`;
+  h += `<div class="modal-section">
+    <h3>€3 applies per declared LINE, not per consignment</h3>
+    <p style="font-size:13px;line-height:1.7;color:#374151;margin:0">
+      ${cite('da_c_2026_2760', 'DA Recital 4')} verbatim: "when goods are declared as
+      separate items, the EUR 3 customs duty applies to each of the items. This also
+      occurs when two or more identical items are declared on separate lines… although
+      it is allowed to group these identical items and declare them in one line."
+      An "item" is defined in ${cite('da_c_2026_2760', 'Art. 1(1)(b)(61)')} as "one or
+      more goods sharing the same tariff classification, description and… origin".
+      So: 1 line with qty=5 identical goods = <strong>€3 once</strong>. 5 separate
+      lines = <strong>€15</strong>. Grouping is the declarant's optional cost-saving
+      strategy.
+    </p>
+  </div>`;
+  h += `<div class="modal-section">
+    <h3>Other regimes (what fires when neither path triggers)</h3>
+    <div class="regime-cards">
       <div class="regime-card std">
         <div class="regime-name">🟡 Standard tariff</div>
-        <div class="regime-desc">Value > €150, or €3 overridden. Full MFN or FTA ad-valorem rate applies.</div>
+        <div class="regime-desc">Value > €150, or neither €3 path triggers. Full MFN or FTA ad-valorem rate applies.</div>
         <div class="regime-citation">${cite('ucc_952_2013', 'UCC 952/2013')}</div>
       </div>
       <div class="regime-card b2b">
         <div class="regime-name">🔵 B2B / CP42</div>
-        <div class="regime-desc">Business buyer → full customs procedures, no IOSS, standard tariff.</div>
+        <div class="regime-desc">Business buyer → full customs procedures, no IOSS, standard tariff. ${cite('da_c_2026_2760', 'DA Recital 5')}.</div>
         <div class="regime-citation">${cite('cp42_da', 'DA Art. 143(1)(d)')}</div>
       </div>
       <div class="regime-card postal">
@@ -545,12 +602,46 @@ function buildExplainerHTML() {
     </p>
   </div>`;
   h += `<div class="modal-section">
-    <h3>VAT routing</h3>
+    <h3>VAT base — and why it's not the same as the €150 threshold</h3>
+    <p style="font-size:13px;line-height:1.7;color:#374151;margin:0 0 10px">
+      The <em>intrinsic value</em> (${cite('reg_282_2011', 'Reg. 282/2011 Art. 5(1)')}) gates
+      whether IOSS can be used (≤ €150). It is not the VAT base. The VAT taxable amount
+      follows the standard supply rules.
+    </p>
     <p style="font-size:12px;line-height:1.7;color:#374151;margin:0">
-      <strong>IOSS-registered seller:</strong> VAT collected at checkout, remitted monthly via the IOSS portal. No VAT collected at import. ${cite('ioss_dir_2017_2455')}<br>
-      <strong>Non-IOSS B2C (express):</strong> Customs/broker collects import VAT on behalf of buyer. ${cite('reg_2026_382')}<br>
-      <strong>Non-IOSS postal:</strong> Designated postal operator uses Special Arrangements scheme. ${cite('reg_2026_382')}<br>
-      <strong>B2B:</strong> Reverse-charge applies at destination; no IOSS. Full customs entry required. ${cite('dir_2006_112')}
+      <strong>IOSS-registered seller:</strong> place of supply is the destination MS
+      (${cite('dir_2006_112', 'Art. 33(c)')}); taxable amount = consideration
+      (${cite('dir_2006_112', 'Art. 73')}) PLUS incidental expenses — "commission,
+      packing, transport and insurance costs charged by the supplier to the customer"
+      (${cite('dir_2006_112', 'Art. 78')}). <strong>Shipping IS in the IOSS VAT base.</strong>
+      Worked example from ${cite('commission_q17')}: goods €140 + transport €20 →
+      VAT 20% × €160 = €32. Importation itself is VAT-exempt
+      (${cite('dir_2006_112', 'Art. 143(1)(ca)')}); the €3 customs duty is a separate
+      customs debt under ${cite('ucc_952_2013', 'UCC Art. 77')} borne by the IOSS holder
+      (${cite('da_c_2026_2760', 'DA Recital 10')}) — NOT in the VAT base.<br>
+      <strong>Non-IOSS B2C (express):</strong> import VAT base = customs value (CIF) +
+      duty + incidentals to first destination (${cite('dir_2006_112', 'Arts. 85, 86')}).
+      Broker collects at import.<br>
+      <strong>Non-IOSS postal:</strong> same Arts. 85/86 base; collected by the
+      designated postal operator under the Special Arrangements scheme. Sunsets 1 July 2028.<br>
+      <strong>B2B:</strong> reverse-charge at destination; full customs entry required.
+      ${cite('da_c_2026_2760', 'DA Recital 5')} confirms CP42 = B2B.
+    </p>
+  </div>`;
+  h += `<div class="modal-section">
+    <h3>Who pays the €3? The declarant hierarchy</h3>
+    <p style="font-size:13px;line-height:1.7;color:#374151;margin:0">
+      ${cite('da_c_2026_2760', 'DA Recital 10')} verbatim: "The responsibility of properly
+      paying the EUR 3 customs duty… should first and foremost lie with the declarant,
+      i.e. the platforms and sellers, or with the carrier or agent declaring the goods to
+      the customs authorities. Only residually, other persons – including the consumer –
+      can declare the goods." Three tiers in order:
+      <strong>(1) Platforms and sellers</strong> →
+      <strong>(2) Carrier or agent</strong> →
+      <strong>(3) Residually, the consumer.</strong>
+      For IOSS shipments, the IOSS holder is the customs debtor for the €3 per
+      ${cite('ucc_952_2013', 'UCC Art. 77')} — a material change for IOSS-registered sellers,
+      who were previously not the importer of record.
     </p>
   </div>`;
   h += `<div class="modal-section">
