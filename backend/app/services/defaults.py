@@ -78,14 +78,21 @@ def resolve_b2b(given: Optional[bool], ledger: list[DefaultApplied]) -> bool:
 
 def resolve_ioss_registered(
     given: Optional[bool], *, b2b: bool, value_eur: Decimal,
-    buyer_agent: bool, ledger: list[DefaultApplied],
+    ledger: list[DefaultApplied],
 ) -> bool:
     """93%-accuracy heuristic for the IOSS flag.
 
     Hard overrides:
     - B2B → IOSS impossible (VAT Directive Art. 369l is B2C-only)
     - Value > €150 → IOSS cap exceeded
-    - Buyer agent → distance-sale construct broken
+
+    NOTE: buyer_agent is NOT a hard override. Art. 14a deemed-supplier rule means
+    a marketplace facilitating the sale (Amazon, Temu, etc.) IS the supplier for
+    VAT purposes — IOSS still applies even when the marketplace looks operationally
+    like a "buyer's agent." If a true buyer's agent operationally lodges H1 standard
+    without claiming the Art. 143(1)(ca) IOSS exemption, the user should uncheck
+    IOSS directly. buyer_agent itself is an informational declarant-identity flag,
+    not a duty determinant.
     """
     if b2b:
         if given is True:
@@ -93,14 +100,6 @@ def resolve_ioss_registered(
                 field="ioss_registered",
                 default=False,
                 rationale="OVERRIDE: B2B set → IOSS impossible (VAT Dir Art. 369l)",
-            ))
-        return False
-    if buyer_agent:
-        if given is True:
-            ledger.append(DefaultApplied(
-                field="ioss_registered",
-                default=False,
-                rationale="OVERRIDE: buyer_agent breaks distance-sale construct",
             ))
         return False
     if value_eur > LOW_VALUE_THRESHOLD_EUR:
@@ -280,10 +279,12 @@ def apply_all_defaults(c: Consignment) -> tuple[Consignment, list[DefaultApplied
     # FTA direct-transport gate — must run after items are resolved
     resolve_ship_from_fta_gate(c, ledger)
 
-    # IOSS last — depends on B2B, value, buyer_agent
+    # IOSS last — depends on B2B and value only. buyer_agent is informational
+    # (declarant identity), not a duty determinant: Art. 14a deemed-supplier
+    # means a marketplace styled as "buyer's agent" still uses IOSS.
     c.ioss_registered = resolve_ioss_registered(
         c.ioss_registered, b2b=c.b2b, value_eur=c.intrinsic_value_eur,
-        buyer_agent=c.buyer_agent, ledger=ledger,
+        ledger=ledger,
     )
 
     return c, ledger

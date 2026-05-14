@@ -3,7 +3,12 @@
 Implements DA C(2026)2760 + Reg 2026/382 decision tree:
 
   1. Phase: date >= 2028-07-01 → standard tariff (CDH live)
-  2. Hard exits to standard tariff: value > €150, b2b, buyer_agent
+  2. Hard exits to standard tariff: value > €150, b2b
+     (NOTE: buyer_agent is NOT a hard exit — it is an informational declarant
+     identity flag. Art. 14a deemed-supplier rule means a marketplace styled
+     as "buyer's agent" still uses IOSS and triggers path (a) €3. If a true
+     buyer's agent operationally lodges H1 standard without claiming Art.
+     143(1)(ca), uncheck IOSS directly to model that outcome.)
   3. ASYMMETRIC €3 trigger per DA Art. 1(1)(a) revised def (24) + Recital 2:
        Path (a) IOSS-exempt (Art. 143(1)(ca)): fires regardless of FTA.
          → ioss_registered → e3_simplified
@@ -54,12 +59,12 @@ def group_items(items: list[Item]) -> dict[tuple, list[Item]]:
 
 def _resolve_item_regime(
     item: Item, *, consignment_low_value: bool, b2b: bool,
-    buyer_agent: bool, ioss: bool, postal: bool, e3_active: bool,
+    ioss: bool, postal: bool, e3_active: bool,
     ship_from: str | None = None, non_alteration_confirmed: bool = False,
 ) -> Regime:
     if not e3_active:
         return _standard_or_fta(item, ship_from=ship_from, non_alteration_confirmed=non_alteration_confirmed)
-    if not consignment_low_value or b2b or buyer_agent:
+    if not consignment_low_value or b2b:
         return _standard_or_fta(item, ship_from=ship_from, non_alteration_confirmed=non_alteration_confirmed)
     # Path (a) — DA Recital 2 first trigger: importation exempt under
     # Art. 143(1)(ca) = IOSS. Fires regardless of FTA: def (24)'s FTA
@@ -101,6 +106,8 @@ def _standard_or_fta(
 
 
 def _resolve_declarant(c: Consignment) -> Declarant:
+    # buyer_agent is informational: when set, signals the consumer-side broker is
+    # filing the entry. Does not affect duty math (see calculator docstring).
     if c.b2b or c.buyer_agent:
         return "agent"
     if c.ioss_registered:
@@ -264,7 +271,7 @@ def calculate(c: Consignment) -> CalculationResult:
         else:
             regime = _resolve_item_regime(
                 agg, consignment_low_value=(c.intrinsic_value_eur <= LOW_VALUE_THRESHOLD_EUR),
-                b2b=c.b2b, buyer_agent=c.buyer_agent,
+                b2b=c.b2b,
                 ioss=c.ioss_registered, postal=c.postal_designated_op,
                 e3_active=e3_active,
                 ship_from=c.ship_from,

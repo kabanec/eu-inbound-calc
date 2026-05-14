@@ -105,14 +105,21 @@ def test_explicit_ioss_true_overridden_when_b2b():
     assert any("OVERRIDE: B2B" in d.rationale for d in ledger)
 
 
-def test_explicit_ioss_true_overridden_when_buyer_agent():
+def test_explicit_ioss_true_preserved_when_buyer_agent():
+    # buyer_agent is NOT a duty determinant — Art. 14a deemed-supplier rule
+    # means a marketplace styled as "buyer's agent" still uses IOSS. So an
+    # explicit IOSS=true must survive a buyer_agent=true flag.
     c = Consignment(
         items=[make_item(unit_value_eur=Decimal("20"))],
         destination_ms="DE", ioss_registered=True, buyer_agent=True,
     )
     c, ledger = apply_all_defaults(c)
-    assert c.ioss_registered is False
-    assert any("buyer_agent" in d.rationale for d in ledger)
+    assert c.ioss_registered is True
+    # No "OVERRIDE: buyer_agent" entry should appear in the ledger.
+    assert not any(
+        "buyer_agent" in d.rationale and "OVERRIDE" in d.rationale
+        for d in ledger
+    )
 
 
 def test_explicit_ioss_true_overridden_when_value_exceeds_150():

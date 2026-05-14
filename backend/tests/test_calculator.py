@@ -130,11 +130,31 @@ class TestHardExits:
         r = calculate(c)
         assert r.duty_total_eur == Decimal("2.40")
 
-    def test_buyer_agent_skips_e3(self):
+    def test_buyer_agent_with_ioss_still_triggers_e3(self):
+        # Art. 14a deemed-supplier: marketplace acting as "buyer's agent" but
+        # IOSS-registered → path (a) still fires → €3 still applies.
+        # buyer_agent is informational (declarant identity), not a duty switch.
         c = Consignment(items=[make_item()], destination_ms="DE",
                         buyer_agent=True, ioss_registered=True,
                         transaction_date=date(2026, 8, 1))
-        assert calculate(c).item_breakdown[0].regime != "e3_simplified"
+        r = calculate(c)
+        assert r.item_breakdown[0].regime == "e3_simplified"
+        assert r.duty_total_eur == Decimal("3.00")
+        # Declarant should still be labelled "agent" (informational).
+        assert r.declarant == "agent"
+
+    def test_buyer_agent_no_ioss_falls_to_standard(self, mock_avalara):
+        # True buyer's agent operationally lodging H1 standard: the user
+        # models this by unchecking IOSS. Neither €3 path fires → standard
+        # tariff (Avalara MFN duty applies).
+        _set_avalara_duties(mock_avalara, [2.40])
+        c = Consignment(items=[make_item(value=20, std_rate=0.12)],
+                        destination_ms="DE",
+                        buyer_agent=True, ioss_registered=False,
+                        transaction_date=date(2026, 8, 1))
+        r = calculate(c)
+        assert r.item_breakdown[0].regime == "standard_tariff"
+        assert r.duty_total_eur == Decimal("2.40")
 
     def test_value_above_150_skips_e3(self, mock_avalara):
         _set_avalara_duties(mock_avalara, [24.00])  # 12% × €200

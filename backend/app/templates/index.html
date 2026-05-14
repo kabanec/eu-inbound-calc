@@ -330,7 +330,7 @@
       <div class="toggle-row" style="margin-top: 12px;">
         <label><input type="checkbox" id="b2b"> B2B (Business buyer)</label>
         <label><input type="checkbox" id="ioss_registered" checked> IOSS-registered seller</label>
-        <label><input type="checkbox" id="buyer_agent"> Buyer agent / forwarder</label>
+        <label title="Informational only — labels the declarant as 'agent' acting for the buyer. Does NOT change the €3 outcome. Marketplaces (Amazon/Temu) facilitating the sale still use IOSS under VAT Dir Art. 14a deemed-supplier — leave IOSS checked. To model 'broker lodges H1 standard instead of IOSS', uncheck IOSS directly."><input type="checkbox" id="buyer_agent"> Buyer agent / forwarder (declarant only)</label>
       </div>
     </div>
 
@@ -907,7 +907,7 @@ function addItem(it) {
     <div class="item-header">
       <span class="line-tag">LINE ${lineNum}</span>
       ${isFta ? '<span class="fta-tag">FTA partner</span>' : ''}
-      <button class="remove-btn" onclick="this.closest('.item').remove()">×</button>
+      <button class="remove-btn" onclick="this.closest('.item').remove();updateMutualExclusion();">×</button>
     </div>
     <div class="grid-2">
       <div>
@@ -961,15 +961,17 @@ function addItem(it) {
         <input type="number" class="fta-rate" value="${it.fta_rate}" step="0.01" min="0" max="1">
         <div class="suggested">If FTA-eligible (often 0)</div>
       </div>
-      <div style="display: flex; align-items: center;">
+      <div style="display: flex; align-items: center; flex-direction: column; align-items: flex-start;">
         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 400; color: #374151; font-size: 12px;">
-          <input type="checkbox" class="fta-proof" ${it.fta_proof?'checked':''} style="width:auto;margin:0;">
+          <input type="checkbox" class="fta-proof" ${it.fta_proof?'checked':''} style="width:auto;margin:0;" onchange="applyItemFtaGates(this.closest('.item'))">
           Holds FTA proof (REX/EUR.1)
         </label>
       </div>
     </div>
   `;
   $('items').appendChild(div);
+  applyItemFtaGates(div);
+  updateMutualExclusion();
 }
 
 function updateLineValue(el) {
@@ -977,6 +979,8 @@ function updateLineValue(el) {
   const qty = parseFloat(row.querySelector('.qty').value) || 0;
   const uv = parseFloat(row.querySelector('.unit-value').value) || 0;
   row.querySelector('.line-value').value = '€' + (qty * uv).toFixed(2);
+  // Value change can move the consignment past the €150 IOSS cap.
+  updateMutualExclusion();
 }
 
 function updateFtaTag(el) {
@@ -989,6 +993,7 @@ function updateFtaTag(el) {
     newTag.textContent = 'FTA partner';
     row.querySelector('.line-tag').after(newTag);
   } else if (!isFta && tag) { tag.remove(); }
+  applyItemFtaGates(row);
 }
 
 function lookupHS(el, lineNum) {
@@ -1604,27 +1609,87 @@ function renderStrategies(strategies, payload) {
   `;
 }
 
-// ---- IOSS mutual-exclusion (B2B / buyer-agent preclude IOSS) ----
+// ---- IOSS mutual-exclusion ----
+// B2B → IOSS impossible (VAT Dir Art. 369l, B2C-only).
+// Value > €150 → IOSS cap exceeded (Reg. 282/2011 Art. 5(1)).
+function consignmentValueEur() {
+  let total = 0;
+  document.querySelectorAll('.item').forEach(row => {
+    const q = parseFloat(row.querySelector('.qty')?.value) || 0;
+    const u = parseFloat(row.querySelector('.unit-value')?.value) || 0;
+    total += q * u;
+  });
+  return total;
+}
+
 function updateMutualExclusion() {
   const b2b = document.getElementById('b2b').checked;
-  const buyerAgent = document.getElementById('buyer_agent').checked;
   const iossCheckbox = document.getElementById('ioss_registered');
   const iossLabel = iossCheckbox.closest('label');
+  const value = consignmentValueEur();
+  const overCap = value > 150;
 
-  if (b2b || buyerAgent) {
+  if (b2b) {
     iossCheckbox.checked = false;
     iossLabel.classList.add('disabled-by-rule');
-    iossLabel.title = b2b
-      ? 'IOSS is B2C-only per VAT Dir Art. 369l — disabled because B2B is set'
-      : 'Buyer agent breaks the distance-sale construct (Art. 14(4)(2)) — IOSS not applicable';
+    iossLabel.title = 'IOSS is B2C-only per VAT Dir Art. 369l — disabled because B2B is set';
+  } else if (overCap) {
+    iossCheckbox.checked = false;
+    iossLabel.classList.add('disabled-by-rule');
+    iossLabel.title = `Consignment value €${value.toFixed(2)} exceeds the €150 IOSS cap (Reg. 282/2011 Art. 5(1)).`;
   } else {
     iossLabel.classList.remove('disabled-by-rule');
     iossLabel.title = '';
   }
+  // FTA-with-IOSS asymmetric-rule hint is item-scoped; refresh now.
+  refreshFtaHints();
 }
 
 document.getElementById('b2b').addEventListener('change', updateMutualExclusion);
 document.getElementById('buyer_agent').addEventListener('change', updateMutualExclusion);
+document.getElementById('ioss_registered').addEventListener('change', refreshFtaHints);
+
+// ---- Per-item FTA gates ----
+// (a) Grey out the FTA-proof checkbox when origin is NOT in EU FTA partners.
+// (b) Show inline hint when FTA proof is checked AND IOSS is checked — under
+//     the asymmetric reading of DA Art. 1(1)(a), path (a) IOSS fires regardless
+//     of FTA, so the toggle has no effect on €3.
+function applyItemFtaGates(row) {
+  const originSel = row.querySelector('.origin');
+  const ftaCheckbox = row.querySelector('.fta-proof');
+  if (!originSel || !ftaCheckbox) return;
+  const ftaLabel = ftaCheckbox.closest('label');
+  const isFta = FTA_PARTNERS.includes(originSel.value);
+  if (!isFta) {
+    ftaCheckbox.checked = false;
+    ftaCheckbox.disabled = true;
+    ftaLabel.classList.add('disabled-by-rule');
+    ftaLabel.title = `No EU FTA with ${originSel.value} — FTA proof has no effect.`;
+  } else {
+    ftaCheckbox.disabled = false;
+    ftaLabel.classList.remove('disabled-by-rule');
+    ftaLabel.title = '';
+  }
+  // Hint container under the FTA toggle.
+  let hint = row.querySelector('.fta-asym-hint');
+  const iossOn = document.getElementById('ioss_registered').checked;
+  const showHint = isFta && ftaCheckbox.checked && iossOn;
+  if (showHint) {
+    if (!hint) {
+      hint = document.createElement('div');
+      hint.className = 'fta-asym-hint';
+      hint.style.cssText = 'font-size:11px;color:#92400e;background:#fef3c7;border-left:3px solid #f59e0b;padding:4px 8px;margin-top:6px;border-radius:3px;line-height:1.4';
+      ftaLabel.parentElement.appendChild(hint);
+    }
+    hint.textContent = 'Path (a) IOSS fires regardless — FTA proof has no effect on €3 here. To make FTA bypass €3, drop IOSS and ship express (preferred) or postal.';
+  } else if (hint) {
+    hint.remove();
+  }
+}
+
+function refreshFtaHints() {
+  document.querySelectorAll('.item').forEach(applyItemFtaGates);
+}
 
 // ---- URL prefill (for iframe embed from parent presentation) ----
 //

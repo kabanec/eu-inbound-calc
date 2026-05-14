@@ -329,7 +329,7 @@
       <div class="toggle-row" style="margin-top: 12px;">
         <label><input type="checkbox" id="b2b" disabled> B2B (Business buyer)</label>
         <label><input type="checkbox" id="ioss_registered" checked disabled> IOSS-registered seller</label>
-        <label><input type="checkbox" id="buyer_agent" disabled> Buyer agent / forwarder</label>
+        <label title="Informational only — labels the declarant as 'agent' acting for the buyer. Does NOT change the €3 outcome. Marketplaces (Amazon/Temu) facilitating the sale still use IOSS under VAT Dir Art. 14a deemed-supplier — leave IOSS checked. To model 'broker lodges H1 standard instead of IOSS', uncheck IOSS directly."><input type="checkbox" id="buyer_agent" disabled> Buyer agent / forwarder (declarant only)</label>
       </div>
     </div>
 
@@ -5593,11 +5593,9 @@ function updateMutualExclusion() {
   const iossCheckbox = $('ioss_registered');
   const iossLabel = iossCheckbox.closest('label');
 
-  if (b2b || buyerAgent) {
+  if (b2b) {
     iossLabel.classList.add('disabled-by-rule');
-    iossLabel.title = b2b
-      ? 'IOSS is B2C-only per VAT Dir Art. 369l — disabled because B2B is set'
-      : 'Buyer agent breaks the distance-sale construct (Art. 14(4)(2)) — IOSS not applicable';
+    iossLabel.title = 'IOSS is B2C-only per VAT Dir Art. 369l — disabled because B2B is set';
   } else {
     iossLabel.classList.remove('disabled-by-rule');
     iossLabel.title = '';
