@@ -608,8 +608,8 @@ const SCENARIOS = [
   // ---------- GB-origin (Royal Mail demo bundle) ----------
   {
     id: 'gb_postal_ioss',
-    label: '🇬🇧📮 Royal Mail: GB→DE postal + IOSS',
-    desc: 'UK IOSS-registered seller via Royal Mail Tracked. FTA preference → €3 bypassed; VAT collected at checkout',
+    label: '🇬🇧📮 GB→DE postal + IOSS + FTA: €3 still applies',
+    desc: 'UK IOSS-registered seller, FTA-eligible origin. IOSS path (a) fires regardless of FTA — €3 applies per declared line. Counter-intuitive: FTA proof does NOT bypass €3 when IOSS is used (DA Art. 1(1)(a) revised def 24).',
     setup: () => {
       reset();
       setSelect('destination_ms', 'DE');
@@ -621,8 +621,8 @@ const SCENARIOS = [
   },
   {
     id: 'gb_postal_no_ioss',
-    label: '🇬🇧📮 Royal Mail: GB→DE postal, no IOSS',
-    desc: 'Non-IOSS UK seller via Royal Mail. Postal special-arrangements VAT collected by designated operator at delivery',
+    label: '🇬🇧📮 GB→DE postal, no IOSS + FTA: €3 bypassed',
+    desc: 'Path (a) IOSS does NOT fire (no IOSS). Path (b) postal def (24) excludes FTA goods → no €3. Standard preferential tariff (0%) applies. VAT collected on delivery via Special Arrangements — worse UX, but cheaper landed cost when FTA preference is available.',
     setup: () => {
       reset();
       setSelect('destination_ms', 'DE');
@@ -634,8 +634,8 @@ const SCENARIOS = [
   },
   {
     id: 'gb_fta',
-    label: '🇬🇧 GB→DE: express + FTA exclusion',
-    desc: 'UK origin via express carrier with FTA proof — €3 bypassed, standard tariff at 0% preferential',
+    label: '🇬🇧 GB→DE express + IOSS + FTA: drop IOSS to escape €3',
+    desc: 'IOSS + FTA = €3 still applies (path a fires regardless of FTA). Strategy advisor shows the fix: drop IOSS and use postal — path (b) def (24) excludes FTA goods, so €3 disappears. Worse checkout UX but cheaper landed cost.',
     setup: () => {
       reset();
       setSelect('destination_ms', 'DE');
@@ -646,8 +646,8 @@ const SCENARIOS = [
   },
   {
     id: 'gb_fr_postal',
-    label: '🇬🇧→🇫🇷 GB→FR postal: FTA saves €3, FR fee stays',
-    desc: 'Royal Mail to France. FTA exclusion drops €3 EU fee, but FR €2/HS6 line tax (TPC) still applies per HS6 group',
+    label: '🇬🇧→🇫🇷 GB→FR postal + IOSS + FTA: €3 + FR fee both apply',
+    desc: 'IOSS path (a) fires regardless of FTA → €3 per line. PLUS FR €2/HS6 line tax (TPC) on top. UK FTA preference would only help if you drop IOSS (path b def 24 excludes FTA goods).',
     setup: () => {
       reset();
       setSelect('destination_ms', 'FR');

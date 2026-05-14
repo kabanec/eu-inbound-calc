@@ -25,8 +25,13 @@ LOW_VALUE_THRESHOLD_EUR = Decimal("150.00")
 E3_PER_ITEM_EUR = Decimal("3.00")
 
 # FTA / customs union partners ----------------------------------------------
-# Goods originating from these countries with valid FTA proof are EXCLUDED
-# from the €3 regime per DA Art. 1(1)(a).
+# Goods originating from these countries with valid FTA proof bypass the €3
+# regime ONLY via path (b) postal — DA Art. 1(1)(a) revised def (24) excludes
+# goods benefiting from "preferential measures, including those provided for in
+# customs union agreements" from "goods in postal consignment". The FTA
+# exclusion is asymmetric: path (a) IOSS still fires regardless of FTA. See
+# DA Recital 2 and Explanatory Memorandum p.2 ("applies only to IOSS holders
+# and to postal consignments as defined in Article 1(24)").
 FTA_PARTNERS = frozenset({
     "TR", "AD", "SM",  # Customs unions
     "NO", "IS", "LI",  # EEA
@@ -45,6 +50,11 @@ NATIONAL_FEES = {
         "source": "Loi de finances pour 2026, Law n° 2026-103, Article 82",
         "source_url": "https://www.legifrance.gouv.fr/eli/loi/2026/2/19/CPPX2524517L/jo/article_82",
         "official_name": "Taxe sur les petits colis (TPC)",
+        # NOTE: primary text of Article 82 not independently verified. Some
+        # secondary sources (Bloomberg, Apr 2026) report a National Assembly
+        # vote raising the fee from €2 to €5 effective 2026. Confirm against
+        # the published Loi 2026-103 final text before relying on €2.
+        "primary_source_verified": False,
     },
     "IT": {
         "amount_eur": Decimal("2.00"),

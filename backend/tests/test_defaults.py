@@ -269,8 +269,13 @@ def test_default_empty_description_is_unique_grouping_key():
     assert len(r.item_breakdown) == 2  # different HS keeps them apart anyway
 
 
-def test_two_items_same_hs_empty_descriptions_collapse():
-    """Same HS + same (empty) description + same origin → one grouping line."""
+def test_two_items_same_hs_empty_descriptions_collapse_for_reporting():
+    """Same HS + same (empty) description + same origin: both items belong to
+    one reporting group (single ItemBreakdown row), but €3 still applies per
+    declared line per DA Recital 4 — two input Items = two lines = €6.
+
+    Grouping for the purpose of one declared line is a declarant option; our
+    calculator surfaces this via the _consolidate_descriptions strategy."""
     c = Consignment(
         items=[
             make_item(description="", hs6="610910", origin="CN"),
@@ -280,8 +285,8 @@ def test_two_items_same_hs_empty_descriptions_collapse():
         transaction_date=date(2026, 8, 1),
     )
     r = calculate(c)
-    assert len(r.item_breakdown) == 1  # collapse to one line, €3 once
-    assert r.duty_total_eur == Decimal("3.00")
+    assert len(r.item_breakdown) == 1   # one reporting group
+    assert r.duty_total_eur == Decimal("6.00")  # but €3 per declared line × 2
 
 
 # ---------------------------------------------------------------------------

@@ -91,10 +91,33 @@ class TestE3Triggers:
         assert calculate(c).duty_total_eur == Decimal("9.00")
 
     def test_qty_within_group_does_not_multiply_e3(self):
+        # One Item with qty=10 = one declared line per DA Art. 1(1)(b)(61):
+        # an "item" is "one or more goods sharing the same tariff, description,
+        # origin." Declared as one line → €3 once.
         c = Consignment(items=[make_item(qty=10, value=5)],
                         destination_ms="DE", ioss_registered=True,
                         transaction_date=date(2026, 8, 1))
         assert calculate(c).duty_total_eur == Decimal("3.00")
+
+    def test_two_identical_items_charge_e3_per_declared_line(self):
+        # DA Recital 4 verbatim: "when two or more identical items are declared
+        # on separate lines in a declaration... the EUR 3 customs duty applies
+        # to each of the items." Grouping is permitted but optional —
+        # _consolidate_descriptions strategy exposes the choice. Two identical
+        # Item rows in input = two declared lines = €6.
+        c = Consignment(
+            items=[make_item(value=10), make_item(value=10)],
+            destination_ms="DE", ioss_registered=True,
+            transaction_date=date(2026, 8, 1),
+        )
+        r = calculate(c)
+        assert r.duty_total_eur == Decimal("6.00")
+        # The breakdown should surface the grouping-strategy savings hint.
+        assert any(
+            "save €3" in note or "save €3.00" in note
+            for ib in r.item_breakdown
+            for note in ib.notes
+        )
 
 
 # Hard exits ---------------------------------------------------------------
@@ -121,9 +144,15 @@ class TestHardExits:
         assert calculate(c).duty_total_eur == Decimal("24.00")
 
 
-# FTA exclusion + direct-transport gate (PRD §FR-1 step 3) -----------------
-class TestFTAExclusion:
-    def test_fta_when_ship_from_equals_origin(self):
+# FTA asymmetry per DA Art. 1(1)(a) revised def (24) -----------------------
+# Path (a) IOSS fires regardless of FTA. Path (b) postal-non-IOSS: def (24)
+# excludes "goods which benefit from preferential measures" so FTA preference
+# applies and €3 is bypassed. Direct-transport gate enforces FTA eligibility.
+class TestFTAAsymmetry:
+    def test_ioss_fta_still_triggers_e3_path_a(self):
+        # GB origin, IOSS, ship_from=GB — direct-transport gate would pass.
+        # But path (a) IOSS fires regardless of FTA per def (24): the FTA
+        # exclusion is scoped to path (b) postal only.
         c = Consignment(
             items=[make_item(origin="GB", fta=True, std_rate=0.12, fta_rate=0.0)],
             destination_ms="DE", ioss_registered=True,
@@ -131,27 +160,30 @@ class TestFTAExclusion:
             transaction_date=date(2026, 8, 1),
         )
         r = calculate(c)
-        assert r.item_breakdown[0].regime == "standard_tariff_fta"
-        assert r.duty_total_eur == Decimal("0.00")
+        assert r.item_breakdown[0].regime == "e3_simplified"
+        assert r.duty_total_eur == Decimal("3.00")
 
-    def test_fta_denied_when_ship_from_differs_no_assertion(self):
+    def test_postal_non_ioss_fta_bypasses_e3_path_b(self):
+        # GB origin, NOT IOSS, postal, ship_from=GB, FTA proof. Path (a) doesn't
+        # fire (not IOSS). Path (b) def (24) excludes FTA goods → no €3,
+        # standard preferential tariff applies.
         c = Consignment(
             items=[make_item(origin="GB", fta=True, std_rate=0.12, fta_rate=0.0)],
-            destination_ms="DE", ioss_registered=True,
-            ship_from="CN", non_alteration_confirmed=False,
+            destination_ms="DE", ioss_registered=False,
+            postal_designated_op=True, channel="postal",
+            ship_from="GB",
             transaction_date=date(2026, 8, 1),
         )
         r = calculate(c)
-        assert r.item_breakdown[0].regime == "e3_simplified"
-        assert r.duty_total_eur == Decimal("3.00")
-        assert any(
-            "ship_from_vs_origin" in d.field for d in r.defaults_applied
-        )
+        assert r.item_breakdown[0].regime == "standard_tariff_fta"
+        assert r.duty_total_eur == Decimal("0.00")
 
-    def test_fta_when_ship_from_differs_with_non_alteration(self):
+    def test_postal_non_ioss_fta_with_non_alteration(self):
+        # Postal non-IOSS, FTA, ship_from differs but non_alteration confirmed.
         c = Consignment(
             items=[make_item(origin="GB", fta=True, std_rate=0.12, fta_rate=0.0)],
-            destination_ms="DE", ioss_registered=True,
+            destination_ms="DE", ioss_registered=False,
+            postal_designated_op=True, channel="postal",
             ship_from="SG", non_alteration_confirmed=True,
             transaction_date=date(2026, 8, 1),
         )
@@ -159,20 +191,36 @@ class TestFTAExclusion:
         assert r.item_breakdown[0].regime == "standard_tariff_fta"
         assert r.duty_total_eur == Decimal("0.00")
 
-    def test_fta_denied_when_ship_from_unknown(self):
+    def test_postal_non_ioss_fta_denied_when_ship_from_differs(self):
+        # Postal non-IOSS, FTA, ship_from differs, no non_alteration → direct
+        # transport gate fails → €3 applies via path (b).
         c = Consignment(
             items=[make_item(origin="GB", fta=True, std_rate=0.12, fta_rate=0.0)],
-            destination_ms="DE", ioss_registered=True,
-            ship_from=None,
+            destination_ms="DE", ioss_registered=False,
+            postal_designated_op=True, channel="postal",
+            ship_from="CN", non_alteration_confirmed=False,
             transaction_date=date(2026, 8, 1),
         )
         r = calculate(c)
         assert r.item_breakdown[0].regime == "e3_simplified"
         assert r.duty_total_eur == Decimal("3.00")
-        assert any("ship_from" in d.field for d in r.defaults_applied)
+
+    def test_express_non_ioss_fta_falls_back_to_standard(self):
+        # Neither path (a) nor (b) fires. Express + non-IOSS + FTA = standard
+        # tariff with FTA preference (no €3 regime in play).
+        c = Consignment(
+            items=[make_item(origin="GB", fta=True, std_rate=0.12, fta_rate=0.0)],
+            destination_ms="DE", ioss_registered=False,
+            postal_designated_op=False, channel="express",
+            ship_from="GB",
+            transaction_date=date(2026, 8, 1),
+        )
+        r = calculate(c)
+        assert r.item_breakdown[0].regime == "standard_tariff_fta"
+        assert r.duty_total_eur == Decimal("0.00")
 
     def test_fta_denied_when_origin_not_in_partners(self):
-        # CN has no EU FTA — proof field is irrelevant, €3 applies silently
+        # CN has no EU FTA — proof field is irrelevant.
         c = Consignment(
             items=[make_item(origin="CN", fta=True, std_rate=0.12, fta_rate=0.0)],
             destination_ms="DE", ioss_registered=True,
@@ -184,7 +232,6 @@ class TestFTAExclusion:
         assert r.duty_total_eur == Decimal("3.00")
 
     def test_fta_denied_when_no_proof(self):
-        # GB is an FTA partner but proof flag is False — €3 applies silently
         c = Consignment(
             items=[make_item(origin="GB", fta=False, std_rate=0.12, fta_rate=0.0)],
             destination_ms="DE", ioss_registered=True,
@@ -216,8 +263,13 @@ class TestPhaseLogic:
 # VAT ----------------------------------------------------------------------
 class TestVAT:
     def test_ioss_excludes_duty_from_base(self):
+        # Shipping pinned to zero so this test isolates the duty-vs-base concern.
+        # The €3 customs duty must NOT enter the IOSS VAT base: importation is
+        # exempt under Art. 143(1)(ca); €3 is a separate customs debt under
+        # UCC Art. 77 borne by the IOSS holder per DA Recital 10.
         c = Consignment(items=[make_item(value=100)], destination_ms="DE",
                         ioss_registered=True,
+                        shipping_cost_eur=Decimal("0.00"),
                         transaction_date=date(2026, 8, 1))
         r = calculate(c)
         assert r.vat.collected_via == "ioss_at_checkout"
@@ -251,18 +303,33 @@ class TestVAT:
         expected_base = Decimal("220.00") + r.duty_total_eur
         assert r.vat.vat_base_eur == expected_base
 
-    def test_ioss_vat_excludes_shipping(self):
-        # Reg 282/2011 Art. 5(1): IOSS taxable amount is intrinsic value
-        # only — shipping is NOT in the VAT base even though it IS in CIF
-        # for duty purposes. Regression for the CIF/VAT split.
-        c = Consignment(items=[make_item(value=100)], destination_ms="DE",
-                        ioss_registered=True,
-                        shipping_cost_eur=Decimal("25.00"),
+    def test_ioss_vat_includes_shipping_art_78(self):
+        # IOSS supply: place of supply = destination MS (Dir 2006/112 Art. 33(c));
+        # taxable amount = Art. 73 consideration + Art. 78 incidentals (transport,
+        # packing, insurance, commission charged by supplier). Confirmed by
+        # Commission Explanatory Notes on VAT e-commerce rules, Q17 Example 2:
+        # goods €140 + transport €20 → VAT 20% × €160 = €32.
+        c = Consignment(items=[make_item(value=140, std_rate=0)],
+                        destination_ms="FR", ioss_registered=True,
+                        shipping_cost_eur=Decimal("20.00"),
                         transaction_date=date(2026, 8, 1))
         r = calculate(c)
         assert r.vat.collected_via == "ioss_at_checkout"
+        assert r.vat.vat_base_eur == Decimal("160.00")
+        assert r.vat.vat_eur == Decimal("32.00")  # FR rate 20%
+
+    def test_ioss_vat_excludes_duty(self):
+        # IOSS importation is VAT-exempt (Art. 143(1)(ca)). The €3 customs
+        # duty is a separate customs debt under UCC Art. 77 borne by the IOSS
+        # holder per DA Recital 10. It must NOT enter the IOSS VAT base.
+        c = Consignment(items=[make_item(value=100, std_rate=0)],
+                        destination_ms="DE", ioss_registered=True,
+                        shipping_cost_eur=Decimal("0.00"),
+                        transaction_date=date(2026, 8, 1))
+        r = calculate(c)
+        assert r.duty_total_eur == Decimal("3.00")
         assert r.vat.vat_base_eur == Decimal("100.00")
-        assert r.vat.vat_eur == Decimal("19.00")
+        assert r.vat.vat_eur == Decimal("19.00")  # 19% × 100, NOT 19% × 103
 
 
 # National fees ------------------------------------------------------------

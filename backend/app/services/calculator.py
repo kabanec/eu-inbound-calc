@@ -1,15 +1,25 @@
 """Core duty + VAT + fees calculator.
 
-Implements PRD §FR-1 decision tree:
+Implements DA C(2026)2760 + Reg 2026/382 decision tree:
 
   1. Phase: date >= 2028-07-01 → standard tariff (CDH live)
   2. Hard exits to standard tariff: value > €150, b2b, buyer_agent
-  3. Per-item FTA exclusion (DA Art. 1(1)(a)) + direct-transport gate:
-       fta_proof_held AND origin ∈ FTA partners
-       AND (ship_from == origin OR non_alteration_confirmed)
-       → standard_tariff_fta; otherwise fall through.
-  4. €3 trigger: ioss_registered OR postal_designated_op
-  5. Else: standard tariff with special-arrangements VAT
+  3. ASYMMETRIC €3 trigger per DA Art. 1(1)(a) revised def (24) + Recital 2:
+       Path (a) IOSS-exempt (Art. 143(1)(ca)): fires regardless of FTA.
+         → ioss_registered → e3_simplified
+       Path (b) postal consignment per def (24): def (24) EXCLUDES FTA goods,
+         so FTA preference applies; otherwise €3.
+         → postal_designated_op + FTA proof + direct-transport gate
+              → standard_tariff_fta
+         → postal_designated_op + no FTA → e3_simplified
+  4. Express/cargo non-IOSS: neither path fires → standard tariff
+     (with FTA preference if proof + direct transport)
+
+The FTA asymmetry is a LITERAL reading of DA Art. 1(1)(a) verbatim, supported
+by the Commission's Explanatory Memorandum (p.2: "applies only to IOSS holders
+and to postal consignments as defined in Article 1(24)"). The €3 cannot be
+bypassed via FTA when path (a) IOSS triggers — only when path (b) postal
+applies and def (24) excludes the FTA good.
 """
 from __future__ import annotations
 
@@ -51,16 +61,25 @@ def _resolve_item_regime(
         return _standard_or_fta(item, ship_from=ship_from, non_alteration_confirmed=non_alteration_confirmed)
     if not consignment_low_value or b2b or buyer_agent:
         return _standard_or_fta(item, ship_from=ship_from, non_alteration_confirmed=non_alteration_confirmed)
-    if item.fta_proof_held and item.origin.upper() in FTA_PARTNERS:
-        # Direct-transport gate: importer-burden default is denial.
-        # FTA granted only when ship_from == origin OR non_alteration_confirmed.
-        if ship_from is not None and (
-            ship_from.upper() == item.origin.upper() or non_alteration_confirmed
-        ):
-            return "standard_tariff_fta"
-        # Gate failed — fall through to €3 trigger below.
-    if ioss or postal:
+    # Path (a) — DA Recital 2 first trigger: importation exempt under
+    # Art. 143(1)(ca) = IOSS. Fires regardless of FTA: def (24)'s FTA
+    # exclusion is scoped to path (b) postal only.
+    if ioss:
         return "e3_simplified"
+    # Path (b) — postal consignment per DA Art. 1(1)(a) revised def (24).
+    # Def (24) EXCLUDES goods benefiting from preferential measures, so an
+    # FTA-eligible good shipped postal non-IOSS escapes €3 and takes the
+    # standard preferential tariff. Direct-transport gate enforces FTA
+    # eligibility (ship_from == origin OR non_alteration_confirmed).
+    if postal:
+        if item.fta_proof_held and item.origin.upper() in FTA_PARTNERS:
+            if ship_from is not None and (
+                ship_from.upper() == item.origin.upper() or non_alteration_confirmed
+            ):
+                return "standard_tariff_fta"
+        return "e3_simplified"
+    # Express/cargo non-IOSS: neither path fires. Standard tariff,
+    # FTA preference if eligible.
     return _standard_or_fta(item, ship_from=ship_from, non_alteration_confirmed=non_alteration_confirmed)
 
 
@@ -129,10 +148,15 @@ def _calculate_vat(
             vat_eur=Decimal("0.00"), collected_via="oss_b2b",
         )
     if c.ioss_registered:
-        # IOSS taxable amount is intrinsic-only per Reg 282/2011 Art. 5(1)
-        # and Dir 2006/112 Art. 369y. Shipping is NOT in the VAT base even
-        # though it IS in the customs (CIF) value for duty purposes.
-        base = c.intrinsic_value_eur
+        # IOSS supply: place of supply is destination MS (Dir 2006/112 Art. 33(c)).
+        # Taxable amount = Art. 73 ("everything which constitutes consideration")
+        # PLUS Art. 78 incidentals — "commission, packing, transport and insurance
+        # costs charged by the supplier to the customer". Confirmed by Commission
+        # Explanatory Notes on VAT e-commerce rules, Q17 Example 2: goods €140 +
+        # transport €20 → VAT 20% × €160 = €32. Reg 282/2011 Art. 5(1) defines
+        # intrinsic value for the €150 ELIGIBILITY threshold, not the VAT base.
+        shipping = c.shipping_cost_eur or Decimal("0.00")
+        base = c.intrinsic_value_eur + shipping
         return VATBreakdown(
             vat_rate=rate, vat_base_eur=_round(base),
             vat_eur=_round(base * rate), collected_via="ioss_at_checkout",
@@ -247,7 +271,11 @@ def calculate(c: Consignment) -> CalculationResult:
                 non_alteration_confirmed=c.non_alteration_confirmed,
             )
             if regime == "e3_simplified":
-                duty = E3_PER_ITEM_EUR
+                # €3 applies per declared LINE per DA Recital 4 + Art. 1(1)(b)(61).
+                # Each input Item = one declared line. Grouping identical items
+                # onto one line is a declarant option ("it is allowed to group"),
+                # not the default — see _consolidate_descriptions strategy.
+                duty = E3_PER_ITEM_EUR * Decimal(len(group_items_list))
             elif regime in ("standard_tariff", "standard_tariff_fta"):
                 duty = ava_group_duty
             else:
@@ -259,14 +287,24 @@ def calculate(c: Consignment) -> CalculationResult:
         notes: list[str] = []
         if regime == "standard_tariff_fta":
             notes.append(
-                f"FTA preference applied (origin {agg.origin}); "
-                f"€3 EXCLUDED per DA Art. 1(1)(a)."
+                f"FTA preference applied (origin {agg.origin}); €3 EXCLUDED "
+                f"via path (b) postal — DA Art. 1(1)(a) revised def (24)."
             )
-        if regime == "e3_simplified" and qty_total > 1:
-            notes.append(
-                f"€3 charged once for {qty_total} units sharing identical "
-                f"(HS, desc, origin) tuple."
-            )
+        if regime == "e3_simplified":
+            n_lines = len(group_items_list)
+            if n_lines > 1:
+                savings = E3_PER_ITEM_EUR * Decimal(n_lines - 1)
+                notes.append(
+                    f"€3 × {n_lines} lines = €{E3_PER_ITEM_EUR * Decimal(n_lines)}. "
+                    f"Grouping identical items onto one declared line (DA Recital 4 "
+                    f"permits this for items sharing tariff classification, "
+                    f"description, origin) would save €{savings}."
+                )
+            elif qty_total > 1:
+                notes.append(
+                    f"€3 once for {qty_total} units on this declared line "
+                    f"(one item per DA Art. 1(1)(b)(61))."
+                )
 
         breakdown.append(ItemBreakdown(
             grouping_key=key, qty_total=qty_total,
@@ -314,10 +352,12 @@ def calculate(c: Consignment) -> CalculationResult:
         defaults_applied=ledger,
         compliance_warnings=_compliance_warnings(c, regimes_seen),
         legal_references=[
-            "Council Regulation (EU) 2026/382 of 11 February 2026",
-            "Commission Delegated Regulation C(2026)2760 of 30 April 2026",
-            "Council Directive 2006/112/EC, Articles 14(4), 85, 143(1)(ca)",
-            "UCC Regulation (EU) 952/2013, Article 77",
+            "Council Regulation (EU) 2026/382 of 11 February 2026 (€3 customs duty)",
+            "Commission Delegated Regulation C(2026)2760 of 30 April 2026 (DA)",
+            "Council Directive 2006/112/EC — Arts. 14(4), 33(c), 73, 78, 85, 86, 143(1)(ca)",
+            "Council Implementing Regulation (EU) 282/2011 Art. 5(1) (intrinsic value)",
+            "Commission Explanatory Notes on VAT e-commerce rules (Sep 2020), Q17 Ex. 2",
+            "UCC Regulation (EU) 952/2013, Article 77 (customs debtor)",
         ],
         avalara_request_id=ava_resp.request_id,
         avalara_total_eur=ava_resp.total_duty_eur,
