@@ -1343,6 +1343,7 @@ const STRATEGY_LABELS = {
   push_above_150:             'Push value above €150',
   drop_ioss_use_fta:          'Drop IOSS → postal + FTA (literal, often impractical)',
   drop_ioss_use_express_fta:  'Drop IOSS → express + FTA (operationally reliable)',
+  drop_ioss_use_mfn:          'Drop IOSS → express + standard MFN (low-value, low-MFN goods)',
   b2b_eu_warehouse:           'Bulk B2B + EU warehouse fulfilment',
 };
 function strategyLabel(name) {
@@ -1354,6 +1355,7 @@ const STRATEGY_BUCKETS = {
   consolidate_descriptions:   'operational',
   drop_ioss_use_fta:          'operational',
   drop_ioss_use_express_fta:  'operational',
+  drop_ioss_use_mfn:          'operational',
   split_parcels:              'counter',
   push_above_150:             'counter',
   b2b_eu_warehouse:           'pivot',
@@ -1382,6 +1384,12 @@ const STRATEGY_EXPLANATIONS = {
     caveat: 'Customer pays import VAT on delivery via broker — worse UX than IOSS, plus broker fees. Express shipping is pricier than postal, so model the all-in landed cost.',
     why_filtered: 'No items qualify — origin not in EU FTA partner list, or FTA proof not held.',
   },
+  drop_ioss_use_mfn: {
+    what: 'Drop IOSS at checkout; keep express carrier; accept standard MFN tariff. Neither path (a) IOSS nor path (b) postal fires.',
+    why_help: 'For low-value goods on low-MFN HS codes (~51% of EU HS codes are ≤6%), MFN × value is below €3 per line. Cheaper than the IOSS path’s flat €3 once the express shipping premium and VAT-base shift are accounted for.',
+    why_worse: 'MFN × value exceeds €3 (or the express shipping premium + VAT base shift eats the saving). Try this if you also have low-MFN HS codes; the advisor will rank it appropriately.',
+    caveat: 'Customer pays import VAT on delivery via broker — worse UX than IOSS at checkout. Broker fees may apply. Best for low-margin sellers shipping cheap, low-rate goods.',
+  },
   split_parcels: {
     what: 'Ship each HS6+origin grouping as a separate parcel instead of 1 consolidated.',
     why_worse: 'Per-parcel fees apply N times (e.g. IT €2/parcel, RO €4.90/parcel), AND shipping is paid per parcel (€15 × N).',
@@ -1409,6 +1417,8 @@ function modifiedInputFor(name, payload) {
       return 'Channel: express → postal · IOSS: yes → no · FTA proof applied.';
     case 'drop_ioss_use_express_fta':
       return 'Channel: express (kept) · IOSS: yes → no · FTA proof applied via H1/H7.';
+    case 'drop_ioss_use_mfn':
+      return 'Channel: → express · IOSS: yes → no · Standard MFN tariff applied.';
     case 'split_parcels': {
       const groupings = new Set(lines.map(l => `${l.hsCode}|${l.countryOfOrigin}`));
       const n = Math.max(groupings.size, 1);
@@ -1446,6 +1456,8 @@ function strategyApplicability(name, payload) {
       return true;
     case 'drop_ioss_use_express_fta':
       return true;
+    case 'drop_ioss_use_mfn':
+      return true;
     default:
       return true;
   }
@@ -1464,6 +1476,59 @@ function classifyStrategy(s, statusQuoCost, payload) {
   return 'noop';
 }
 
+// Break-even decomposition for FTA-replacing strategies. Reads ACTUAL deltas
+// from the calculated result (no hardcoded VAT rates) and reports how many
+// additional FTA-eligible item lines would tip the strategy from "worse" to
+// "saves" — useful for understanding why a strategy lost on a 1-line basket
+// but might win on a multi-line one.
+function breakEvenFor(r, statusQuo) {
+  if (!r || !r.entry || !statusQuo || !statusQuo.result) return '';
+  if (r.state === 'na_inapplicable' || r.state === 'noop') return '';
+  const sq = statusQuo.result;
+  const me = r.entry.result;
+  if (!me || !sq.vat || !me.vat) return '';
+  const shipDelta = Number(me.shipping_cost_eur || 0) - Number(sq.shipping_cost_eur || 0);
+  const dutyDelta = Number(me.duty_total_eur    || 0) - Number(sq.duty_total_eur    || 0);
+  const vatDelta  = Number(me.vat.vat_eur       || 0) - Number(sq.vat.vat_eur       || 0);
+  const total     = Number(me.landed_cost_eur   || 0) - Number(sq.landed_cost_eur   || 0);
+
+  // Per-line duty saving relative to status quo. For FTA-replacing strategies
+  // against an IOSS status quo, this is exactly €3 per FTA-eligible line.
+  // We infer it from the actual duty delta and current line count.
+  const sqLineCount = Array.isArray(sq.item_breakdown) ? sq.item_breakdown.length : 0;
+  const meLineCount = Array.isArray(me.item_breakdown) ? me.item_breakdown.length : 0;
+  if (sqLineCount === 0 || meLineCount === 0) return '';
+  const savingPerLine = -dutyDelta / sqLineCount;  // positive when this strategy reduces duty
+
+  const fmtDelta = (n) => (n >= 0 ? '+' : '−') + '€' + Math.abs(n).toFixed(2);
+  const components =
+    `Shipping ${fmtDelta(shipDelta)} · Duty ${fmtDelta(dutyDelta)} · VAT ${fmtDelta(vatDelta)} ` +
+    `= ${fmtDelta(total)} total.`;
+
+  // Only render break-even line-count math when there IS a per-line saving lever
+  // (e.g. each FTA-eligible line saves a flat €3 vs IOSS path). With no saving
+  // per line, no number of extra lines flips the verdict.
+  if (savingPerLine <= 0.01) {
+    return `<span class="lbl">Cost breakdown:</span> ${components}`;
+  }
+
+  if (r.state === 'worse') {
+    // How many MORE lines (each saving `savingPerLine`) to make total ≤ 0?
+    const additional = Math.ceil(total / savingPerLine);
+    const totalAtBreakEven = sqLineCount + additional;
+    return `<span class="lbl">Cost breakdown:</span> ${components} ` +
+           `<span class="lbl">Break-even:</span> ` +
+           `each ${r.name === 'drop_ioss_use_mfn' ? 'low-MFN' : 'FTA-eligible'} line saves ~€${savingPerLine.toFixed(2)}; ` +
+           `this strategy starts winning at ~${totalAtBreakEven} such lines (this shipment: ${sqLineCount}).`;
+  }
+  // SAVES: report how far past break-even we are.
+  const linesPastBreakEven = Math.floor(-total / savingPerLine);
+  const minLines = Math.max(1, sqLineCount - linesPastBreakEven);
+  return `<span class="lbl">Cost breakdown:</span> ${components} ` +
+         `<span class="lbl">Break-even:</span> ` +
+         `wins at ≥${minLines} ${r.name === 'drop_ioss_use_mfn' ? 'low-MFN' : 'FTA-eligible'} line${minLines === 1 ? '' : 's'}; this shipment: ${sqLineCount}.`;
+}
+
 const STATE_ICONS = {
   saves: '✅',
   worse: '⚠️',
@@ -1479,7 +1544,7 @@ function renderStrategies(strategies, payload) {
   const statusQuo = strategies.find(s => s.name === 'status_quo');
   const sqCost = statusQuo ? Number(statusQuo.result.landed_cost_eur || 0) : 0;
 
-  const ALL_NAMES = ['consolidate_descriptions','drop_ioss_use_fta','drop_ioss_use_express_fta','split_parcels','push_above_150','b2b_eu_warehouse'];
+  const ALL_NAMES = ['consolidate_descriptions','drop_ioss_use_fta','drop_ioss_use_express_fta','drop_ioss_use_mfn','split_parcels','push_above_150','b2b_eu_warehouse'];
   const byName = Object.fromEntries(strategies.map(s => [s.name, s]));
 
   const rows = ALL_NAMES.map(name => {
@@ -1532,6 +1597,8 @@ function renderStrategies(strategies, payload) {
       }
       parts.push(`<span class="lbl">Why N/A:</span> ${escHtml(reason)}`);
     }
+    const be = breakEvenFor(r, statusQuo);
+    if (be) parts.push(be);
     const cls = (r.state === 'na_inapplicable') ? 'strategy-explain na' : 'strategy-explain';
     return `<div class="${cls}">${parts.join(' ')}</div>`;
   }
@@ -1888,6 +1955,10 @@ if (_prefill && _prefill.prefilled) {
   }
 } else {
   SCENARIOS[0].setup();   // No URL params → pre-load the FTA exclusion demo
+  // FTA proof unchecked on initial page open (user request — start in a
+  // neutral state, user opts in by checking the box themselves).
+  document.querySelectorAll('.fta-proof').forEach(cb => { cb.checked = false; });
+  document.querySelectorAll('.item').forEach(row => applyItemFtaGates(row));
   updateMutualExclusion();
 }
 </script>
